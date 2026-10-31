@@ -65,6 +65,7 @@ class PlasmaCustomCalculator {
     let dimension = [0, 0, 0, 0, 0]; // [M, L, T, I, Theta]
     let symbolStr = "";
     let valueStr = "";
+    let latexStr = "";
     let unitLabel = "";
 
     const mult = parseFloat(term.multiplier) || 1;
@@ -83,6 +84,12 @@ class PlasmaCustomCalculator {
       const pwrSuffix = power !== 1 ? `^${power}` : "";
       symbolStr = `${multPrefix}${qDef.symbol}${pwrSuffix}`;
       valueStr = `${multPrefix}(${val} ${unitDef.id})${pwrSuffix}`;
+
+      // LaTeX 表示
+      const multLatex = mult !== 1 ? `${mult} ` : "";
+      const pwrLatex = power !== 1 ? `^{${power}}` : "";
+      latexStr = `${multLatex}${qDef.symbol}${pwrLatex}`;
+
       unitLabel = unitDef.label;
     } else if (term.type === "constant") {
       const cDef = this.getConstantDef(term.constantId);
@@ -95,6 +102,20 @@ class PlasmaCustomCalculator {
       const pwrSuffix = power !== 1 ? `^${power}` : "";
       symbolStr = `${multPrefix}${cDef.symbol}${pwrSuffix}`;
       valueStr = `${multPrefix}${cDef.symbol}${pwrSuffix}`;
+
+      // LaTeX 表示
+      let cSymLatex = cDef.symbol;
+      if (cDef.id === "mu0") cSymLatex = "\\mu_0";
+      else if (cDef.id === "eps0") cSymLatex = "\\varepsilon_0";
+      else if (cDef.id === "kB") cSymLatex = "k_B";
+      else if (cDef.id === "mp") cSymLatex = "m_p";
+      else if (cDef.id === "me") cSymLatex = "m_e";
+      else if (cDef.id === "RE") cSymLatex = "R_E";
+
+      const multLatex = mult !== 1 ? `${mult} ` : "";
+      const pwrLatex = power !== 1 ? `^{${power}}` : "";
+      latexStr = `${multLatex}${cSymLatex}${pwrLatex}`;
+
       unitLabel = cDef.unit;
     } else {
       // 純數值
@@ -106,6 +127,7 @@ class PlasmaCustomCalculator {
       const pwrSuffix = power !== 1 ? `^${power}` : "";
       symbolStr = `${siValue}${pwrSuffix}`;
       valueStr = `${siValue}${pwrSuffix}`;
+      latexStr = power !== 1 ? `${siValue}^{${power}}` : `${siValue}`;
       unitLabel = "純數值";
     }
 
@@ -115,6 +137,7 @@ class PlasmaCustomCalculator {
       power,
       symbolStr,
       valueStr,
+      latexStr,
       unitLabel
     };
   }
@@ -208,6 +231,7 @@ class PlasmaCustomCalculator {
       return {
         formulaText: "（尚未新增任何運算項目）",
         formulaHtml: `<span class="empty-formula">（尚未新增任何運算項目）</span>`,
+        latexFormula: "",
         symbolicText: ""
       };
     }
@@ -215,6 +239,7 @@ class PlasmaCustomCalculator {
     const groups = this.parsePolynomialGroups();
     const formulaParts = [];
     const htmlParts = [];
+    const latexParts = [];
 
     groups.forEach((g, idx) => {
       const signPrefix = idx === 0 ? (g.sign === "-" ? "- " : "") : ` ${g.sign} `;
@@ -225,18 +250,25 @@ class PlasmaCustomCalculator {
       const denFactors = g.factors.filter(f => f.op === "/");
 
       let termHtml = "";
+      let termLatex = "";
+
       if (denFactors.length > 0) {
         // 分式結構呈現
         const numStr = numFactors.map(f => this.formatFactorHtml(f.factor)).join(" · ");
         const denStr = denFactors.map(f => this.formatFactorHtml(f.factor)).join(" · ");
         termHtml = `
           <span class="math-fraction">
-            <span class="math-num">${numStr}</span>
+            <span class="math-num">${numStr || "1"}</span>
             <span class="math-denom">${denStr}</span>
           </span>
         `;
+
+        const numLatex = numFactors.map(f => f.factor.latexStr).join(" \\cdot ");
+        const denLatex = denFactors.map(f => f.factor.latexStr).join(" \\cdot ");
+        termLatex = `\\frac{${numLatex || "1"}}{${denLatex}}`;
       } else {
         termHtml = numFactors.map(f => this.formatFactorHtml(f.factor)).join(" · ");
+        termLatex = numFactors.map(f => f.factor.latexStr).join(" \\cdot ");
       }
 
       htmlParts.push(`
@@ -245,11 +277,14 @@ class PlasmaCustomCalculator {
           ${termHtml}
         </span>
       `);
+
+      latexParts.push(`${signPrefix}${termLatex}`);
     });
 
     return {
       formulaText: formulaParts.join(""),
       formulaHtml: htmlParts.join(""),
+      latexFormula: latexParts.join(""),
       groups
     };
   }

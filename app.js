@@ -489,7 +489,19 @@ class SpacePlasmaApp {
     const isZh = this.currentLang === "zh";
     const eqRep = this.calculator.generateEquationRepresentation();
 
-    this.previewFormulaMath.innerHTML = eqRep.formulaHtml;
+    if (window.katex && eqRep.latexFormula) {
+      try {
+        window.katex.render(eqRep.latexFormula, this.previewFormulaMath, {
+          displayMode: true,
+          throwOnError: false
+        });
+      } catch (e) {
+        this.previewFormulaMath.innerHTML = eqRep.formulaHtml;
+      }
+    } else {
+      this.previewFormulaMath.innerHTML = eqRep.formulaHtml;
+    }
+
     this.previewFormulaSub.textContent = eqRep.formulaText ? `代號表示：${eqRep.formulaText}` : "";
 
     // 進行預檢以即時更新標籤狀態
@@ -987,7 +999,21 @@ class SpacePlasmaApp {
     if (!eq) return;
 
     const isZh = this.currentLang === "zh";
-    document.getElementById("eq-formula-display").textContent = eq.formulaLatex;
+    const formulaEl = document.getElementById("eq-formula-display");
+
+    if (window.katex && eq.formulaLatex) {
+      try {
+        window.katex.render(eq.formulaLatex, formulaEl, {
+          displayMode: true,
+          throwOnError: false
+        });
+      } catch (e) {
+        formulaEl.textContent = eq.formulaLatex;
+      }
+    } else {
+      formulaEl.textContent = eq.formulaLatex;
+    }
+
     document.getElementById("eq-desc-display").textContent = isZh ? eq.descZh : eq.descEn;
 
     this.eqInputsContainer.innerHTML = "";

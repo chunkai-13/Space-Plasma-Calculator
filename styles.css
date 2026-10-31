@@ -823,13 +823,27 @@ body {
 }
 
 .formula-math {
-  font-family: var(--font-mono);
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--brand-primary);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
-  white-space: pre-wrap;
-  word-break: break-word;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+}
+
+.formula-math .katex-display {
+  margin: 0.4rem 0;
+  text-align: left;
+}
+
+.preview-formula-math .katex-display {
+  margin: 0.25rem 0;
+  text-align: left;
+}
+
+html.dark .katex {
+  color: var(--text-primary);
 }
 
 .formula-desc {
