@@ -27,6 +27,7 @@ const I18N = {
     presetLabel: "快速帶入經典範例：",
     presetPB: "磁壓力 (B² / 2μ₀)",
     presetTotalP: "總壓力 (P_th + P_B)",
+    presetBracket: "巢狀括號 [ (P_B) + P_th ]",
     presetBeta: "電漿 Beta (nkT / P_B)",
     presetVA: "阿爾芬速度 (B / √(μ₀ ρ))",
     btnEqual: "＝ 計算結果",
@@ -88,6 +89,7 @@ const I18N = {
     presetLabel: "Quick Presets:",
     presetPB: "Magnetic Pressure (B² / 2μ₀)",
     presetTotalP: "Total Pressure (P_th + P_B)",
+    presetBracket: "Nested Brackets [ (P_B) + P_th ]",
     presetBeta: "Plasma Beta (nkT / P_B)",
     presetVA: "Alfvén Speed (B / √(μ₀ ρ))",
     btnEqual: "= Compute Result",
@@ -186,7 +188,6 @@ class SpacePlasmaApp {
     this.eqCatSelect = document.getElementById("eq-cat-select");
     this.eqSelect = document.getElementById("eq-select");
     this.eqSearch = document.getElementById("eq-search-input");
-    this.eqFormulaCard = document.getElementById("eq-formula-card");
     this.eqInputsContainer = document.getElementById("eq-inputs-container");
     this.btnComputeEq = document.getElementById("btn-compute-eq");
     this.eqResultBox = document.getElementById("eq-result-box");
@@ -194,67 +195,87 @@ class SpacePlasmaApp {
 
   bindEvents() {
     // 分頁切換
-    this.tabBtns.forEach(btn => {
-      btn.addEventListener("click", () => {
-        const targetTab = btn.getAttribute("data-tab");
-        this.switchTab(targetTab);
+    if (this.tabBtns) {
+      this.tabBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+          const targetTab = btn.getAttribute("data-tab");
+          this.switchTab(targetTab);
+        });
       });
-    });
+    }
 
     // 主題與語言
-    this.themeToggleBtn.addEventListener("click", () => {
-      this.currentTheme = this.currentTheme === "dark" ? "light" : "dark";
-      this.applyTheme(this.currentTheme);
-    });
+    if (this.themeToggleBtn) {
+      this.themeToggleBtn.addEventListener("click", () => {
+        this.currentTheme = this.currentTheme === "dark" ? "light" : "dark";
+        this.applyTheme(this.currentTheme);
+      });
+    }
 
-    this.langToggleBtn.addEventListener("click", () => {
-      this.currentLang = this.currentLang === "zh" ? "en" : "zh";
-      this.applyLanguage(this.currentLang);
-    });
+    if (this.langToggleBtn) {
+      this.langToggleBtn.addEventListener("click", () => {
+        this.currentLang = this.currentLang === "zh" ? "en" : "zh";
+        this.applyLanguage(this.currentLang);
+      });
+    }
 
     // 分頁一事件
-    this.btnAddQty.addEventListener("click", () => {
-      this.calculator.addTerm({ type: "quantity", operator: "+" });
-      this.renderTermsList();
-    });
-
-    this.btnAddConst.addEventListener("click", () => {
-      this.calculator.addTerm({ type: "constant", operator: "*" });
-      this.renderTermsList();
-    });
-
-    this.btnAddOpenParen.addEventListener("click", () => {
-      this.calculator.addOpenParen("+");
-      this.renderTermsList();
-    });
-
-    this.btnAddCloseParen.addEventListener("click", () => {
-      this.calculator.addCloseParen(1);
-      this.renderTermsList();
-    });
-
-    this.btnClearTerms.addEventListener("click", () => {
-      this.calculator.clear();
-      this.renderTermsList();
-      this.renderResultBox(null);
-    });
-
-    this.btnEqual.addEventListener("click", () => {
-      try {
-        const res = this.calculator.compute();
-        this.renderResultBox(res);
-      } catch (err) {
-        alert(err.message);
-      }
-    });
-
-    this.sysRadios.forEach(radio => {
-      radio.addEventListener("change", (e) => {
-        const sys = e.target.value;
-        const res = this.calculator.formatResult(sys);
-        this.renderResultBox(res);
+    if (this.btnAddQty) {
+      this.btnAddQty.addEventListener("click", () => {
+        this.calculator.addTerm({ type: "quantity", operator: "+" });
+        this.renderTermsList();
       });
-    });
+    }
+
+    if (this.btnAddConst) {
+      this.btnAddConst.addEventListener("click", () => {
+        this.calculator.addTerm({ type: "constant", operator: "*" });
+        this.renderTermsList();
+      });
+    }
+
+    if (this.btnAddOpenParen) {
+      this.btnAddOpenParen.addEventListener("click", () => {
+        this.calculator.addOpenParen("+");
+        this.renderTermsList();
+      });
+    }
+
+    if (this.btnAddCloseParen) {
+      this.btnAddCloseParen.addEventListener("click", () => {
+        this.calculator.addCloseParen(1);
+        this.renderTermsList();
+      });
+    }
+
+    if (this.btnClearTerms) {
+      this.btnClearTerms.addEventListener("click", () => {
+        this.calculator.clear();
+        this.renderTermsList();
+        this.renderResultBox(null);
+      });
+    }
+
+    if (this.btnEqual) {
+      this.btnEqual.addEventListener("click", () => {
+        try {
+          const res = this.calculator.compute();
+          this.renderResultBox(res);
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    }
+
+    if (this.sysRadios) {
+      this.sysRadios.forEach(radio => {
+        radio.addEventListener("change", (e) => {
+          const sys = e.target.value;
+          const res = this.calculator.formatResult(sys);
+          this.renderResultBox(res);
+        });
+      });
+    }
 
     // 預設快速按鈕
     document.querySelectorAll(".preset-btn").forEach(btn => {
@@ -265,62 +286,90 @@ class SpacePlasmaApp {
     });
 
     // 分頁二：單位查詢與換算
-    this.catSelect.addEventListener("change", () => {
-      this.filterQuantitiesByCategory(this.catSelect.value);
-    });
+    if (this.catSelect) {
+      this.catSelect.addEventListener("change", () => {
+        this.filterQuantitiesByCategory(this.catSelect.value);
+      });
+    }
 
-    this.qtySelect.addEventListener("change", () => {
-      const q = PHYSICAL_QUANTITIES.find(x => x.id === this.qtySelect.value);
-      if (q) {
-        this.selectedQuantity = q;
-        this.renderQuantityDetail();
-      }
-    });
+    if (this.qtySelect) {
+      this.qtySelect.addEventListener("change", () => {
+        const q = PHYSICAL_QUANTITIES.find(x => x.id === this.qtySelect.value);
+        if (q) {
+          this.selectedQuantity = q;
+          this.renderQuantityDetail();
+        }
+      });
+    }
 
-    this.lookupSearch.addEventListener("input", () => {
-      this.searchQuantities(this.lookupSearch.value);
-    });
+    if (this.lookupSearch) {
+      this.lookupSearch.addEventListener("input", () => {
+        this.searchQuantities(this.lookupSearch.value);
+      });
+    }
 
-    this.convInputVal.addEventListener("input", () => this.updateConversion());
-    this.convFromUnit.addEventListener("change", () => this.updateConversion());
-    this.convToUnit.addEventListener("change", () => this.updateConversion());
+    if (this.convInputVal) {
+      this.convInputVal.addEventListener("input", () => this.updateConversion());
+    }
+    if (this.convFromUnit) {
+      this.convFromUnit.addEventListener("change", () => this.updateConversion());
+    }
+    if (this.convToUnit) {
+      this.convToUnit.addEventListener("change", () => this.updateConversion());
+    }
 
     // 分頁三：方程式
-    this.eqCatSelect.addEventListener("change", () => {
-      this.filterEquationsByCategory(this.eqCatSelect.value);
-    });
+    if (this.eqCatSelect) {
+      this.eqCatSelect.addEventListener("change", () => {
+        this.filterEquationsByCategory(this.eqCatSelect.value);
+      });
+    }
 
-    this.eqSelect.addEventListener("change", () => {
-      const eq = EQUATIONS_DATABASE.find(e => e.id === this.eqSelect.value);
-      if (eq) {
-        this.selectedEquation = eq;
-        this.renderEquationDetail();
-      }
-    });
+    if (this.eqSelect) {
+      this.eqSelect.addEventListener("change", () => {
+        const eq = EQUATIONS_DATABASE.find(e => e.id === this.eqSelect.value);
+        if (eq) {
+          this.selectedEquation = eq;
+          this.renderEquationDetail();
+        }
+      });
+    }
 
-    this.eqSearch.addEventListener("input", () => {
-      this.searchEquations(this.eqSearch.value);
-    });
+    if (this.eqSearch) {
+      this.eqSearch.addEventListener("input", () => {
+        this.searchEquations(this.eqSearch.value);
+      });
+    }
 
-    this.btnComputeEq.addEventListener("click", () => {
-      this.computeCurrentEquation();
-    });
+    if (this.btnComputeEq) {
+      this.btnComputeEq.addEventListener("click", () => {
+        this.computeCurrentEquation();
+      });
+    }
   }
 
   // 切換分頁
   switchTab(tabId) {
-    this.tabBtns.forEach(b => b.classList.toggle("active", b.getAttribute("data-tab") === tabId));
-    this.tabContents.forEach(c => c.classList.toggle("active", c.id === `tab-${tabId}`));
+    if (this.tabBtns) {
+      this.tabBtns.forEach(b => b.classList.toggle("active", b.getAttribute("data-tab") === tabId));
+    }
+    if (this.tabContents) {
+      this.tabContents.forEach(c => c.classList.toggle("active", c.id === `tab-${tabId}`));
+    }
   }
 
   // 主題控制
   applyTheme(theme) {
     if (theme === "dark") {
       document.documentElement.classList.add("dark");
-      this.themeToggleBtn.innerHTML = `<span class="icon">☀️</span> <span class="theme-text">${I18N[this.currentLang].lightMode}</span>`;
+      if (this.themeToggleBtn) {
+        this.themeToggleBtn.innerHTML = `<span class="icon">☀️</span> <span class="theme-text">${I18N[this.currentLang].lightMode}</span>`;
+      }
     } else {
       document.documentElement.classList.remove("dark");
-      this.themeToggleBtn.innerHTML = `<span class="icon">🌙</span> <span class="theme-text">${I18N[this.currentLang].darkMode}</span>`;
+      if (this.themeToggleBtn) {
+        this.themeToggleBtn.innerHTML = `<span class="icon">🌙</span> <span class="theme-text">${I18N[this.currentLang].darkMode}</span>`;
+      }
     }
     localStorage.setItem("sp_theme", theme);
   }
@@ -331,7 +380,6 @@ class SpacePlasmaApp {
     localStorage.setItem("sp_lang", lang);
     const dict = I18N[lang];
 
-    // 更新常規靜態文字
     document.querySelectorAll("[data-i18n]").forEach(el => {
       const key = el.getAttribute("data-i18n");
       if (dict[key]) {
@@ -343,10 +391,11 @@ class SpacePlasmaApp {
       }
     });
 
-    this.langToggleBtn.textContent = dict.langName;
-    this.applyTheme(this.currentTheme); // 更新主題按鈕文字
+    if (this.langToggleBtn) {
+      this.langToggleBtn.textContent = dict.langName;
+    }
+    this.applyTheme(this.currentTheme);
 
-    // 重新渲染動態組件
     this.renderTermsList();
     this.renderLookupTab();
     this.renderEquationsTab();
@@ -366,7 +415,6 @@ class SpacePlasmaApp {
         quantityId: "magnetic_field",
         unitId: "nT",
         numberValue: 10,
-        multiplier: 1,
         power: 2
       });
       this.calculator.addTerm({
@@ -378,7 +426,6 @@ class SpacePlasmaApp {
       });
     } else if (presetKey === "presetTotalP") {
       // 總壓力: 熱壓力 (n * kB * T) + 磁壓力 (B^2 / 2mu0)
-      // 項 1: n
       this.calculator.addTerm({
         operator: "+",
         type: "quantity",
@@ -387,14 +434,12 @@ class SpacePlasmaApp {
         numberValue: 5,
         power: 1
       });
-      // 項 2: * kB
       this.calculator.addTerm({
         operator: "*",
         type: "constant",
         constantId: "kB",
         power: 1
       });
-      // 項 3: * T
       this.calculator.addTerm({
         operator: "*",
         type: "quantity",
@@ -403,7 +448,6 @@ class SpacePlasmaApp {
         numberValue: 10,
         power: 1
       });
-      // 項 4: + B^2
       this.calculator.addTerm({
         operator: "+",
         type: "quantity",
@@ -412,7 +456,6 @@ class SpacePlasmaApp {
         numberValue: 10,
         power: 2
       });
-      // 項 5: / (2 mu0)
       this.calculator.addTerm({
         operator: "/",
         type: "constant",
@@ -422,9 +465,7 @@ class SpacePlasmaApp {
       });
     } else if (presetKey === "presetBracket") {
       // 巢狀括號範例: [ (B^2 / 2mu0) + P_th ]
-      // 外層開括號 (包含內層括號 -> 自動變為中括號 [ )
       this.calculator.addOpenParen("+");
-      // 內層開括號 (自動為小括號 ( )
       this.calculator.addOpenParen("+");
       this.calculator.addTerm({
         operator: "+",
@@ -441,9 +482,7 @@ class SpacePlasmaApp {
         multiplier: 2,
         power: 1
       });
-      // 內層閉括號
       this.calculator.addCloseParen(1);
-      // 外層多項式項目: + P_th
       this.calculator.addTerm({
         operator: "+",
         type: "quantity",
@@ -452,7 +491,6 @@ class SpacePlasmaApp {
         numberValue: 0.05,
         power: 1
       });
-      // 外層閉括號 (自動為中括號 ] )
       this.calculator.addCloseParen(1);
     } else if (presetKey === "presetBeta") {
       // 電漿 Beta: (n * kB * T) / (B^2 / 2mu0)
@@ -532,6 +570,8 @@ class SpacePlasmaApp {
 
   // 更新頂部方程式呈現看板與因次狀態
   updateEquationPreview() {
+    if (!this.previewFormulaMath) return;
+
     const isZh = this.currentLang === "zh";
     const eqRep = this.calculator.generateEquationRepresentation();
 
@@ -542,20 +582,23 @@ class SpacePlasmaApp {
           throwOnError: false
         });
       } catch (e) {
-        this.previewFormulaMath.innerHTML = eqRep.formulaHtml;
+        this.previewFormulaMath.textContent = eqRep.formulaText || "--";
       }
     } else {
-      this.previewFormulaMath.innerHTML = eqRep.formulaHtml;
+      this.previewFormulaMath.textContent = eqRep.formulaText || "--";
     }
 
-    this.previewFormulaSub.textContent = eqRep.formulaText ? `代號表示：${eqRep.formulaText}` : "";
+    if (this.previewFormulaSub) {
+      this.previewFormulaSub.textContent = eqRep.formulaText ? `代號表示：${eqRep.formulaText}` : "";
+    }
 
-    // 進行預檢以即時更新標籤狀態
+    if (!this.dimStatusBadge) return;
+
     try {
       if (this.calculator.terms.length === 0) {
         this.dimStatusBadge.className = "dim-status-badge";
         this.dimStatusBadge.textContent = I18N[this.currentLang].dimReady;
-        this.mismatchWarningCard.style.display = "none";
+        if (this.mismatchWarningCard) this.mismatchWarningCard.style.display = "none";
         return;
       }
 
@@ -564,33 +607,36 @@ class SpacePlasmaApp {
         this.dimStatusBadge.className = "dim-status-badge warning";
         this.dimStatusBadge.textContent = I18N[this.currentLang].dimMismatch;
 
-        // 展開警告說明卡
-        this.mismatchWarningCard.style.display = "block";
-        this.mismatchWarningCard.innerHTML = `
-          <div class="mismatch-title">
-            <span>⚠️</span>
-            <span>${isZh ? res.warningTitleZh : res.warningTitleEn}</span>
-          </div>
-          <ul class="mismatch-list">
-            ${res.mismatchDetails.map(d => `<li>${d}</li>`).join("")}
-          </ul>
-          <div class="mismatch-advice">
-            ${isZh ? res.adviceZh : res.adviceEn}
-          </div>
-        `;
+        if (this.mismatchWarningCard) {
+          this.mismatchWarningCard.style.display = "block";
+          this.mismatchWarningCard.innerHTML = `
+            <div class="mismatch-title">
+              <span>⚠️</span>
+              <span>${isZh ? res.warningTitleZh : res.warningTitleEn}</span>
+            </div>
+            <ul class="mismatch-list">
+              ${res.mismatchDetails.map(d => `<li>${d}</li>`).join("")}
+            </ul>
+            <div class="mismatch-advice">
+              ${isZh ? res.adviceZh : res.adviceEn}
+            </div>
+          `;
+        }
       } else {
         this.dimStatusBadge.className = "dim-status-badge";
         this.dimStatusBadge.textContent = I18N[this.currentLang].dimConsistent;
-        this.mismatchWarningCard.style.display = "none";
+        if (this.mismatchWarningCard) this.mismatchWarningCard.style.display = "none";
       }
     } catch (e) {
       this.dimStatusBadge.className = "dim-status-badge warning";
       this.dimStatusBadge.textContent = e.message;
-      this.mismatchWarningCard.style.display = "none";
+      if (this.mismatchWarningCard) this.mismatchWarningCard.style.display = "none";
     }
   }
 
   renderTermsList() {
+    if (!this.termsContainer) return;
+
     this.termsContainer.innerHTML = "";
     const isZh = this.currentLang === "zh";
 
@@ -643,10 +689,12 @@ class SpacePlasmaApp {
         });
 
         const btnDel = card.querySelector(".btn-delete");
-        btnDel.addEventListener("click", () => {
-          this.calculator.removeTerm(term.id);
-          this.renderTermsList();
-        });
+        if (btnDel) {
+          btnDel.addEventListener("click", () => {
+            this.calculator.removeTerm(term.id);
+            this.renderTermsList();
+          });
+        }
 
         this.termsContainer.appendChild(card);
         return;
@@ -673,16 +721,20 @@ class SpacePlasmaApp {
         `;
 
         const btnDel = card.querySelector(".btn-delete");
-        btnDel.addEventListener("click", () => {
-          this.calculator.removeTerm(term.id);
-          this.renderTermsList();
-        });
+        if (btnDel) {
+          btnDel.addEventListener("click", () => {
+            this.calculator.removeTerm(term.id);
+            this.renderTermsList();
+          });
+        }
 
         const powerInput = card.querySelector(".term-paren-power-input");
-        powerInput.addEventListener("input", () => {
-          term.power = parseFloat(powerInput.value) || 1;
-          this.updateEquationPreview();
-        });
+        if (powerInput) {
+          powerInput.addEventListener("input", () => {
+            term.power = parseFloat(powerInput.value) || 1;
+            this.updateEquationPreview();
+          });
+        }
 
         this.termsContainer.appendChild(card);
         return;
@@ -726,26 +778,6 @@ class SpacePlasmaApp {
           </select>
         `;
         unitSelectHtml = `<span class="const-unit-badge">${this.calculator.getConstantDef(term.constantId).unit}</span>`;
-      }
-
-      // 運算符號選擇按鈕列
-      let opSelectorHtml = "";
-      if (index === 0) {
-        opSelectorHtml = `
-          <div class="term-op-selector">
-            <button type="button" class="btn-op ${term.operator === '+' ? 'active' : ''}" data-op="+" title="正項">＋</button>
-            <button type="button" class="btn-op ${term.operator === '-' ? 'active' : ''}" data-op="-" title="負項">－</button>
-          </div>
-        `;
-      } else {
-        opSelectorHtml = `
-          <div class="term-op-selector">
-            <button type="button" class="btn-op ${term.operator === '+' ? 'active' : ''}" data-op="+" title="相加">＋</button>
-            <button type="button" class="btn-op ${term.operator === '-' ? 'active' : ''}" data-op="-" title="相減">－</button>
-            <button type="button" class="btn-op ${term.operator === '*' ? 'active' : ''}" data-op="*" title="相乘">×</button>
-            <button type="button" class="btn-op ${term.operator === '/' ? 'active' : ''}" data-op="/" title="相除 (分母)">÷</button>
-          </div>
-        `;
       }
 
       card.innerHTML = `
@@ -792,50 +824,64 @@ class SpacePlasmaApp {
       });
 
       const btnDel = card.querySelector(".btn-delete");
-      btnDel.addEventListener("click", () => {
-        this.calculator.removeTerm(term.id);
-        this.renderTermsList();
-      });
-
-      if (term.type === "quantity") {
-        const qtySelect = card.querySelector(".term-qty-select");
-        qtySelect.addEventListener("change", () => {
-          term.quantityId = qtySelect.value;
-          const newQ = this.calculator.getQuantityDef(term.quantityId);
-          term.unitId = newQ.units[0].id;
-          this.renderTermsList();
-        });
-
-        const unitSelect = card.querySelector(".term-unit-select");
-        unitSelect.addEventListener("change", () => {
-          term.unitId = unitSelect.value;
-          this.updateEquationPreview();
-        });
-
-        const valInput = card.querySelector(".term-value-input");
-        valInput.addEventListener("input", () => {
-          term.numberValue = parseFloat(valInput.value) || 0;
-          this.updateEquationPreview();
-        });
-      } else if (term.type === "constant") {
-        const constSelect = card.querySelector(".term-const-select");
-        constSelect.addEventListener("change", () => {
-          term.constantId = constSelect.value;
+      if (btnDel) {
+        btnDel.addEventListener("click", () => {
+          this.calculator.removeTerm(term.id);
           this.renderTermsList();
         });
       }
 
+      if (term.type === "quantity") {
+        const qtySelect = card.querySelector(".term-qty-select");
+        if (qtySelect) {
+          qtySelect.addEventListener("change", () => {
+            term.quantityId = qtySelect.value;
+            const newQ = this.calculator.getQuantityDef(term.quantityId);
+            term.unitId = newQ.units[0].id;
+            this.renderTermsList();
+          });
+        }
+
+        const unitSelect = card.querySelector(".term-unit-select");
+        if (unitSelect) {
+          unitSelect.addEventListener("change", () => {
+            term.unitId = unitSelect.value;
+            this.updateEquationPreview();
+          });
+        }
+
+        const valInput = card.querySelector(".term-value-input");
+        if (valInput) {
+          valInput.addEventListener("input", () => {
+            term.numberValue = parseFloat(valInput.value) || 0;
+            this.updateEquationPreview();
+          });
+        }
+      } else if (term.type === "constant") {
+        const constSelect = card.querySelector(".term-const-select");
+        if (constSelect) {
+          constSelect.addEventListener("change", () => {
+            term.constantId = constSelect.value;
+            this.renderTermsList();
+          });
+        }
+      }
+
       const multInput = card.querySelector(".term-mult-input");
-      multInput.addEventListener("input", () => {
-        term.multiplier = parseFloat(multInput.value) || 1;
-        this.updateEquationPreview();
-      });
+      if (multInput) {
+        multInput.addEventListener("input", () => {
+          term.multiplier = parseFloat(multInput.value) || 1;
+          this.updateEquationPreview();
+        });
+      }
 
       const powerInput = card.querySelector(".term-power-input");
-      powerInput.addEventListener("input", () => {
-        term.power = parseFloat(powerInput.value) || 1;
-        this.updateEquationPreview();
-      });
+      if (powerInput) {
+        powerInput.addEventListener("input", () => {
+          term.power = parseFloat(powerInput.value) || 1;
+          this.updateEquationPreview();
+        });
+      }
 
       this.termsContainer.appendChild(card);
     });
@@ -844,6 +890,8 @@ class SpacePlasmaApp {
   }
 
   renderResultBox(res) {
+    if (!this.resultOutputBox) return;
+
     if (!res) {
       this.resultOutputBox.innerHTML = `
         <div class="empty-state">
@@ -855,7 +903,6 @@ class SpacePlasmaApp {
 
     const isZh = this.currentLang === "zh";
 
-    // 單位因次不符警告處理
     if (res.hasError) {
       this.resultOutputBox.innerHTML = `
         <div class="mismatch-warning-card" style="margin-bottom: 0;">
@@ -900,7 +947,6 @@ class SpacePlasmaApp {
       `;
     }
 
-    // 多項式各項細項拆解表
     let groupsBreakdownHtml = "";
     if (res.groups && res.groups.length > 1) {
       groupsBreakdownHtml = `
@@ -951,20 +997,23 @@ class SpacePlasmaApp {
       </div>
     `;
 
-    document.getElementById("btn-copy-result").addEventListener("click", () => {
-      navigator.clipboard.writeText(`${formattedVal} ${res.unitLabel}`);
-      const btn = document.getElementById("btn-copy-result");
-      btn.textContent = `✓ ${I18N[this.currentLang].copied}`;
-      setTimeout(() => {
-        btn.textContent = `📋 ${I18N[this.currentLang].btnCopy}`;
-      }, 2000);
-    });
+    const copyBtn = document.getElementById("btn-copy-result");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText(`${formattedVal} ${res.unitLabel}`);
+        copyBtn.textContent = `✓ ${I18N[this.currentLang].copied}`;
+        setTimeout(() => {
+          copyBtn.textContent = `📋 ${I18N[this.currentLang].btnCopy}`;
+        }, 2000);
+      });
+    }
   }
 
   // -------------------------
   // 分頁二：查找單位與換算
   // -------------------------
   renderLookupTab() {
+    if (!this.catSelect) return;
     const isZh = this.currentLang === "zh";
 
     this.catSelect.innerHTML = `
@@ -979,6 +1028,7 @@ class SpacePlasmaApp {
   }
 
   filterQuantitiesByCategory(catId) {
+    if (!this.qtySelect) return;
     const isZh = this.currentLang === "zh";
     const filtered = catId === "all"
       ? PHYSICAL_QUANTITIES
@@ -998,10 +1048,11 @@ class SpacePlasmaApp {
   }
 
   searchQuantities(keyword) {
+    if (!this.qtySelect) return;
     const isZh = this.currentLang === "zh";
     const kw = keyword.trim().toLowerCase();
     if (!kw) {
-      this.filterQuantitiesByCategory(this.catSelect.value);
+      this.filterQuantitiesByCategory(this.catSelect ? this.catSelect.value : "all");
       return;
     }
 
@@ -1029,30 +1080,37 @@ class SpacePlasmaApp {
     if (!q) return;
 
     const isZh = this.currentLang === "zh";
-    document.getElementById("lookup-desc-box").textContent = isZh ? q.descZh : q.descEn;
-
-    this.unitSpecTable.innerHTML = q.units.map(u => `
-      <tr>
-        <td><span class="badge-system badge-${u.system.toLowerCase()}">${u.system}</span></td>
-        <td><strong>${u.label}</strong></td>
-        <td><code>${u.toBaseSI >= 1e-3 && u.toBaseSI <= 1e4 ? u.toBaseSI : u.toBaseSI.toExponential()} ${q.baseUnitSI}</code></td>
-        <td>${u.desc}</td>
-      </tr>
-    `).join("");
-
-    this.convFromUnit.innerHTML = q.units.map(u => `<option value="${u.id}">${u.label}</option>`).join("");
-    this.convToUnit.innerHTML = q.units.map(u => `<option value="${u.id}">${u.label}</option>`).join("");
-
-    if (q.units.length > 1) {
-      this.convToUnit.selectedIndex = 1;
+    const descBox = document.getElementById("lookup-desc-box");
+    if (descBox) {
+      descBox.textContent = isZh ? q.descZh : q.descEn;
     }
 
-    this.updateConversion();
+    if (this.unitSpecTable) {
+      this.unitSpecTable.innerHTML = q.units.map(u => `
+        <tr>
+          <td><span class="badge-system badge-${u.system.toLowerCase()}">${u.system}</span></td>
+          <td><strong>${u.label}</strong></td>
+          <td><code>${u.toBaseSI >= 1e-3 && u.toBaseSI <= 1e4 ? u.toBaseSI : u.toBaseSI.toExponential()} ${q.baseUnitSI}</code></td>
+          <td>${u.desc}</td>
+        </tr>
+      `).join("");
+    }
+
+    if (this.convFromUnit && this.convToUnit) {
+      this.convFromUnit.innerHTML = q.units.map(u => `<option value="${u.id}">${u.label}</option>`).join("");
+      this.convToUnit.innerHTML = q.units.map(u => `<option value="${u.id}">${u.label}</option>`).join("");
+
+      if (q.units.length > 1) {
+        this.convToUnit.selectedIndex = 1;
+      }
+
+      this.updateConversion();
+    }
   }
 
   updateConversion() {
     const q = this.selectedQuantity;
-    if (!q) return;
+    if (!q || !this.convInputVal || !this.convFromUnit || !this.convToUnit) return;
 
     const val = parseFloat(this.convInputVal.value) || 0;
     const fromUnit = q.units.find(u => u.id === this.convFromUnit.value) || q.units[0];
@@ -1070,14 +1128,19 @@ class SpacePlasmaApp {
       ? factor.toExponential(5)
       : factor.toString();
 
-    this.convResultDisplay.textContent = `${formattedVal} ${toUnit.id}`;
-    this.convFactorDisplay.innerHTML = `1 ${fromUnit.id} = <strong>${factorStr}</strong> ${toUnit.id} (數值乘以 ${factorStr})`;
+    if (this.convResultDisplay) {
+      this.convResultDisplay.textContent = `${formattedVal} ${toUnit.id}`;
+    }
+    if (this.convFactorDisplay) {
+      this.convFactorDisplay.innerHTML = `1 ${fromUnit.id} = <strong>${factorStr}</strong> ${toUnit.id} (數值乘以 ${factorStr})`;
+    }
   }
 
   // -------------------------
   // 分頁三：太空物理方程式
   // -------------------------
   renderEquationsTab() {
+    if (!this.eqCatSelect) return;
     const isZh = this.currentLang === "zh";
 
     this.eqCatSelect.innerHTML = `
@@ -1092,6 +1155,7 @@ class SpacePlasmaApp {
   }
 
   filterEquationsByCategory(catId) {
+    if (!this.eqSelect) return;
     const isZh = this.currentLang === "zh";
     const filtered = catId === "all"
       ? EQUATIONS_DATABASE
@@ -1109,10 +1173,11 @@ class SpacePlasmaApp {
   }
 
   searchEquations(keyword) {
+    if (!this.eqSelect) return;
     const isZh = this.currentLang === "zh";
     const kw = keyword.trim().toLowerCase();
     if (!kw) {
-      this.filterEquationsByCategory(this.eqCatSelect.value);
+      this.filterEquationsByCategory(this.eqCatSelect ? this.eqCatSelect.value : "all");
       return;
     }
 
@@ -1139,7 +1204,7 @@ class SpacePlasmaApp {
     const isZh = this.currentLang === "zh";
     const formulaEl = document.getElementById("eq-formula-display");
 
-    if (window.katex && eq.formulaLatex) {
+    if (window.katex && eq.formulaLatex && formulaEl) {
       try {
         window.katex.render(eq.formulaLatex, formulaEl, {
           displayMode: true,
@@ -1148,11 +1213,16 @@ class SpacePlasmaApp {
       } catch (e) {
         formulaEl.textContent = eq.formulaLatex;
       }
-    } else {
+    } else if (formulaEl) {
       formulaEl.textContent = eq.formulaLatex;
     }
 
-    document.getElementById("eq-desc-display").textContent = isZh ? eq.descZh : eq.descEn;
+    const descEl = document.getElementById("eq-desc-display");
+    if (descEl) {
+      descEl.textContent = isZh ? eq.descZh : eq.descEn;
+    }
+
+    if (!this.eqInputsContainer) return;
 
     this.eqInputsContainer.innerHTML = "";
 
@@ -1208,7 +1278,7 @@ class SpacePlasmaApp {
 
   computeCurrentEquation() {
     const eq = this.selectedEquation;
-    if (!eq) return;
+    if (!eq || !this.eqInputsContainer) return;
 
     const isZh = this.currentLang === "zh";
     const inputs = {};
@@ -1218,16 +1288,16 @@ class SpacePlasmaApp {
       eq.inputs.forEach(param => {
         if (param.type === "select") {
           const selectEl = this.eqInputsContainer.querySelector(`.eq-param-input[data-param="${param.id}"]`);
-          const chosen = param.options.find(o => o.value === selectEl.value);
+          const chosen = param.options.find(o => o.value === (selectEl ? selectEl.value : param.default));
           inputs[param.id] = chosen;
         } else {
           const inputEl = this.eqInputsContainer.querySelector(`.eq-param-input[data-param="${param.id}"]`);
-          inputs[param.id] = parseFloat(inputEl.value) || 0;
+          inputs[param.id] = inputEl ? (parseFloat(inputEl.value) || 0) : (param.default || 0);
 
           if (param.unitCategory) {
             const unitEl = this.eqInputsContainer.querySelector(`.eq-param-unit[data-param="${param.id}"]`);
             const qDef = PHYSICAL_QUANTITIES.find(q => q.id === param.unitCategory);
-            const uDef = qDef.units.find(u => u.id === unitEl.value);
+            const uDef = qDef ? qDef.units.find(u => u.id === (unitEl ? unitEl.value : param.defaultUnit)) : null;
             units[param.id] = uDef;
           }
         }
@@ -1236,13 +1306,16 @@ class SpacePlasmaApp {
       const outputs = eq.calculate(inputs, units);
       this.renderEquationOutputs(outputs);
     } catch (err) {
-      this.eqResultBox.innerHTML = `
-        <div class="calc-error">⚠️ ${err.message}</div>
-      `;
+      if (this.eqResultBox) {
+        this.eqResultBox.innerHTML = `
+          <div class="calc-error">⚠️ ${err.message}</div>
+        `;
+      }
     }
   }
 
   renderEquationOutputs(outputs) {
+    if (!this.eqResultBox) return;
     const isZh = this.currentLang === "zh";
 
     this.eqResultBox.innerHTML = `
