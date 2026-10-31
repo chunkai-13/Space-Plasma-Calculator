@@ -1,5 +1,5 @@
 /**
- * app.js - 主應用程式互動邏輯、多語系、深色模式與分頁控制器
+ * app.js - 主應用程式互動邏輯、獨立運算符、點擊聚焦插入與分頁控制器
  */
 
 // 多語系字典
@@ -16,14 +16,14 @@ const I18N = {
     
     // Tab 1
     builderTitle: "自訂運算建構區",
-    builderDesc: "自由以多項式組合物理量與常數，支援 ＋、－、×、÷ 運算，並具備即時方程式呈現與單位相符性檢查。",
+    builderDesc: "自由組合物理量與常數，支援獨立 ＋、－、×、÷ 運算符與括號，點擊上方公式任意位置即可自由插入項目。",
     previewTitle: "目前建構的方程式：",
     dimReady: "因次檢驗就緒",
     dimConsistent: "因次完全相符 ✓",
     dimMismatch: "單位因次不符 ⚠️",
-    btnAddQty: "＋ 新增物理量",
-    btnAddConst: "＋ 插入常用常數",
-    btnClear: "清空項目",
+    btnAddQty: "＋ 物理量",
+    btnAddConst: "＋ 物理常數",
+    btnClear: "清空全部",
     presetLabel: "快速帶入經典範例：",
     presetPB: "磁壓力 (B² / 2μ₀)",
     presetTotalP: "總壓力 (P_th + P_B)",
@@ -78,13 +78,13 @@ const I18N = {
 
     // Tab 1
     builderTitle: "Expression Builder",
-    builderDesc: "Build polynomial expressions with +, -, ×, ÷. Includes real-time equation display and dimensional consistency check.",
+    builderDesc: "Build polynomial expressions with standalone +, -, ×, ÷. Click any position on the formula above to insert items.",
     previewTitle: "Current Equation Preview:",
     dimReady: "Ready",
     dimConsistent: "Dimensions Match ✓",
     dimMismatch: "Dimension Mismatch ⚠️",
-    btnAddQty: "+ Add Quantity",
-    btnAddConst: "+ Insert Constant",
+    btnAddQty: "+ Quantity",
+    btnAddConst: "+ Constant",
     btnClear: "Clear All",
     presetLabel: "Quick Presets:",
     presetPB: "Magnetic Pressure (B² / 2μ₀)",
@@ -168,10 +168,10 @@ class SpacePlasmaApp {
     this.sysRadios = document.querySelectorAll("input[name='display-system']");
 
     // 即時方程式看板元件
-    this.previewFormulaMath = document.getElementById("preview-formula-math");
-    this.previewFormulaSub = document.getElementById("preview-formula-sub");
+    this.interactiveFormulaContainer = document.getElementById("interactive-formula-container");
     this.dimStatusBadge = document.getElementById("dim-status-badge");
     this.mismatchWarningCard = document.getElementById("mismatch-warning-card");
+    this.previewCursorHint = document.getElementById("preview-cursor-hint");
 
     // 分頁二元件
     this.catSelect = document.getElementById("lookup-cat-select");
@@ -219,35 +219,48 @@ class SpacePlasmaApp {
       });
     }
 
-    // 分頁一事件
+    // 獨立運算符號按鈕點擊 (在當前游標處插入)
+    document.querySelectorAll(".btn-op-action").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const op = btn.getAttribute("data-insert-op");
+        this.calculator.insertOperator(op);
+        this.renderTermsList();
+      });
+    });
+
+    // 插入物理量
     if (this.btnAddQty) {
       this.btnAddQty.addEventListener("click", () => {
-        this.calculator.addTerm({ type: "quantity", operator: "+" });
+        this.calculator.insertQuantity();
         this.renderTermsList();
       });
     }
 
+    // 插入常數
     if (this.btnAddConst) {
       this.btnAddConst.addEventListener("click", () => {
-        this.calculator.addTerm({ type: "constant", operator: "*" });
+        this.calculator.insertConstant();
         this.renderTermsList();
       });
     }
 
+    // 插入左括號
     if (this.btnAddOpenParen) {
       this.btnAddOpenParen.addEventListener("click", () => {
-        this.calculator.addOpenParen("+");
+        this.calculator.insertOpenParen();
         this.renderTermsList();
       });
     }
 
+    // 插入右括號
     if (this.btnAddCloseParen) {
       this.btnAddCloseParen.addEventListener("click", () => {
-        this.calculator.addCloseParen(1);
+        this.calculator.insertCloseParen(1);
         this.renderTermsList();
       });
     }
 
+    // 清空
     if (this.btnClearTerms) {
       this.btnClearTerms.addEventListener("click", () => {
         this.calculator.clear();
@@ -256,6 +269,7 @@ class SpacePlasmaApp {
       });
     }
 
+    // 計算
     if (this.btnEqual) {
       this.btnEqual.addEventListener("click", () => {
         try {
@@ -267,6 +281,7 @@ class SpacePlasmaApp {
       });
     }
 
+    // 制度切換
     if (this.sysRadios) {
       this.sysRadios.forEach(radio => {
         radio.addEventListener("change", (e) => {
@@ -409,158 +424,51 @@ class SpacePlasmaApp {
 
     if (presetKey === "presetPB") {
       // 磁壓力: B^2 / (2 * mu0)
-      this.calculator.addTerm({
-        operator: "+",
-        type: "quantity",
-        quantityId: "magnetic_field",
-        unitId: "nT",
-        numberValue: 10,
-        power: 2
-      });
-      this.calculator.addTerm({
-        operator: "/",
-        type: "constant",
-        constantId: "mu0",
-        multiplier: 2,
-        power: 1
-      });
+      this.calculator.insertQuantity({ quantityId: "magnetic_field", unitId: "nT", numberValue: 10, power: 2 });
+      this.calculator.insertOperator("/");
+      this.calculator.insertConstant({ constantId: "mu0", multiplier: 2, power: 1 });
     } else if (presetKey === "presetTotalP") {
-      // 總壓力: 熱壓力 (n * kB * T) + 磁壓力 (B^2 / 2mu0)
-      this.calculator.addTerm({
-        operator: "+",
-        type: "quantity",
-        quantityId: "number_density",
-        unitId: "cm_minus3",
-        numberValue: 5,
-        power: 1
-      });
-      this.calculator.addTerm({
-        operator: "*",
-        type: "constant",
-        constantId: "kB",
-        power: 1
-      });
-      this.calculator.addTerm({
-        operator: "*",
-        type: "quantity",
-        quantityId: "temperature",
-        unitId: "eV",
-        numberValue: 10,
-        power: 1
-      });
-      this.calculator.addTerm({
-        operator: "+",
-        type: "quantity",
-        quantityId: "magnetic_field",
-        unitId: "nT",
-        numberValue: 10,
-        power: 2
-      });
-      this.calculator.addTerm({
-        operator: "/",
-        type: "constant",
-        constantId: "mu0",
-        multiplier: 2,
-        power: 1
-      });
+      // 總壓力: (n * kB * T) + (B^2 / 2mu0)
+      this.calculator.insertQuantity({ quantityId: "number_density", unitId: "cm_minus3", numberValue: 5 });
+      this.calculator.insertOperator("*");
+      this.calculator.insertConstant({ constantId: "kB" });
+      this.calculator.insertOperator("*");
+      this.calculator.insertQuantity({ quantityId: "temperature", unitId: "eV", numberValue: 10 });
+      this.calculator.insertOperator("+");
+      this.calculator.insertQuantity({ quantityId: "magnetic_field", unitId: "nT", numberValue: 10, power: 2 });
+      this.calculator.insertOperator("/");
+      this.calculator.insertConstant({ constantId: "mu0", multiplier: 2 });
     } else if (presetKey === "presetBracket") {
       // 巢狀括號範例: [ (B^2 / 2mu0) + P_th ]
-      this.calculator.addOpenParen("+");
-      this.calculator.addOpenParen("+");
-      this.calculator.addTerm({
-        operator: "+",
-        type: "quantity",
-        quantityId: "magnetic_field",
-        unitId: "nT",
-        numberValue: 10,
-        power: 2
-      });
-      this.calculator.addTerm({
-        operator: "/",
-        type: "constant",
-        constantId: "mu0",
-        multiplier: 2,
-        power: 1
-      });
-      this.calculator.addCloseParen(1);
-      this.calculator.addTerm({
-        operator: "+",
-        type: "quantity",
-        quantityId: "plasma_pressure",
-        unitId: "nPa",
-        numberValue: 0.05,
-        power: 1
-      });
-      this.calculator.addCloseParen(1);
+      this.calculator.insertOpenParen();
+      this.calculator.insertOpenParen();
+      this.calculator.insertQuantity({ quantityId: "magnetic_field", unitId: "nT", numberValue: 10, power: 2 });
+      this.calculator.insertOperator("/");
+      this.calculator.insertConstant({ constantId: "mu0", multiplier: 2 });
+      this.calculator.insertCloseParen(1);
+      this.calculator.insertOperator("+");
+      this.calculator.insertQuantity({ quantityId: "plasma_pressure", unitId: "nPa", numberValue: 0.05 });
+      this.calculator.insertCloseParen(1);
     } else if (presetKey === "presetBeta") {
       // 電漿 Beta: (n * kB * T) / (B^2 / 2mu0)
-      this.calculator.addTerm({
-        operator: "+",
-        type: "quantity",
-        quantityId: "number_density",
-        unitId: "cm_minus3",
-        numberValue: 5,
-        power: 1
-      });
-      this.calculator.addTerm({
-        operator: "*",
-        type: "quantity",
-        quantityId: "temperature",
-        unitId: "eV",
-        numberValue: 15,
-        power: 1
-      });
-      this.calculator.addTerm({
-        operator: "*",
-        type: "constant",
-        constantId: "kB",
-        power: 1
-      });
-      this.calculator.addTerm({
-        operator: "/",
-        type: "quantity",
-        quantityId: "magnetic_field",
-        unitId: "nT",
-        numberValue: 10,
-        power: 2
-      });
-      this.calculator.addTerm({
-        operator: "*",
-        type: "constant",
-        constantId: "mu0",
-        multiplier: 2,
-        power: 1
-      });
+      this.calculator.insertQuantity({ quantityId: "number_density", unitId: "cm_minus3", numberValue: 5 });
+      this.calculator.insertOperator("*");
+      this.calculator.insertQuantity({ quantityId: "temperature", unitId: "eV", numberValue: 15 });
+      this.calculator.insertOperator("*");
+      this.calculator.insertConstant({ constantId: "kB" });
+      this.calculator.insertOperator("/");
+      this.calculator.insertQuantity({ quantityId: "magnetic_field", unitId: "nT", numberValue: 10, power: 2 });
+      this.calculator.insertOperator("*");
+      this.calculator.insertConstant({ constantId: "mu0", multiplier: 2 });
     } else if (presetKey === "presetVA") {
       // 阿爾芬速度: B / (mu0^0.5 * mp^0.5 * n^0.5)
-      this.calculator.addTerm({
-        operator: "+",
-        type: "quantity",
-        quantityId: "magnetic_field",
-        unitId: "nT",
-        numberValue: 5,
-        power: 1
-      });
-      this.calculator.addTerm({
-        operator: "/",
-        type: "constant",
-        constantId: "mu0",
-        power: 0.5
-      });
-      this.calculator.addTerm({
-        operator: "/",
-        type: "constant",
-        constantId: "mp",
-        power: 0.5
-      });
-      this.calculator.addTerm({
-        operator: "/",
-        type: "quantity",
-        quantityId: "number_density",
-        unitId: "cm_minus3",
-        numberValue: 5,
-        power: 0.5
-      });
+      this.calculator.insertQuantity({ quantityId: "magnetic_field", unitId: "nT", numberValue: 5 });
+      this.calculator.insertOperator("/");
+      this.calculator.insertConstant({ constantId: "mu0", power: 0.5 });
+      this.calculator.insertOperator("/");
+      this.calculator.insertConstant({ constantId: "mp", power: 0.5 });
+      this.calculator.insertOperator("/");
+      this.calculator.insertQuantity({ quantityId: "number_density", unitId: "cm_minus3", numberValue: 5, power: 0.5 });
     }
 
     this.renderTermsList();
@@ -568,34 +476,95 @@ class SpacePlasmaApp {
     this.renderResultBox(res);
   }
 
-  // 更新頂部方程式呈現看板與因次狀態
+  // 更新頂部方程式呈現看板 (可點選任意位置切換插入點)
   updateEquationPreview() {
-    if (!this.previewFormulaMath) return;
+    if (!this.interactiveFormulaContainer) return;
 
     const isZh = this.currentLang === "zh";
     const eqRep = this.calculator.generateEquationRepresentation();
+    const curIdx = this.calculator.cursorIndex;
 
-    if (window.katex && eqRep.latexFormula) {
-      try {
-        window.katex.render(eqRep.latexFormula, this.previewFormulaMath, {
-          displayMode: true,
-          throwOnError: false
-        });
-      } catch (e) {
-        this.previewFormulaMath.textContent = eqRep.formulaText || "--";
-      }
+    this.interactiveFormulaContainer.innerHTML = "";
+
+    // 若尚未新增項目
+    if (this.calculator.tokens.length === 0) {
+      const slot = document.createElement("div");
+      slot.className = "formula-caret-slot active";
+      slot.title = "點擊在此插入";
+      slot.addEventListener("click", () => {
+        this.calculator.setCursor(0);
+        this.updateEquationPreview();
+      });
+
+      const emptyHint = document.createElement("span");
+      emptyHint.style.color = "var(--text-muted)";
+      emptyHint.style.fontSize = "0.95rem";
+      emptyHint.textContent = isZh ? "（算式目前為空，請點擊下方按鈕加入項目）" : "(Expression is empty, click buttons below)";
+
+      this.interactiveFormulaContainer.appendChild(slot);
+      this.interactiveFormulaContainer.appendChild(emptyHint);
     } else {
-      this.previewFormulaMath.textContent = eqRep.formulaText || "--";
+      // 逐一建立 Caret Slot 與 Token Chip
+      for (let i = 0; i <= this.calculator.tokens.length; i++) {
+        // 插入游標槽位 (Caret Slot i)
+        const slot = document.createElement("div");
+        slot.className = `formula-caret-slot ${curIdx === i ? "active" : ""}`;
+        slot.title = `插入位置 #${i} (點擊切換)`;
+        slot.addEventListener("click", () => {
+          this.calculator.setCursor(i);
+          this.updateEquationPreview();
+        });
+        this.interactiveFormulaContainer.appendChild(slot);
+
+        // 如果還有 token，放置 token chip
+        if (i < this.calculator.tokens.length) {
+          const t = this.calculator.tokens[i];
+          const chip = document.createElement("div");
+          chip.className = `formula-token-chip token-${t.type === "quantity" ? "qty" : t.type === "constant" ? "const" : t.type === "operator" ? "op" : "paren"}`;
+          chip.title = `點擊選取並定位第 #${i + 1} 項`;
+
+          // 標籤內容
+          const itemRep = eqRep.displayElements[i];
+          if (window.katex && itemRep && itemRep.latex) {
+            try {
+              window.katex.render(itemRep.latex, chip, { throwOnError: false });
+            } catch (e) {
+              chip.textContent = itemRep.label;
+            }
+          } else {
+            chip.textContent = itemRep ? itemRep.label : t.type;
+          }
+
+          // 點擊 token：將光標移至此項後方，並滾動至下方對應卡片
+          chip.addEventListener("click", () => {
+            this.calculator.setCursor(i + 1);
+            this.updateEquationPreview();
+            const targetCard = document.getElementById(`term-card-${t.id}`);
+            if (targetCard) {
+              targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+              targetCard.style.outline = "2px solid var(--brand-primary)";
+              setTimeout(() => { targetCard.style.outline = ""; }, 1200);
+            }
+          });
+
+          this.interactiveFormulaContainer.appendChild(chip);
+        }
+      }
     }
 
-    if (this.previewFormulaSub) {
-      this.previewFormulaSub.textContent = eqRep.formulaText ? `代號表示：${eqRep.formulaText}` : "";
+    // 更新游標位置提示標籤
+    if (this.previewCursorHint) {
+      this.previewCursorHint.innerHTML = `
+        <span>📌 當前插入位置：<span class="cursor-pos-badge">第 ${curIdx} / ${this.calculator.tokens.length} 項</span></span>
+        <span style="color: var(--text-muted); font-size: 0.8rem;">（點擊公式中任何符號或兩側的光標 ⏐ 即可變更插入點）</span>
+      `;
     }
 
+    // 更新因次檢驗狀態
     if (!this.dimStatusBadge) return;
 
     try {
-      if (this.calculator.terms.length === 0) {
+      if (this.calculator.tokens.length === 0) {
         this.dimStatusBadge.className = "dim-status-badge";
         this.dimStatusBadge.textContent = I18N[this.currentLang].dimReady;
         if (this.mismatchWarningCard) this.mismatchWarningCard.style.display = "none";
@@ -634,64 +603,66 @@ class SpacePlasmaApp {
     }
   }
 
+  // 渲染下方項目編輯清單
   renderTermsList() {
     if (!this.termsContainer) return;
 
     this.termsContainer.innerHTML = "";
     const isZh = this.currentLang === "zh";
 
-    this.calculator.terms.forEach((term, index) => {
+    this.calculator.tokens.forEach((term, index) => {
       const card = document.createElement("div");
+      card.id = `term-card-${term.id}`;
 
-      // 運算符號選擇按鈕列
-      let opSelectorHtml = "";
-      if (index === 0) {
-        opSelectorHtml = `
-          <div class="term-op-selector">
-            <button type="button" class="btn-op ${term.operator === '+' ? 'active' : ''}" data-op="+" title="正項">＋</button>
-            <button type="button" class="btn-op ${term.operator === '-' ? 'active' : ''}" data-op="-" title="負項">－</button>
-          </div>
-        `;
-      } else {
-        opSelectorHtml = `
-          <div class="term-op-selector">
-            <button type="button" class="btn-op ${term.operator === '+' ? 'active' : ''}" data-op="+" title="相加">＋</button>
-            <button type="button" class="btn-op ${term.operator === '-' ? 'active' : ''}" data-op="-" title="相減">－</button>
-            <button type="button" class="btn-op ${term.operator === '*' ? 'active' : ''}" data-op="*" title="相乘">×</button>
-            <button type="button" class="btn-op ${term.operator === '/' ? 'active' : ''}" data-op="/" title="相除 (分母)">÷</button>
-          </div>
-        `;
-      }
-
-      // 分支一：左括號卡片
-      if (term.type === "open_paren") {
-        card.className = "term-card term-card-paren";
+      // 分支一：獨立運算符卡片
+      if (term.type === "operator") {
+        card.className = "term-card-operator";
         card.innerHTML = `
-          <div class="term-header">
-            <div style="display: flex; align-items: center; gap: 0.65rem;">
-              <span class="term-idx">#${index + 1}</span>
-              ${opSelectorHtml}
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span class="term-idx">#${index + 1}</span>
+            <div class="op-switch-group">
+              <button type="button" class="btn-op ${term.value === '+' ? 'active' : ''}" data-val="+">＋</button>
+              <button type="button" class="btn-op ${term.value === '-' ? 'active' : ''}" data-val="-">－</button>
+              <button type="button" class="btn-op ${term.value === '*' ? 'active' : ''}" data-val="*">×</button>
+              <button type="button" class="btn-op ${term.value === '/' ? 'active' : ''}" data-val="/">÷</button>
             </div>
-            <button type="button" class="btn-delete" title="刪除此項">✕</button>
+            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">獨立運算符號</span>
           </div>
-          <div style="display: flex; align-items: center; padding: 0.25rem 0;">
-            <span class="paren-symbol-badge">(</span>
-            <span class="paren-desc-text">${isZh ? '左括號：開啟多項式分組子表達式' : 'Open Parenthesis: Start sub-expression'}</span>
+          <div class="term-ctrl-btns">
+            ${index > 0 ? `<button type="button" class="btn-move btn-move-up" title="往前移">⬆</button>` : ''}
+            ${index < this.calculator.tokens.length - 1 ? `<button type="button" class="btn-move btn-move-down" title="往後移">⬇</button>` : ''}
+            <button type="button" class="btn-delete" title="刪除此符號">✕</button>
           </div>
         `;
 
-        const opBtns = card.querySelectorAll(".term-op-selector .btn-op");
-        opBtns.forEach(btn => {
-          btn.addEventListener("click", () => {
-            term.operator = btn.getAttribute("data-op");
+        const opBtns = card.querySelectorAll(".op-switch-group .btn-op");
+        opBtns.forEach(b => {
+          b.addEventListener("click", () => {
+            term.value = b.getAttribute("data-val");
             this.renderTermsList();
           });
         });
 
+        const btnUp = card.querySelector(".btn-move-up");
+        if (btnUp) {
+          btnUp.addEventListener("click", () => {
+            this.calculator.moveToken(index, index - 1);
+            this.renderTermsList();
+          });
+        }
+
+        const btnDown = card.querySelector(".btn-move-down");
+        if (btnDown) {
+          btnDown.addEventListener("click", () => {
+            this.calculator.moveToken(index, index + 1);
+            this.renderTermsList();
+          });
+        }
+
         const btnDel = card.querySelector(".btn-delete");
         if (btnDel) {
           btnDel.addEventListener("click", () => {
-            this.calculator.removeTerm(term.id);
+            this.calculator.removeTokenAt(index);
             this.renderTermsList();
           });
         }
@@ -700,18 +671,66 @@ class SpacePlasmaApp {
         return;
       }
 
-      // 分支二：右括號卡片
+      // 分支二：左括號卡片
+      if (term.type === "open_paren") {
+        card.className = "term-card term-card-paren";
+        card.innerHTML = `
+          <div class="term-header">
+            <span class="term-idx">#${index + 1}</span>
+            <div class="term-ctrl-btns">
+              ${index > 0 ? `<button type="button" class="btn-move btn-move-up" title="往前移">⬆</button>` : ''}
+              ${index < this.calculator.tokens.length - 1 ? `<button type="button" class="btn-move btn-move-down" title="往後移">⬇</button>` : ''}
+              <button type="button" class="btn-delete" title="刪除此括號">✕</button>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; padding: 0.25rem 0;">
+            <span class="paren-symbol-badge">(</span>
+            <span class="paren-desc-text">${isZh ? '左括號：開啟多項式分組子表達式' : 'Open Parenthesis'}</span>
+          </div>
+        `;
+
+        const btnUp = card.querySelector(".btn-move-up");
+        if (btnUp) {
+          btnUp.addEventListener("click", () => {
+            this.calculator.moveToken(index, index - 1);
+            this.renderTermsList();
+          });
+        }
+        const btnDown = card.querySelector(".btn-move-down");
+        if (btnDown) {
+          btnDown.addEventListener("click", () => {
+            this.calculator.moveToken(index, index + 1);
+            this.renderTermsList();
+          });
+        }
+        const btnDel = card.querySelector(".btn-delete");
+        if (btnDel) {
+          btnDel.addEventListener("click", () => {
+            this.calculator.removeTokenAt(index);
+            this.renderTermsList();
+          });
+        }
+
+        this.termsContainer.appendChild(card);
+        return;
+      }
+
+      // 分支三：右括號卡片
       if (term.type === "close_paren") {
         card.className = "term-card term-card-paren";
         card.innerHTML = `
           <div class="term-header">
             <span class="term-idx">#${index + 1}</span>
-            <button type="button" class="btn-delete" title="刪除此項">✕</button>
+            <div class="term-ctrl-btns">
+              ${index > 0 ? `<button type="button" class="btn-move btn-move-up" title="往前移">⬆</button>` : ''}
+              ${index < this.calculator.tokens.length - 1 ? `<button type="button" class="btn-move btn-move-down" title="往後移">⬇</button>` : ''}
+              <button type="button" class="btn-delete" title="刪除此括號">✕</button>
+            </div>
           </div>
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; padding: 0.25rem 0;">
             <div style="display: flex; align-items: center;">
               <span class="paren-symbol-badge">)</span>
-              <span class="paren-desc-text">${isZh ? '右括號：閉合分組（可指定括號整體次方）' : 'Close Parenthesis: Close sub-expression'}</span>
+              <span class="paren-desc-text">${isZh ? '右括號：閉合分組（可指定括號外整體次方）' : 'Close Parenthesis'}</span>
             </div>
             <div class="form-group flex-half" style="min-width: 120px;">
               <label class="form-label">${isZh ? '括號次方' : 'Power'}</label>
@@ -720,18 +739,32 @@ class SpacePlasmaApp {
           </div>
         `;
 
+        const btnUp = card.querySelector(".btn-move-up");
+        if (btnUp) {
+          btnUp.addEventListener("click", () => {
+            this.calculator.moveToken(index, index - 1);
+            this.renderTermsList();
+          });
+        }
+        const btnDown = card.querySelector(".btn-move-down");
+        if (btnDown) {
+          btnDown.addEventListener("click", () => {
+            this.calculator.moveToken(index, index + 1);
+            this.renderTermsList();
+          });
+        }
         const btnDel = card.querySelector(".btn-delete");
         if (btnDel) {
           btnDel.addEventListener("click", () => {
-            this.calculator.removeTerm(term.id);
+            this.calculator.removeTokenAt(index);
             this.renderTermsList();
           });
         }
 
-        const powerInput = card.querySelector(".term-paren-power-input");
-        if (powerInput) {
-          powerInput.addEventListener("input", () => {
-            term.power = parseFloat(powerInput.value) || 1;
+        const pwrInput = card.querySelector(".term-paren-power-input");
+        if (pwrInput) {
+          pwrInput.addEventListener("input", () => {
+            term.power = parseFloat(pwrInput.value) || 1;
             this.updateEquationPreview();
           });
         }
@@ -740,7 +773,7 @@ class SpacePlasmaApp {
         return;
       }
 
-      // 分支三：常規物理量或常數卡片
+      // 分支四：物理量或常數項目卡片
       card.className = "term-card";
 
       let itemSelectHtml = "";
@@ -782,11 +815,12 @@ class SpacePlasmaApp {
 
       card.innerHTML = `
         <div class="term-header">
-          <div style="display: flex; align-items: center; gap: 0.65rem;">
-            <span class="term-idx">#${index + 1}</span>
-            ${opSelectorHtml}
+          <span class="term-idx">#${index + 1}</span>
+          <div class="term-ctrl-btns">
+            ${index > 0 ? `<button type="button" class="btn-move btn-move-up" title="往前移">⬆</button>` : ''}
+            ${index < this.calculator.tokens.length - 1 ? `<button type="button" class="btn-move btn-move-down" title="往後移">⬇</button>` : ''}
+            <button type="button" class="btn-delete" title="刪除此項">✕</button>
           </div>
-          <button type="button" class="btn-delete" title="刪除此項">✕</button>
         </div>
         <div class="term-body">
           <div class="form-group flex-2">
@@ -814,19 +848,24 @@ class SpacePlasmaApp {
         </div>
       `;
 
-      // 綁定運算符號點擊切換
-      const opBtns = card.querySelectorAll(".term-op-selector .btn-op");
-      opBtns.forEach(btn => {
-        btn.addEventListener("click", () => {
-          term.operator = btn.getAttribute("data-op");
+      const btnUp = card.querySelector(".btn-move-up");
+      if (btnUp) {
+        btnUp.addEventListener("click", () => {
+          this.calculator.moveToken(index, index - 1);
           this.renderTermsList();
         });
-      });
-
+      }
+      const btnDown = card.querySelector(".btn-move-down");
+      if (btnDown) {
+        btnDown.addEventListener("click", () => {
+          this.calculator.moveToken(index, index + 1);
+          this.renderTermsList();
+        });
+      }
       const btnDel = card.querySelector(".btn-delete");
       if (btnDel) {
         btnDel.addEventListener("click", () => {
-          this.calculator.removeTerm(term.id);
+          this.calculator.removeTokenAt(index);
           this.renderTermsList();
         });
       }

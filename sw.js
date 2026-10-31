@@ -1,14 +1,14 @@
-const CACHE_NAME = 'plasma-calc-v2.3';
+const CACHE_NAME = 'plasma-calc-v2.4';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=2.3',
-  './constants.js?v=2.3',
-  './equations.js?v=2.3',
-  './calculator.js?v=2.3',
-  './app.js?v=2.3',
-  './katex/katex.min.js?v=2.3',
-  './katex/katex.min.css?v=2.3',
+  './styles.css?v=2.4',
+  './constants.js?v=2.4',
+  './equations.js?v=2.4',
+  './calculator.js?v=2.4',
+  './app.js?v=2.4',
+  './katex/katex.min.js?v=2.4',
+  './katex/katex.min.css?v=2.4',
   './icon.png',
   './icon-192.png',
   './icon-512.png',

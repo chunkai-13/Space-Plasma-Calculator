@@ -1,11 +1,12 @@
 /**
- * calculator.js - 多項式運算、巢狀括號層級排版與因次一致性檢驗引擎
+ * calculator.js - 獨立運算符、游標插入、多層括號排版與因次檢驗引擎
  */
 
 class PlasmaCustomCalculator {
   constructor() {
-    this.terms = [];
-    this.nextTermId = 1;
+    this.tokens = [];
+    this.nextTokenId = 1;
+    this.cursorIndex = 0; // 當前游標插入點位置 (0 ~ tokens.length)
     this.lastResult = null;
     this.displaySystem = "Space"; // 預設太空常用制
   }
@@ -20,70 +21,117 @@ class PlasmaCustomCalculator {
     return PHYSICAL_CONSTANTS[constantId] || PHYSICAL_CONSTANTS.mu0;
   }
 
-  // 新增項目
-  addTerm(preset = {}) {
-    const termId = this.nextTermId++;
-    const defaultQty = PHYSICAL_QUANTITIES[0];
-    const isFirst = this.terms.length === 0;
+  // 設定游標位置
+  setCursor(index) {
+    this.cursorIndex = Math.max(0, Math.min(this.tokens.length, index));
+  }
 
-    const term = {
-      id: termId,
-      type: preset.type || "quantity", // "quantity", "constant", "open_paren", "close_paren"
-      operator: preset.operator || (isFirst ? "+" : "+"),
+  // 在指定位置 (預設為 cursorIndex) 插入 Token
+  insertToken(token, index = this.cursorIndex) {
+    const tid = this.nextTokenId++;
+    token.id = tid;
+
+    const at = Math.max(0, Math.min(this.tokens.length, index));
+    this.tokens.splice(at, 0, token);
+    this.cursorIndex = at + 1; // 游標自動後移
+    return token;
+  }
+
+  // 插入獨立運算符 (+, -, *, /)
+  insertOperator(opValue, index = this.cursorIndex) {
+    return this.insertToken({
+      type: "operator",
+      value: opValue || "+"
+    }, index);
+  }
+
+  // 插入物理量
+  insertQuantity(preset = {}, index = this.cursorIndex) {
+    const defaultQty = PHYSICAL_QUANTITIES[0];
+    return this.insertToken({
+      type: "quantity",
       quantityId: preset.quantityId || defaultQty.id,
-      constantId: preset.constantId || "mu0",
+      unitId: preset.unitId || defaultQty.units[1].id,
       numberValue: preset.numberValue !== undefined ? preset.numberValue : 10,
       multiplier: preset.multiplier !== undefined ? preset.multiplier : 1,
-      unitId: preset.unitId || defaultQty.units[1].id,
       power: preset.power !== undefined ? preset.power : 1
-    };
+    }, index);
+  }
 
-    this.terms.push(term);
-    return term;
+  // 插入物理常數
+  insertConstant(preset = {}, index = this.cursorIndex) {
+    return this.insertToken({
+      type: "constant",
+      constantId: preset.constantId || "mu0",
+      multiplier: preset.multiplier !== undefined ? preset.multiplier : 1,
+      power: preset.power !== undefined ? preset.power : 1
+    }, index);
   }
 
   // 插入左括號
-  addOpenParen(operator = "+") {
-    return this.addTerm({
-      type: "open_paren",
-      operator: this.terms.length === 0 ? "+" : operator
-    });
+  insertOpenParen(index = this.cursorIndex) {
+    return this.insertToken({
+      type: "open_paren"
+    }, index);
   }
 
   // 插入右括號
-  addCloseParen(power = 1) {
-    return this.addTerm({
+  insertCloseParen(power = 1, index = this.cursorIndex) {
+    return this.insertToken({
       type: "close_paren",
       power: power || 1
-    });
+    }, index);
   }
 
-  // 移除項目
-  removeTerm(termId) {
-    this.terms = this.terms.filter(t => t.id !== termId);
-    if (this.terms.length > 0 && this.terms[0].operator !== "-") {
-      this.terms[0].operator = "+";
+  // 移除指定位置的 Token
+  removeTokenAt(index) {
+    if (index >= 0 && index < this.tokens.length) {
+      this.tokens.splice(index, 1);
+      if (this.cursorIndex > index) {
+        this.cursorIndex = Math.max(0, this.cursorIndex - 1);
+      } else if (this.cursorIndex > this.tokens.length) {
+        this.cursorIndex = this.tokens.length;
+      }
+    }
+  }
+
+  // 移除指定 ID 的 Token
+  removeTokenById(id) {
+    const idx = this.tokens.findIndex(t => t.id === id);
+    if (idx !== -1) {
+      this.removeTokenAt(idx);
+    }
+  }
+
+  // 移動 Token 位置
+  moveToken(fromIndex, toIndex) {
+    if (fromIndex >= 0 && fromIndex < this.tokens.length && toIndex >= 0 && toIndex < this.tokens.length) {
+      const item = this.tokens.splice(fromIndex, 1)[0];
+      this.tokens.splice(toIndex, 0, item);
+      this.cursorIndex = toIndex;
     }
   }
 
   // 清空
   clear() {
-    this.terms = [];
-    this.nextTermId = 1;
+    this.tokens = [];
+    this.nextTokenId = 1;
+    this.cursorIndex = 0;
     this.lastResult = null;
   }
 
-  // 分析括號配對與層級深度 (Bracket Matching & Height-based Level Classifier)
+  // 分析括號配對與層級深度 (Height-based Bracket Typing)
+  // 規則: 內層 height=1 -> ( ), 外包層 height=2 -> [ ], 更外包層 height=3 -> { }
   analyzeBrackets() {
     const stack = [];
-    const pairs = []; // { openIndex, closeIndex, height }
+    const pairs = [];
     const errors = [];
 
-    for (let i = 0; i < this.terms.length; i++) {
-      const term = this.terms[i];
-      if (term.type === "open_paren") {
+    for (let i = 0; i < this.tokens.length; i++) {
+      const t = this.tokens[i];
+      if (t.type === "open_paren") {
         stack.push(i);
-      } else if (term.type === "close_paren") {
+      } else if (t.type === "close_paren") {
         if (stack.length > 0) {
           const openIdx = stack.pop();
           pairs.push({
@@ -102,10 +150,7 @@ class PlasmaCustomCalculator {
       errors.push(`尚有 ${stack.length} 個左括號未閉合。`);
     }
 
-    // 計算巢狀包含關係以決定括號層級高度 (Height)
-    // 內層括號 height = 1 -> 小括號 ( )
-    // 外層包含內層 height = 2 -> 中括號 [ ]
-    // 更外層 height = 3 -> 大括號 { }
+    // 建立巢狀包含關係
     for (let i = 0; i < pairs.length; i++) {
       for (let j = 0; j < pairs.length; j++) {
         if (i !== j) {
@@ -135,8 +180,7 @@ class PlasmaCustomCalculator {
     return { pairs, errors, isBalanced: errors.length === 0 };
   }
 
-  // 根據層級高度取得對應括號樣式 (LaTeX 與純文字)
-  // height=1 -> ( ), height=2 -> [ ], height=3 -> { }
+  // 取得對應層級高度的括號符號 (LaTeX 與純文字)
   getBracketStyle(height) {
     const cycle = (height - 1) % 3;
     if (cycle === 1) {
@@ -144,37 +188,34 @@ class PlasmaCustomCalculator {
         openLatex: "\\left[ ",
         closeLatex: " \\right]",
         openText: "[",
-        closeText: "]",
-        className: "bracket-level-2"
+        closeText: "]"
       };
     } else if (cycle === 2) {
       return {
         openLatex: "\\left\\{ ",
         closeLatex: " \\right\\}",
         openText: "{",
-        closeText: "}",
-        className: "bracket-level-3"
+        closeText: "}"
       };
     } else {
       return {
         openLatex: "\\left( ",
         closeLatex: " \\right)",
         openText: "(",
-        closeText: ")",
-        className: "bracket-level-1"
+        closeText: ")"
       };
     }
   }
 
-  // 單一因子數值與因次評估
-  evaluateFactor(term) {
-    if (term.isPreComputed) {
+  // 評估單一運算因子的數值與因次
+  evaluateFactor(token) {
+    if (token.isPreComputed) {
       return {
-        baseValue: term.baseValue,
-        dimension: term.dimension,
-        power: term.power || 1,
-        symbolStr: term.symbolStr,
-        latexStr: term.latexStr
+        baseValue: token.baseValue,
+        dimension: token.dimension,
+        power: token.power || 1,
+        symbolStr: token.symbolStr,
+        latexStr: token.latexStr
       };
     }
 
@@ -183,13 +224,13 @@ class PlasmaCustomCalculator {
     let symbolStr = "";
     let latexStr = "";
 
-    const mult = parseFloat(term.multiplier) || 1;
-    const power = parseFloat(term.power) || 1;
+    const mult = parseFloat(token.multiplier) || 1;
+    const power = parseFloat(token.power) || 1;
 
-    if (term.type === "quantity") {
-      const qDef = this.getQuantityDef(term.quantityId);
-      const unitDef = qDef.units.find(u => u.id === term.unitId) || qDef.units[0];
-      const val = parseFloat(term.numberValue) || 0;
+    if (token.type === "quantity") {
+      const qDef = this.getQuantityDef(token.quantityId);
+      const unitDef = qDef.units.find(u => u.id === token.unitId) || qDef.units[0];
+      const val = parseFloat(token.numberValue) || 0;
       const siValue = mult * (val * unitDef.toBaseSI);
 
       baseVal = Math.pow(siValue, power);
@@ -202,8 +243,8 @@ class PlasmaCustomCalculator {
       const multLatex = mult !== 1 ? `${mult} ` : "";
       const pwrLatex = power !== 1 ? `^{${power}}` : "";
       latexStr = `${multLatex}${qDef.symbol}${pwrLatex}`;
-    } else if (term.type === "constant") {
-      const cDef = this.getConstantDef(term.constantId);
+    } else if (token.type === "constant") {
+      const cDef = this.getConstantDef(token.constantId);
       const siValue = mult * cDef.value;
 
       baseVal = Math.pow(siValue, power);
@@ -225,7 +266,7 @@ class PlasmaCustomCalculator {
       const pwrLatex = power !== 1 ? `^{${power}}` : "";
       latexStr = `${multLatex}${cSymLatex}${pwrLatex}`;
     } else {
-      const val = parseFloat(term.numberValue) || 1;
+      const val = parseFloat(token.numberValue) || 1;
       const siValue = mult * val;
       baseVal = Math.pow(siValue, power);
       dimension = [0, 0, 0, 0, 0];
@@ -236,12 +277,13 @@ class PlasmaCustomCalculator {
     return { baseValue: baseVal, dimension, power, symbolStr, latexStr };
   }
 
-  // 產生包含多層括號變換的 LaTeX 與公式文字
+  // 產生可視化方程式表現（含插入光標資訊與各 Token 對照）
   generateEquationRepresentation() {
-    if (this.terms.length === 0) {
+    if (this.tokens.length === 0) {
       return {
-        formulaText: "（尚未新增任何運算項目）",
+        formulaText: "（點擊下方按鈕或此處開始建構方程式）",
         latexFormula: "",
+        displayElements: [],
         bracketAnalysis: { isBalanced: true, errors: [] }
       };
     }
@@ -253,75 +295,102 @@ class PlasmaCustomCalculator {
       pairsMap.set(p.closeIndex, p);
     });
 
-    let latexParts = [];
-    let textParts = [];
+    const displayElements = [];
+    const latexParts = [];
+    const textParts = [];
 
-    for (let i = 0; i < this.terms.length; i++) {
-      const term = this.terms[i];
-      const isFirst = i === 0;
-      let opSign = term.operator || "+";
-      let opText = isFirst ? (opSign === "-" ? "- " : "") : ` ${opSign === "*" ? "·" : opSign === "/" ? "/" : opSign} `;
-      let opLatex = isFirst ? (opSign === "-" ? "- " : "") : ` ${opSign === "*" ? "\\cdot" : opSign === "/" ? "/" : opSign} `;
+    for (let i = 0; i < this.tokens.length; i++) {
+      const t = this.tokens[i];
+      let elemLabel = "";
+      let elemLatex = "";
 
-      if (term.type === "open_paren") {
+      if (t.type === "operator") {
+        const opSym = t.value === "*" ? "×" : t.value === "/" ? "÷" : t.value;
+        const opLatex = t.value === "*" ? "\\times" : t.value === "/" ? "\\div" : t.value;
+        elemLabel = opSym;
+        elemLatex = ` ${opLatex} `;
+      } else if (t.type === "open_paren") {
         const pair = pairsMap.get(i);
         const height = pair ? pair.height : 1;
         const bStyle = this.getBracketStyle(height);
-
-        textParts.push(`${opText}${bStyle.openText}`);
-        latexParts.push(`${opLatex}${bStyle.openLatex}`);
-      } else if (term.type === "close_paren") {
+        elemLabel = bStyle.openText;
+        elemLatex = bStyle.openLatex;
+      } else if (t.type === "close_paren") {
         const pair = pairsMap.get(i);
         const height = pair ? pair.height : 1;
         const bStyle = this.getBracketStyle(height);
-        const pwr = term.power && term.power !== 1 ? `^{${term.power}}` : "";
-        const pwrTxt = term.power && term.power !== 1 ? `^${term.power}` : "";
-
-        textParts.push(`${bStyle.closeText}${pwrTxt}`);
-        latexParts.push(`${bStyle.closeLatex}${pwr}`);
+        const pwr = t.power && t.power !== 1 ? `^{${t.power}}` : "";
+        const pwrTxt = t.power && t.power !== 1 ? `^${t.power}` : "";
+        elemLabel = `${bStyle.closeText}${pwrTxt}`;
+        elemLatex = `${bStyle.closeLatex}${pwr}`;
       } else {
-        const factor = this.evaluateFactor(term);
-        textParts.push(`${opText}${factor.symbolStr}`);
-        latexParts.push(`${opLatex}${factor.latexStr}`);
+        const f = this.evaluateFactor(t);
+        elemLabel = f.symbolStr;
+        elemLatex = f.latexStr;
       }
+
+      displayElements.push({
+        index: i,
+        token: t,
+        label: elemLabel,
+        latex: elemLatex
+      });
+
+      latexParts.push(elemLatex);
+      textParts.push(elemLabel);
     }
 
     return {
-      formulaText: textParts.join("").trim(),
-      latexFormula: latexParts.join("").trim(),
-      bracketAnalysis
+      formulaText: textParts.join(" "),
+      latexFormula: latexParts.join(""),
+      displayElements,
+      bracketAnalysis,
+      cursorIndex: this.cursorIndex
     };
   }
 
-  // 計算一組不含括號的扁平多項式序列 (Flat Polynomial Sub-Evaluator)
-  evaluateFlatPolynomial(flatTerms) {
-    if (flatTerms.length === 0) {
+  // 計算扁平無括號的多項式子表達式
+  evaluateFlatPolynomial(flatTokens) {
+    if (flatTokens.length === 0) {
       return { baseValue: 0, dimension: [0, 0, 0, 0, 0], symbolStr: "0", latexStr: "0" };
     }
 
     const groups = [];
-    let currentGroup = { sign: "+", factors: [] };
+    let currentSign = "+";
+    let currentFactors = [];
 
-    for (let i = 0; i < flatTerms.length; i++) {
-      const term = flatTerms[i];
-      const op = term.operator || "+";
-      const factorEval = this.evaluateFactor(term);
+    let pendingOp = "*"; // 預設乘法連接
 
-      if (op === "+" || op === "-") {
-        if (i === 0) {
-          currentGroup.sign = op;
-          currentGroup.factors.push({ op: "*", factor: factorEval });
+    for (let i = 0; i < flatTokens.length; i++) {
+      const t = flatTokens[i];
+
+      if (t.type === "operator") {
+        if (t.value === "+" || t.value === "-") {
+          // 遇到加減號：結束上一群乘除組合
+          if (currentFactors.length > 0) {
+            groups.push({ sign: currentSign, factors: currentFactors });
+            currentFactors = [];
+          }
+          currentSign = t.value;
+          pendingOp = "*";
         } else {
-          groups.push(currentGroup);
-          currentGroup = { sign: op, factors: [{ op: "*", factor: factorEval }] };
+          // 乘除號
+          pendingOp = t.value;
         }
       } else {
-        currentGroup.factors.push({ op, factor: factorEval });
+        // 運算因子 (quantity, constant, precomputed)
+        const factorEval = this.evaluateFactor(t);
+        currentFactors.push({ op: pendingOp, factor: factorEval });
+        pendingOp = "*"; // 預設復位
       }
     }
 
-    if (currentGroup.factors.length > 0) {
-      groups.push(currentGroup);
+    if (currentFactors.length > 0) {
+      groups.push({ sign: currentSign, factors: currentFactors });
+    }
+
+    if (groups.length === 0) {
+      throw new Error("運算式無有效計算項目。");
     }
 
     // 計算各群乘除值與維度
@@ -365,7 +434,7 @@ class PlasmaCustomCalculator {
       }
     });
 
-    // 因次一致性檢驗
+    // 單位因次一致性檢驗
     const baseDim = groups[0].dimension;
     const mismatches = [];
 
@@ -399,7 +468,7 @@ class PlasmaCustomCalculator {
       throw err;
     }
 
-    // 因次相符：累加求值
+    // 因次一致：代數累加
     let totalSI = 0;
     const repSymbols = [];
     const repLatex = [];
@@ -424,9 +493,9 @@ class PlasmaCustomCalculator {
     };
   }
 
-  // 遞迴解析帶括號之完整多項式表達式
+  // 遞迴多項式計算
   compute() {
-    if (this.terms.length === 0) {
+    if (this.tokens.length === 0) {
       throw new Error("請先新增至少一個物理量或常數項目。");
     }
 
@@ -445,12 +514,10 @@ class PlasmaCustomCalculator {
       return this.formatResult(this.displaySystem);
     }
 
-    // 依序由內而外求值括號區塊
-    let workingTokens = [...this.terms];
+    let workingTokens = [...this.tokens];
 
     try {
       while (true) {
-        // 尋找最內層的一對匹配括號
         let lastOpenIdx = -1;
         let matchCloseIdx = -1;
 
@@ -465,16 +532,13 @@ class PlasmaCustomCalculator {
           }
         }
 
-        // 若無括號，跳出進入頂層求值
         if (lastOpenIdx === -1 || matchCloseIdx === -1) {
           break;
         }
 
-        const openToken = workingTokens[lastOpenIdx];
         const closeToken = workingTokens[matchCloseIdx];
         const innerTerms = workingTokens.slice(lastOpenIdx + 1, matchCloseIdx);
 
-        // 計算括號內部
         const innerEval = this.evaluateFlatPolynomial(innerTerms);
         const pwr = parseFloat(closeToken.power) || 1;
         const finalVal = Math.pow(innerEval.baseValue, pwr);
@@ -483,10 +547,8 @@ class PlasmaCustomCalculator {
         const pwrTxt = pwr !== 1 ? `^${pwr}` : "";
         const pwrLatex = pwr !== 1 ? `^{${pwr}}` : "";
 
-        // 封裝為單一複合合成因子
         const compoundToken = {
           isPreComputed: true,
-          operator: openToken.operator || "+",
           baseValue: finalVal,
           dimension: finalDim,
           power: 1,
@@ -494,11 +556,9 @@ class PlasmaCustomCalculator {
           latexStr: `\\left( ${innerEval.latexStr} \\right)${pwrLatex}`
         };
 
-        // 替換
         workingTokens.splice(lastOpenIdx, (matchCloseIdx - lastOpenIdx + 1), compoundToken);
       }
 
-      // 求值頂層
       const finalEval = this.evaluateFlatPolynomial(workingTokens);
       const matchedQty = this.matchDimensionToQuantity(finalEval.dimension);
 
