@@ -1,14 +1,14 @@
-const CACHE_NAME = 'plasma-calc-v2';
+const CACHE_NAME = 'plasma-calc-v2.1';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css',
-  './constants.js',
-  './equations.js',
-  './calculator.js',
-  './app.js',
-  './katex/katex.min.js',
-  './katex/katex.min.css',
+  './styles.css?v=2.1',
+  './constants.js?v=2.1',
+  './equations.js?v=2.1',
+  './calculator.js?v=2.1',
+  './app.js?v=2.1',
+  './katex/katex.min.js?v=2.1',
+  './katex/katex.min.css?v=2.1',
   './icon.png',
   './icon-192.png',
   './icon-512.png',
@@ -17,12 +17,12 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (e) => {
+  self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
     })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (e) => {
@@ -35,15 +35,19 @@ self.addEventListener('activate', (e) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (e) => {
+  // 優先嘗試從網路取得最新內容，若斷網則使用快取
   e.respondWith(
-    caches.match(e.request).then((res) => {
-      return res || fetch(e.request);
-    })
+    fetch(e.request).then((networkRes) => {
+      if (networkRes && networkRes.status === 200) {
+        const resClone = networkRes.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, resClone));
+      }
+      return networkRes;
+    }).catch(() => caches.match(e.request))
   );
 });
