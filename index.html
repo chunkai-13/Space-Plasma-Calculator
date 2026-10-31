@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="Plasma Calc">
 
   <!-- 樣式表與 KaTeX 數學排版庫 -->
-  <link rel="stylesheet" href="katex/katex.min.css?v=2.1">
-  <link rel="stylesheet" href="styles.css?v=2.1">
-  <script src="katex/katex.min.js?v=2.1"></script>
+  <link rel="stylesheet" href="katex/katex.min.css?v=2.2">
+  <link rel="stylesheet" href="styles.css?v=2.2">
+  <script src="katex/katex.min.js?v=2.2"></script>
 </head>
 <body>
 
@@ -65,6 +65,7 @@
           <span data-i18n="presetLabel">快速帶入經典範例：</span>
           <button type="button" class="preset-btn" data-preset="presetPB" data-i18n="presetPB">磁壓力 (B² / 2μ₀)</button>
           <button type="button" class="preset-btn" data-preset="presetTotalP" data-i18n="presetTotalP">總壓力 (P_th + P_B)</button>
+          <button type="button" class="preset-btn" data-preset="presetBracket" data-i18n="presetBracket">巢狀括號 [ (P_B) + P_th ]</button>
           <button type="button" class="preset-btn" data-preset="presetBeta" data-i18n="presetBeta">電漿 Beta (nkT / P_B)</button>
           <button type="button" class="preset-btn" data-preset="presetVA" data-i18n="presetVA">阿爾芬速度 (B / √(μ₀ ρ))</button>
         </div>
@@ -89,6 +90,8 @@
         <div class="calc-actions-row">
           <button type="button" class="btn btn-secondary" id="btn-add-qty" data-i18n="btnAddQty">＋ 新增物理量</button>
           <button type="button" class="btn btn-secondary" id="btn-add-const" data-i18n="btnAddConst">＋ 插入常用常數</button>
+          <button type="button" class="btn btn-secondary" id="btn-add-open-paren" title="插入左括號">＋ ( 左括號</button>
+          <button type="button" class="btn btn-secondary" id="btn-add-close-paren" title="插入右括號">＋ ) 右括號</button>
           <button type="button" class="btn btn-secondary" id="btn-clear-terms" data-i18n="btnClear">清空項目</button>
           <button type="button" class="btn btn-large" id="btn-equal" data-i18n="btnEqual">＝ 計算結果</button>
         </div>
@@ -237,7 +240,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=2.1').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=2.2').then(reg => {
           reg.update();
         }).catch(() => {});
       });
@@ -245,9 +248,9 @@
   </script>
 
   <!-- 載入腳本 (加入版本號以防瀏覽器快取舊版) -->
-  <script src="constants.js?v=2.1"></script>
-  <script src="equations.js?v=2.1"></script>
-  <script src="calculator.js?v=2.1"></script>
-  <script src="app.js?v=2.1"></script>
+  <script src="constants.js?v=2.2"></script>
+  <script src="equations.js?v=2.2"></script>
+  <script src="calculator.js?v=2.2"></script>
+  <script src="app.js?v=2.2"></script>
 </body>
 </html>

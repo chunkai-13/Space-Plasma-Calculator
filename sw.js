@@ -1,14 +1,14 @@
-const CACHE_NAME = 'plasma-calc-v2.1';
+const CACHE_NAME = 'plasma-calc-v2.2';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=2.1',
-  './constants.js?v=2.1',
-  './equations.js?v=2.1',
-  './calculator.js?v=2.1',
-  './app.js?v=2.1',
-  './katex/katex.min.js?v=2.1',
-  './katex/katex.min.css?v=2.1',
+  './styles.css?v=2.2',
+  './constants.js?v=2.2',
+  './equations.js?v=2.2',
+  './calculator.js?v=2.2',
+  './app.js?v=2.2',
+  './katex/katex.min.js?v=2.2',
+  './katex/katex.min.css?v=2.2',
   './icon.png',
   './icon-192.png',
   './icon-512.png',
@@ -40,7 +40,6 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // 優先嘗試從網路取得最新內容，若斷網則使用快取
   e.respondWith(
     fetch(e.request).then((networkRes) => {
       if (networkRes && networkRes.status === 200) {

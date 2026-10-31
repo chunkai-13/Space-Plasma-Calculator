@@ -158,6 +158,8 @@ class SpacePlasmaApp {
     this.termsContainer = document.getElementById("terms-container");
     this.btnAddQty = document.getElementById("btn-add-qty");
     this.btnAddConst = document.getElementById("btn-add-const");
+    this.btnAddOpenParen = document.getElementById("btn-add-open-paren");
+    this.btnAddCloseParen = document.getElementById("btn-add-close-paren");
     this.btnClearTerms = document.getElementById("btn-clear-terms");
     this.btnEqual = document.getElementById("btn-equal");
     this.resultOutputBox = document.getElementById("result-output-box");
@@ -218,6 +220,16 @@ class SpacePlasmaApp {
 
     this.btnAddConst.addEventListener("click", () => {
       this.calculator.addTerm({ type: "constant", operator: "*" });
+      this.renderTermsList();
+    });
+
+    this.btnAddOpenParen.addEventListener("click", () => {
+      this.calculator.addOpenParen("+");
+      this.renderTermsList();
+    });
+
+    this.btnAddCloseParen.addEventListener("click", () => {
+      this.calculator.addCloseParen(1);
       this.renderTermsList();
     });
 
@@ -408,6 +420,40 @@ class SpacePlasmaApp {
         multiplier: 2,
         power: 1
       });
+    } else if (presetKey === "presetBracket") {
+      // 巢狀括號範例: [ (B^2 / 2mu0) + P_th ]
+      // 外層開括號 (包含內層括號 -> 自動變為中括號 [ )
+      this.calculator.addOpenParen("+");
+      // 內層開括號 (自動為小括號 ( )
+      this.calculator.addOpenParen("+");
+      this.calculator.addTerm({
+        operator: "+",
+        type: "quantity",
+        quantityId: "magnetic_field",
+        unitId: "nT",
+        numberValue: 10,
+        power: 2
+      });
+      this.calculator.addTerm({
+        operator: "/",
+        type: "constant",
+        constantId: "mu0",
+        multiplier: 2,
+        power: 1
+      });
+      // 內層閉括號
+      this.calculator.addCloseParen(1);
+      // 外層多項式項目: + P_th
+      this.calculator.addTerm({
+        operator: "+",
+        type: "quantity",
+        quantityId: "plasma_pressure",
+        unitId: "nPa",
+        numberValue: 0.05,
+        power: 1
+      });
+      // 外層閉括號 (自動為中括號 ] )
+      this.calculator.addCloseParen(1);
     } else if (presetKey === "presetBeta") {
       // 電漿 Beta: (n * kB * T) / (B^2 / 2mu0)
       this.calculator.addTerm({
@@ -550,9 +596,101 @@ class SpacePlasmaApp {
 
     this.calculator.terms.forEach((term, index) => {
       const card = document.createElement("div");
+
+      // 運算符號選擇按鈕列
+      let opSelectorHtml = "";
+      if (index === 0) {
+        opSelectorHtml = `
+          <div class="term-op-selector">
+            <button type="button" class="btn-op ${term.operator === '+' ? 'active' : ''}" data-op="+" title="正項">＋</button>
+            <button type="button" class="btn-op ${term.operator === '-' ? 'active' : ''}" data-op="-" title="負項">－</button>
+          </div>
+        `;
+      } else {
+        opSelectorHtml = `
+          <div class="term-op-selector">
+            <button type="button" class="btn-op ${term.operator === '+' ? 'active' : ''}" data-op="+" title="相加">＋</button>
+            <button type="button" class="btn-op ${term.operator === '-' ? 'active' : ''}" data-op="-" title="相減">－</button>
+            <button type="button" class="btn-op ${term.operator === '*' ? 'active' : ''}" data-op="*" title="相乘">×</button>
+            <button type="button" class="btn-op ${term.operator === '/' ? 'active' : ''}" data-op="/" title="相除 (分母)">÷</button>
+          </div>
+        `;
+      }
+
+      // 分支一：左括號卡片
+      if (term.type === "open_paren") {
+        card.className = "term-card term-card-paren";
+        card.innerHTML = `
+          <div class="term-header">
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+              <span class="term-idx">#${index + 1}</span>
+              ${opSelectorHtml}
+            </div>
+            <button type="button" class="btn-delete" title="刪除此項">✕</button>
+          </div>
+          <div style="display: flex; align-items: center; padding: 0.25rem 0;">
+            <span class="paren-symbol-badge">(</span>
+            <span class="paren-desc-text">${isZh ? '左括號：開啟多項式分組子表達式' : 'Open Parenthesis: Start sub-expression'}</span>
+          </div>
+        `;
+
+        const opBtns = card.querySelectorAll(".term-op-selector .btn-op");
+        opBtns.forEach(btn => {
+          btn.addEventListener("click", () => {
+            term.operator = btn.getAttribute("data-op");
+            this.renderTermsList();
+          });
+        });
+
+        const btnDel = card.querySelector(".btn-delete");
+        btnDel.addEventListener("click", () => {
+          this.calculator.removeTerm(term.id);
+          this.renderTermsList();
+        });
+
+        this.termsContainer.appendChild(card);
+        return;
+      }
+
+      // 分支二：右括號卡片
+      if (term.type === "close_paren") {
+        card.className = "term-card term-card-paren";
+        card.innerHTML = `
+          <div class="term-header">
+            <span class="term-idx">#${index + 1}</span>
+            <button type="button" class="btn-delete" title="刪除此項">✕</button>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; padding: 0.25rem 0;">
+            <div style="display: flex; align-items: center;">
+              <span class="paren-symbol-badge">)</span>
+              <span class="paren-desc-text">${isZh ? '右括號：閉合分組（可指定括號整體次方）' : 'Close Parenthesis: Close sub-expression'}</span>
+            </div>
+            <div class="form-group flex-half" style="min-width: 120px;">
+              <label class="form-label">${isZh ? '括號次方' : 'Power'}</label>
+              <input type="number" step="any" class="form-input term-paren-power-input" value="${term.power !== undefined ? term.power : 1}">
+            </div>
+          </div>
+        `;
+
+        const btnDel = card.querySelector(".btn-delete");
+        btnDel.addEventListener("click", () => {
+          this.calculator.removeTerm(term.id);
+          this.renderTermsList();
+        });
+
+        const powerInput = card.querySelector(".term-paren-power-input");
+        powerInput.addEventListener("input", () => {
+          term.power = parseFloat(powerInput.value) || 1;
+          this.updateEquationPreview();
+        });
+
+        this.termsContainer.appendChild(card);
+        return;
+      }
+
+      // 分支三：常規物理量或常數卡片
       card.className = "term-card";
 
-      // 種類選單
       let itemSelectHtml = "";
       let unitSelectHtml = "";
 

@@ -348,6 +348,29 @@ body {
   padding-top: 0.45rem;
 }
 
+/* 括號項目卡片樣式 */
+.term-card-paren {
+  background: rgba(14, 165, 233, 0.05);
+  border: 1px dashed var(--brand-primary);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 1rem;
+}
+
+.paren-symbol-badge {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--brand-primary);
+  margin-right: 0.75rem;
+  line-height: 1;
+}
+
+.paren-desc-text {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
 /* 運算符號選擇列 (Operator Selector Bar) */
 .term-op-selector {
   display: inline-flex;
