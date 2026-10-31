@@ -62,9 +62,23 @@
         <div class="presets-bar">
           <span data-i18n="presetLabel">快速帶入經典範例：</span>
           <button type="button" class="preset-btn" data-preset="presetPB" data-i18n="presetPB">磁壓力 (B² / 2μ₀)</button>
+          <button type="button" class="preset-btn" data-preset="presetTotalP" data-i18n="presetTotalP">總壓力 (P_th + P_B)</button>
           <button type="button" class="preset-btn" data-preset="presetBeta" data-i18n="presetBeta">電漿 Beta (nkT / P_B)</button>
           <button type="button" class="preset-btn" data-preset="presetVA" data-i18n="presetVA">阿爾芬速度 (B / √(μ₀ ρ))</button>
         </div>
+
+        <!-- 即時方程式呈現看板 (Equation Preview Board) -->
+        <div class="equation-preview-board">
+          <div class="preview-header">
+            <span class="preview-title" data-i18n="previewTitle">目前建構的方程式：</span>
+            <span class="dim-status-badge" id="dim-status-badge">因次檢驗就緒</span>
+          </div>
+          <div class="preview-formula-math" id="preview-formula-math">--</div>
+          <div class="preview-formula-sub" id="preview-formula-sub">--</div>
+        </div>
+
+        <!-- 單位不符警示橫幅 -->
+        <div class="mismatch-warning-card" id="mismatch-warning-card" style="display: none;"></div>
 
         <!-- 項目列表容器 -->
         <div class="terms-list" id="terms-container"></div>

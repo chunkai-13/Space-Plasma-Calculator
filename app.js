@@ -16,25 +16,28 @@ const I18N = {
     
     // Tab 1
     builderTitle: "自訂運算建構區",
-    builderDesc: "自由組合物理量與常數，設定分子、分母、係數與次方量進行計算。",
+    builderDesc: "自由以多項式組合物理量與常數，支援 ＋、－、×、÷ 運算，並具備即時方程式呈現與單位相符性檢查。",
+    previewTitle: "目前建構的方程式：",
+    dimReady: "因次檢驗就緒",
+    dimConsistent: "因次完全相符 ✓",
+    dimMismatch: "單位因次不符 ⚠️",
     btnAddQty: "＋ 新增物理量",
     btnAddConst: "＋ 插入常用常數",
     btnClear: "清空項目",
     presetLabel: "快速帶入經典範例：",
     presetPB: "磁壓力 (B² / 2μ₀)",
+    presetTotalP: "總壓力 (P_th + P_B)",
     presetBeta: "電漿 Beta (nkT / P_B)",
     presetVA: "阿爾芬速度 (B / √(μ₀ ρ))",
     btnEqual: "＝ 計算結果",
     resultTitle: "計算結果輸出",
-    resultPlaceholder: "請於上方新增項目後，點擊「＝ 計算結果」按鈕。",
+    resultPlaceholder: "請於上方建構多項式後，點擊「＝ 計算結果」按鈕。",
     outputSystem: "輸出制度：",
     sysSpace: "太空常用制 (Space)",
     sysSI: "國際單位制 (SI)",
     sysCGS: "高斯制 (CGS)",
     btnCopy: "複製數值",
     copied: "已複製！",
-    termNumerator: "分子",
-    termDenominator: "分母",
     termPower: "次方",
     termMult: "係數",
     termDelete: "刪除",
@@ -74,25 +77,28 @@ const I18N = {
 
     // Tab 1
     builderTitle: "Expression Builder",
-    builderDesc: "Combine physical quantities, constants, exponents, and numerators/denominators.",
+    builderDesc: "Build polynomial expressions with +, -, ×, ÷. Includes real-time equation display and dimensional consistency check.",
+    previewTitle: "Current Equation Preview:",
+    dimReady: "Ready",
+    dimConsistent: "Dimensions Match ✓",
+    dimMismatch: "Dimension Mismatch ⚠️",
     btnAddQty: "+ Add Quantity",
     btnAddConst: "+ Insert Constant",
     btnClear: "Clear All",
     presetLabel: "Quick Presets:",
     presetPB: "Magnetic Pressure (B² / 2μ₀)",
+    presetTotalP: "Total Pressure (P_th + P_B)",
     presetBeta: "Plasma Beta (nkT / P_B)",
     presetVA: "Alfvén Speed (B / √(μ₀ ρ))",
     btnEqual: "= Compute Result",
     resultTitle: "Calculation Output",
-    resultPlaceholder: "Add terms above and click '= Compute Result'.",
+    resultPlaceholder: "Construct your polynomial expression above and click '= Compute Result'.",
     outputSystem: "Output System:",
     sysSpace: "Space Units",
     sysSI: "SI Units",
     sysCGS: "CGS Units",
     btnCopy: "Copy Value",
     copied: "Copied!",
-    termNumerator: "Num",
-    termDenominator: "Denom",
     termPower: "Power",
     termMult: "Coeff",
     termDelete: "Delete",
@@ -157,6 +163,12 @@ class SpacePlasmaApp {
     this.resultOutputBox = document.getElementById("result-output-box");
     this.sysRadios = document.querySelectorAll("input[name='display-system']");
 
+    // 即時方程式看板元件
+    this.previewFormulaMath = document.getElementById("preview-formula-math");
+    this.previewFormulaSub = document.getElementById("preview-formula-sub");
+    this.dimStatusBadge = document.getElementById("dim-status-badge");
+    this.mismatchWarningCard = document.getElementById("mismatch-warning-card");
+
     // 分頁二元件
     this.catSelect = document.getElementById("lookup-cat-select");
     this.qtySelect = document.getElementById("lookup-qty-select");
@@ -200,12 +212,12 @@ class SpacePlasmaApp {
 
     // 分頁一事件
     this.btnAddQty.addEventListener("click", () => {
-      this.calculator.addTerm({ type: "quantity" });
+      this.calculator.addTerm({ type: "quantity", operator: "+" });
       this.renderTermsList();
     });
 
     this.btnAddConst.addEventListener("click", () => {
-      this.calculator.addTerm({ type: "constant" });
+      this.calculator.addTerm({ type: "constant", operator: "*" });
       this.renderTermsList();
     });
 
@@ -336,91 +348,133 @@ class SpacePlasmaApp {
 
     if (presetKey === "presetPB") {
       // 磁壓力: B^2 / (2 * mu0)
-      // 第 1 項: 磁場 B = 10 nT, 分子, 2 次方
       this.calculator.addTerm({
+        operator: "+",
         type: "quantity",
         quantityId: "magnetic_field",
         unitId: "nT",
         numberValue: 10,
         multiplier: 1,
-        position: "numerator",
         power: 2
       });
-      // 第 2 項: 真空磁導率 mu0, 分母, 1 次方, 係數 2
       this.calculator.addTerm({
+        operator: "/",
         type: "constant",
         constantId: "mu0",
         multiplier: 2,
-        position: "denominator",
         power: 1
       });
-    } else if (presetKey === "presetBeta") {
-      // 電漿 Beta: nkT / (B^2 / 2mu0)
+    } else if (presetKey === "presetTotalP") {
+      // 總壓力: 熱壓力 (n * kB * T) + 磁壓力 (B^2 / 2mu0)
+      // 項 1: n
       this.calculator.addTerm({
+        operator: "+",
         type: "quantity",
         quantityId: "number_density",
         unitId: "cm_minus3",
         numberValue: 5,
-        position: "numerator",
         power: 1
       });
+      // 項 2: * kB
       this.calculator.addTerm({
+        operator: "*",
+        type: "constant",
+        constantId: "kB",
+        power: 1
+      });
+      // 項 3: * T
+      this.calculator.addTerm({
+        operator: "*",
         type: "quantity",
         quantityId: "temperature",
         unitId: "eV",
-        numberValue: 15,
-        position: "numerator",
+        numberValue: 10,
         power: 1
       });
+      // 項 4: + B^2
       this.calculator.addTerm({
-        type: "constant",
-        constantId: "kB",
-        position: "numerator",
-        power: 1
-      });
-      this.calculator.addTerm({
+        operator: "+",
         type: "quantity",
         quantityId: "magnetic_field",
         unitId: "nT",
         numberValue: 10,
-        position: "denominator",
         power: 2
       });
+      // 項 5: / (2 mu0)
       this.calculator.addTerm({
+        operator: "/",
         type: "constant",
         constantId: "mu0",
         multiplier: 2,
-        position: "numerator", // 乘在分子等於除以分母的 1/2mu0
         power: 1
       });
-    } else if (presetKey === "presetVA") {
-      // 阿爾芬速度: B / sqrt(mu0 * mp * n)
+    } else if (presetKey === "presetBeta") {
+      // 電漿 Beta: (n * kB * T) / (B^2 / 2mu0)
       this.calculator.addTerm({
-        type: "quantity",
-        quantityId: "magnetic_field",
-        unitId: "nT",
-        numberValue: 5,
-        position: "numerator",
-        power: 1
-      });
-      this.calculator.addTerm({
-        type: "constant",
-        constantId: "mu0",
-        position: "denominator",
-        power: 0.5
-      });
-      this.calculator.addTerm({
-        type: "constant",
-        constantId: "mp",
-        position: "denominator",
-        power: 0.5
-      });
-      this.calculator.addTerm({
+        operator: "+",
         type: "quantity",
         quantityId: "number_density",
         unitId: "cm_minus3",
         numberValue: 5,
-        position: "denominator",
+        power: 1
+      });
+      this.calculator.addTerm({
+        operator: "*",
+        type: "quantity",
+        quantityId: "temperature",
+        unitId: "eV",
+        numberValue: 15,
+        power: 1
+      });
+      this.calculator.addTerm({
+        operator: "*",
+        type: "constant",
+        constantId: "kB",
+        power: 1
+      });
+      this.calculator.addTerm({
+        operator: "/",
+        type: "quantity",
+        quantityId: "magnetic_field",
+        unitId: "nT",
+        numberValue: 10,
+        power: 2
+      });
+      this.calculator.addTerm({
+        operator: "*",
+        type: "constant",
+        constantId: "mu0",
+        multiplier: 2,
+        power: 1
+      });
+    } else if (presetKey === "presetVA") {
+      // 阿爾芬速度: B / (mu0^0.5 * mp^0.5 * n^0.5)
+      this.calculator.addTerm({
+        operator: "+",
+        type: "quantity",
+        quantityId: "magnetic_field",
+        unitId: "nT",
+        numberValue: 5,
+        power: 1
+      });
+      this.calculator.addTerm({
+        operator: "/",
+        type: "constant",
+        constantId: "mu0",
+        power: 0.5
+      });
+      this.calculator.addTerm({
+        operator: "/",
+        type: "constant",
+        constantId: "mp",
+        power: 0.5
+      });
+      this.calculator.addTerm({
+        operator: "/",
+        type: "quantity",
+        quantityId: "number_density",
+        unitId: "cm_minus3",
+        numberValue: 5,
         power: 0.5
       });
     }
@@ -428,6 +482,54 @@ class SpacePlasmaApp {
     this.renderTermsList();
     const res = this.calculator.compute();
     this.renderResultBox(res);
+  }
+
+  // 更新頂部方程式呈現看板與因次狀態
+  updateEquationPreview() {
+    const isZh = this.currentLang === "zh";
+    const eqRep = this.calculator.generateEquationRepresentation();
+
+    this.previewFormulaMath.innerHTML = eqRep.formulaHtml;
+    this.previewFormulaSub.textContent = eqRep.formulaText ? `代號表示：${eqRep.formulaText}` : "";
+
+    // 進行預檢以即時更新標籤狀態
+    try {
+      if (this.calculator.terms.length === 0) {
+        this.dimStatusBadge.className = "dim-status-badge";
+        this.dimStatusBadge.textContent = I18N[this.currentLang].dimReady;
+        this.mismatchWarningCard.style.display = "none";
+        return;
+      }
+
+      const res = this.calculator.compute();
+      if (res && res.hasError) {
+        this.dimStatusBadge.className = "dim-status-badge warning";
+        this.dimStatusBadge.textContent = I18N[this.currentLang].dimMismatch;
+
+        // 展開警告說明卡
+        this.mismatchWarningCard.style.display = "block";
+        this.mismatchWarningCard.innerHTML = `
+          <div class="mismatch-title">
+            <span>⚠️</span>
+            <span>${isZh ? res.warningTitleZh : res.warningTitleEn}</span>
+          </div>
+          <ul class="mismatch-list">
+            ${res.mismatchDetails.map(d => `<li>${d}</li>`).join("")}
+          </ul>
+          <div class="mismatch-advice">
+            ${isZh ? res.adviceZh : res.adviceEn}
+          </div>
+        `;
+      } else {
+        this.dimStatusBadge.className = "dim-status-badge";
+        this.dimStatusBadge.textContent = I18N[this.currentLang].dimConsistent;
+        this.mismatchWarningCard.style.display = "none";
+      }
+    } catch (e) {
+      this.dimStatusBadge.className = "dim-status-badge warning";
+      this.dimStatusBadge.textContent = e.message;
+      this.mismatchWarningCard.style.display = "none";
+    }
   }
 
   renderTermsList() {
@@ -476,16 +578,31 @@ class SpacePlasmaApp {
         unitSelectHtml = `<span class="const-unit-badge">${this.calculator.getConstantDef(term.constantId).unit}</span>`;
       }
 
+      // 運算符號選擇按鈕列
+      let opSelectorHtml = "";
+      if (index === 0) {
+        opSelectorHtml = `
+          <div class="term-op-selector">
+            <button type="button" class="btn-op ${term.operator === '+' ? 'active' : ''}" data-op="+" title="正項">＋</button>
+            <button type="button" class="btn-op ${term.operator === '-' ? 'active' : ''}" data-op="-" title="負項">－</button>
+          </div>
+        `;
+      } else {
+        opSelectorHtml = `
+          <div class="term-op-selector">
+            <button type="button" class="btn-op ${term.operator === '+' ? 'active' : ''}" data-op="+" title="相加">＋</button>
+            <button type="button" class="btn-op ${term.operator === '-' ? 'active' : ''}" data-op="-" title="相減">－</button>
+            <button type="button" class="btn-op ${term.operator === '*' ? 'active' : ''}" data-op="*" title="相乘">×</button>
+            <button type="button" class="btn-op ${term.operator === '/' ? 'active' : ''}" data-op="/" title="相除 (分母)">÷</button>
+          </div>
+        `;
+      }
+
       card.innerHTML = `
         <div class="term-header">
-          <span class="term-idx">#${index + 1}</span>
-          <div class="term-pos-toggle">
-            <button type="button" class="btn-toggle ${term.position === 'numerator' ? 'active' : ''}" data-pos="numerator">
-              ${isZh ? '分子' : 'Num'}
-            </button>
-            <button type="button" class="btn-toggle ${term.position === 'denominator' ? 'active' : ''}" data-pos="denominator">
-              ${isZh ? '分母' : 'Denom'}
-            </button>
+          <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <span class="term-idx">#${index + 1}</span>
+            ${opSelectorHtml}
           </div>
           <button type="button" class="btn-delete" title="刪除此項">✕</button>
         </div>
@@ -515,11 +632,11 @@ class SpacePlasmaApp {
         </div>
       `;
 
-      // 綁定項目內部變動事件
-      const posBtns = card.querySelectorAll(".term-pos-toggle .btn-toggle");
-      posBtns.forEach(btn => {
+      // 綁定運算符號點擊切換
+      const opBtns = card.querySelectorAll(".term-op-selector .btn-op");
+      opBtns.forEach(btn => {
         btn.addEventListener("click", () => {
-          term.position = btn.getAttribute("data-pos");
+          term.operator = btn.getAttribute("data-op");
           this.renderTermsList();
         });
       });
@@ -542,11 +659,13 @@ class SpacePlasmaApp {
         const unitSelect = card.querySelector(".term-unit-select");
         unitSelect.addEventListener("change", () => {
           term.unitId = unitSelect.value;
+          this.updateEquationPreview();
         });
 
         const valInput = card.querySelector(".term-value-input");
         valInput.addEventListener("input", () => {
           term.numberValue = parseFloat(valInput.value) || 0;
+          this.updateEquationPreview();
         });
       } else if (term.type === "constant") {
         const constSelect = card.querySelector(".term-const-select");
@@ -559,15 +678,19 @@ class SpacePlasmaApp {
       const multInput = card.querySelector(".term-mult-input");
       multInput.addEventListener("input", () => {
         term.multiplier = parseFloat(multInput.value) || 1;
+        this.updateEquationPreview();
       });
 
       const powerInput = card.querySelector(".term-power-input");
       powerInput.addEventListener("input", () => {
         term.power = parseFloat(powerInput.value) || 1;
+        this.updateEquationPreview();
       });
 
       this.termsContainer.appendChild(card);
     });
+
+    this.updateEquationPreview();
   }
 
   renderResultBox(res) {
@@ -581,6 +704,26 @@ class SpacePlasmaApp {
     }
 
     const isZh = this.currentLang === "zh";
+
+    // 單位因次不符警告處理
+    if (res.hasError) {
+      this.resultOutputBox.innerHTML = `
+        <div class="mismatch-warning-card" style="margin-bottom: 0;">
+          <div class="mismatch-title">
+            <span>⚠️</span>
+            <span>${isZh ? res.warningTitleZh : res.warningTitleEn}</span>
+          </div>
+          <ul class="mismatch-list">
+            ${res.mismatchDetails.map(d => `<li>${d}</li>`).join("")}
+          </ul>
+          <div class="mismatch-advice">
+            ${isZh ? res.adviceZh : res.adviceEn}
+          </div>
+        </div>
+      `;
+      return;
+    }
+
     const formattedVal = Math.abs(res.value) < 1e-3 || Math.abs(res.value) >= 1e5
       ? res.value.toExponential(4)
       : res.value.toLocaleString(undefined, { maximumFractionDigits: 4 });
@@ -600,6 +743,27 @@ class SpacePlasmaApp {
                 <span class="unit-system">[${u.system}]</span>
                 <span class="unit-val">${v}</span>
                 <span class="unit-name">${u.label}</span>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    // 多項式各項細項拆解表
+    let groupsBreakdownHtml = "";
+    if (res.groups && res.groups.length > 1) {
+      groupsBreakdownHtml = `
+        <div style="margin: 1rem 0; font-size: 0.85rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+          <div style="font-weight: 600; margin-bottom: 0.4rem; color: var(--text-secondary);">多項式各項計算貢獻分解：</div>
+          ${res.groups.map(g => {
+            const signStr = g.sign === "-" ? "－ " : "＋ ";
+            const valStr = Math.abs(g.valueSI) < 1e-3 || Math.abs(g.valueSI) >= 1e5 ? g.valueSI.toExponential(4) : g.valueSI.toLocaleString(undefined, { maximumFractionDigits: 4 });
+            const qName = g.matchedQuantity ? (isZh ? g.matchedQuantity.nameZh : g.matchedQuantity.nameEn) : g.dimensionStr;
+            return `
+              <div style="display: flex; justify-content: space-between; padding: 0.25rem 0; color: var(--text-muted);">
+                <span>${signStr}項 #${g.groupIndex} (${g.symbolExpression}) [${qName}]</span>
+                <code>${valStr} SI</code>
               </div>
             `;
           }).join("")}
@@ -627,6 +791,7 @@ class SpacePlasmaApp {
         SI 基本制等值：<code>${rawSIFormatted} ${res.baseUnitSI}</code>
       </div>
 
+      ${groupsBreakdownHtml}
       ${unitsListHtml}
 
       <div class="result-actions">
@@ -652,7 +817,6 @@ class SpacePlasmaApp {
   renderLookupTab() {
     const isZh = this.currentLang === "zh";
 
-    // 填充類別選單
     this.catSelect.innerHTML = `
       <option value="all">${I18N[this.currentLang].allCats}</option>
       ${QUANTITY_CATEGORIES.map(c => `
@@ -717,7 +881,6 @@ class SpacePlasmaApp {
     const isZh = this.currentLang === "zh";
     document.getElementById("lookup-desc-box").textContent = isZh ? q.descZh : q.descEn;
 
-    // 渲染單位對照表
     this.unitSpecTable.innerHTML = q.units.map(u => `
       <tr>
         <td><span class="badge-system badge-${u.system.toLowerCase()}">${u.system}</span></td>
@@ -727,7 +890,6 @@ class SpacePlasmaApp {
       </tr>
     `).join("");
 
-    // 填充換算選單
     this.convFromUnit.innerHTML = q.units.map(u => `<option value="${u.id}">${u.label}</option>`).join("");
     this.convToUnit.innerHTML = q.units.map(u => `<option value="${u.id}">${u.label}</option>`).join("");
 
@@ -746,7 +908,6 @@ class SpacePlasmaApp {
     const fromUnit = q.units.find(u => u.id === this.convFromUnit.value) || q.units[0];
     const toUnit = q.units.find(u => u.id === this.convToUnit.value) || q.units[0];
 
-    // 換算到 SI 再換到目標單位
     const valSI = val * fromUnit.toBaseSI;
     const converted = valSI / toUnit.toBaseSI;
     const factor = fromUnit.toBaseSI / toUnit.toBaseSI;
@@ -829,7 +990,6 @@ class SpacePlasmaApp {
     document.getElementById("eq-formula-display").textContent = eq.formulaLatex;
     document.getElementById("eq-desc-display").textContent = isZh ? eq.descZh : eq.descEn;
 
-    // 動態渲染參數輸入表單
     this.eqInputsContainer.innerHTML = "";
 
     eq.inputs.forEach(input => {
@@ -879,7 +1039,6 @@ class SpacePlasmaApp {
       this.eqInputsContainer.appendChild(row);
     });
 
-    // 自動計算一次
     this.computeCurrentEquation();
   }
 
