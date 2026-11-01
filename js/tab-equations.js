@@ -88,14 +88,26 @@ class EquationsTabController {
     if (!this.eqSelect) return;
     const isZh = this.app.currentLang === "zh";
     const kw = keyword.trim().toLowerCase();
+    const cleanKw = kw.replace(/[-\s_]/g, "");
     if (!kw) {
       this.filterEquationsByCategory(this.eqCatSelect ? this.eqCatSelect.value : "all");
       return;
     }
 
     const matches = EQUATIONS_DATABASE.filter(e => {
-      return e.nameZh.toLowerCase().includes(kw) ||
-             e.nameEn.toLowerCase().includes(kw) ||
+      const nameZh = e.nameZh.toLowerCase();
+      const nameEn = e.nameEn.toLowerCase();
+      const cleanNameEn = nameEn.replace(/[-\s_]/g, "");
+      const idStr = e.id.toLowerCase().replace(/[-\s_]/g, "");
+      const descZh = (e.descZh || "").toLowerCase();
+      const descEn = (e.descEn || "").toLowerCase();
+
+      return nameZh.includes(kw) ||
+             nameEn.includes(kw) ||
+             cleanNameEn.includes(cleanKw) ||
+             idStr.includes(cleanKw) ||
+             descZh.includes(kw) ||
+             descEn.includes(kw) ||
              e.formulaLatex.toLowerCase().includes(kw);
     });
 

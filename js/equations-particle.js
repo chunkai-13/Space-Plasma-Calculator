@@ -57,11 +57,11 @@ const PARTICLE_EQUATIONS = [
   {
     id: "gyro_radius",
     category: "particle_motion",
-    nameZh: "迴旋半徑 (拉莫爾半徑)",
-    nameEn: "Gyro-radius (Larmor Radius)",
-    formulaLatex: "r_L = \\frac{m v_\\perp}{|q| B} = \\frac{\\sqrt{2 m k_B T_\\perp}}{|q| B}",
-    descZh: "粒子繞磁力線旋轉時軌跡的圓半徑，決定了流體描述（MHD）何時有效或需考慮微觀動態效應。",
-    descEn: "Radius of circular motion of a charged particle in the plane perpendicular to B.",
+    nameZh: "迴旋半徑 (Gyroradius / 拉莫爾半徑 - 依能量 E_⊥)",
+    nameEn: "Gyroradius (Larmor Radius - from Energy E_⊥)",
+    formulaLatex: "r_g = \\frac{m v_\\perp}{|q| B} = \\frac{\\sqrt{2 m E_\\perp}}{|q| B} = \\frac{\\sqrt{2 m k_B T_\\perp}}{|q| B}",
+    descZh: "帶電粒子在磁場中繞磁力線迴旋的拉莫爾軌跡半徑 (Gyroradius / Larmor radius, r_g 或 r_L)。決定粒子是否能被磁場拘束、磁層粒子損失錐以及何時必須考慮動態微觀物理效應。",
+    descEn: "Gyroradius (Larmor radius) of a charged particle in a magnetic field: r_g = m v_⊥ / (|q| B). Defines the spatial scale of cyclotron motion.",
     inputs: [
       {
         id: "particle",
@@ -70,14 +70,16 @@ const PARTICLE_EQUATIONS = [
         type: "select",
         options: [
           { value: "electron", labelZh: "電子 (e⁻)", labelEn: "Electron (e⁻)", q: 1.602176634e-19, m: 9.1093837015e-31 },
-          { value: "proton", labelZh: "質子 (p⁺)", labelEn: "Proton (p⁺)", q: 1.602176634e-19, m: 1.67262192369e-27 }
+          { value: "proton", labelZh: "質子 / 氫離子 (p⁺)", labelEn: "Proton / H⁺ (p⁺)", q: 1.602176634e-19, m: 1.67262192369e-27 },
+          { value: "alpha", labelZh: "Alpha 粒子 / 氦離子 (He²⁺)", labelEn: "Alpha / He²⁺ (He²⁺)", q: 2 * 1.602176634e-19, m: 4 * 1.6726e-27 },
+          { value: "oxygen", labelZh: "氧離子 (O⁺)", labelEn: "Oxygen Ion (O⁺)", q: 1.602176634e-19, m: 16 * 1.6726e-27 }
         ],
         default: "proton"
       },
       {
         id: "energy_or_v",
         nameZh: "垂直動能 (E_⊥) 或 溫度 (T_⊥)",
-        nameEn: "Perpendicular Energy (E_⊥)",
+        nameEn: "Perpendicular Energy / Temperature (E_⊥)",
         default: 10,
         unitCategory: "energy",
         defaultUnit: "eV"
@@ -99,13 +101,80 @@ const PARTICLE_EQUATIONS = [
       const r_L = (p.m * v_perp) / (p.q * B_T);
 
       return [
-        { labelZh: "迴旋半徑 (r_L)", labelEn: "Gyro-radius (r_L)", value: r_L, unit: "m", altUnits: [
+        { labelZh: "迴旋半徑 (r_g / r_L)", labelEn: "Gyroradius (r_g / r_L)", value: r_L, unit: "m", altUnits: [
           { label: "km", value: r_L * 1e-3 },
           { label: "R_E (地球半徑)", value: r_L / 6.371e6 }
         ]},
         { labelZh: "垂直運動速度 (v_⊥)", labelEn: "Perpendicular Speed (v_⊥)", value: v_perp, unit: "m/s", altUnits: [
           { label: "km/s", value: v_perp * 1e-3 }
-        ]}
+        ]},
+        { labelZh: "磁剛度 (Magnetic Rigidity = B · r_g)", labelEn: "Magnetic Rigidity (B · r_g)", value: B_T * r_L, unit: "T·m" }
+      ];
+    }
+  },
+  {
+    id: "gyro_radius_velocity",
+    category: "particle_motion",
+    nameZh: "迴旋半徑 (Gyroradius - 依垂直速度 v_⊥)",
+    nameEn: "Gyroradius from Velocity (v_⊥)",
+    formulaLatex: "r_g = \\frac{m v_\\perp}{|q| B}",
+    descZh: "由垂直迴旋速度 v_⊥ 與磁場 B 直接解算粒子迴旋半徑 (Gyroradius)。太空探測器直接測得之垂直流速或熱速度可直接代入計算。",
+    descEn: "Gyroradius computed directly from perpendicular particle velocity: r_g = m v_⊥ / (|q| B).",
+    inputs: [
+      {
+        id: "particle",
+        nameZh: "粒子種類",
+        nameEn: "Particle Type",
+        type: "select",
+        options: [
+          { value: "electron", labelZh: "電子 (e⁻)", labelEn: "Electron (e⁻)", q: 1.602176634e-19, m: 9.1093837015e-31 },
+          { value: "proton", labelZh: "質子 / 氫離子 (p⁺)", labelEn: "Proton / H⁺ (p⁺)", q: 1.602176634e-19, m: 1.67262192369e-27 },
+          { value: "alpha", labelZh: "Alpha 粒子 / 氦離子 (He²⁺)", labelEn: "Alpha / He²⁺ (He²⁺)", q: 2 * 1.602176634e-19, m: 4 * 1.6726e-27 },
+          { value: "oxygen", labelZh: "氧離子 (O⁺)", labelEn: "Oxygen Ion (O⁺)", q: 1.602176634e-19, m: 16 * 1.6726e-27 }
+        ],
+        default: "proton"
+      },
+      {
+        id: "v_perp",
+        nameZh: "垂直迴旋速度 (v_⊥)",
+        nameEn: "Perpendicular Speed (v_⊥)",
+        default: 200,
+        unitCategory: "velocity",
+        defaultUnit: "km_per_s"
+      },
+      {
+        id: "B",
+        nameZh: "磁場強度 (B)",
+        nameEn: "Magnetic Field (B)",
+        default: 10,
+        unitCategory: "magnetic_field",
+        defaultUnit: "nT"
+      }
+    ],
+    calculate: (inputs, units) => {
+      const p = inputs.particle;
+      const B_T = inputs.B * units.B.toBaseSI;
+      const v_perp_SI = inputs.v_perp * units.v_perp.toBaseSI;
+      const r_L = (p.m * v_perp_SI) / (p.q * B_T);
+      const E_perp_J = 0.5 * p.m * v_perp_SI * v_perp_SI;
+      const E_perp_eV = E_perp_J / 1.602176634e-19;
+      const omega_c = (p.q * B_T) / p.m;
+      const T_c = (2 * Math.PI) / omega_c;
+
+      return [
+        { labelZh: "迴旋半徑 (r_g / r_L)", labelEn: "Gyroradius (r_g / r_L)", value: r_L, unit: "m", altUnits: [
+          { label: "km", value: r_L * 1e-3 },
+          { label: "R_E (地球半徑)", value: r_L / 6.371e6 }
+        ]},
+        { labelZh: "垂直動能 (E_⊥)", labelEn: "Perpendicular Energy (E_⊥)", value: E_perp_eV, unit: "eV", altUnits: [
+          { label: "keV", value: E_perp_eV * 1e-3 },
+          { label: "J", value: E_perp_J }
+        ]},
+        { labelZh: "迴旋週期 (T_c)", labelEn: "Gyro-period (T_c)", value: T_c, unit: "s", altUnits: [
+          { label: "ms", value: T_c * 1e3 },
+          { label: "μs", value: T_c * 1e6 }
+        ]},
+        { labelZh: "磁剛度 (Magnetic Rigidity = B · r_g)", labelEn: "Magnetic Rigidity (B · r_g)", value: B_T * r_L, unit: "T·m" }
       ];
     }
   },
