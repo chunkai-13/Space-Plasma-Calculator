@@ -174,47 +174,53 @@ class BuilderTabController {
       this.calculator.insertConstant({ constantId: "mu0", multiplier: 2 }, { scope: "fraction", fractionId: frac.id, part: "denominator", index: 0 });
       this.calculator.setCursorTarget({ scope: "root", index: 1 });
     } else if (presetKey === "presetTotalP") {
-      // 總壓力: (n * kB * T) + (B^2 / 2mu0)
+      // 總壓力: (n * kB * T) + 直式分式 (B^2 / 2mu0)
       this.calculator.insertQuantity({ quantityId: "number_density", unitId: "cm_minus3", numberValue: 5 });
       this.calculator.insertOperator("*");
       this.calculator.insertConstant({ constantId: "kB" });
       this.calculator.insertOperator("*");
       this.calculator.insertQuantity({ quantityId: "temperature", unitId: "eV", numberValue: 10 });
       this.calculator.insertOperator("+");
-      this.calculator.insertQuantity({ quantityId: "magnetic_field", unitId: "nT", numberValue: 10, power: 2 });
-      this.calculator.insertOperator("/");
-      this.calculator.insertConstant({ constantId: "mu0", multiplier: 2 });
+      const fracPB = this.calculator.insertFraction();
+      this.calculator.insertQuantity({ quantityId: "magnetic_field", unitId: "nT", numberValue: 10, power: 2 }, { scope: "fraction", fractionId: fracPB.id, part: "numerator", index: 0 });
+      this.calculator.insertConstant({ constantId: "mu0", multiplier: 2 }, { scope: "fraction", fractionId: fracPB.id, part: "denominator", index: 0 });
+      this.calculator.setCursorTarget({ scope: "root", index: this.calculator.tokens.length });
     } else if (presetKey === "presetBracket") {
-      // 巢狀括號範例: [ (B^2 / 2mu0) + P_th ]
+      // 巢狀括號範例: [ ( 直式分式 B^2 / 2mu0 ) + P_th ]
       this.calculator.insertOpenParen();
       this.calculator.insertOpenParen();
-      this.calculator.insertQuantity({ quantityId: "magnetic_field", unitId: "nT", numberValue: 10, power: 2 });
-      this.calculator.insertOperator("/");
-      this.calculator.insertConstant({ constantId: "mu0", multiplier: 2 });
+      const fracB = this.calculator.insertFraction();
+      this.calculator.insertQuantity({ quantityId: "magnetic_field", unitId: "nT", numberValue: 10, power: 2 }, { scope: "fraction", fractionId: fracB.id, part: "numerator", index: 0 });
+      this.calculator.insertConstant({ constantId: "mu0", multiplier: 2 }, { scope: "fraction", fractionId: fracB.id, part: "denominator", index: 0 });
+      this.calculator.setCursorTarget({ scope: "root", index: this.calculator.tokens.length });
       this.calculator.insertCloseParen(1);
       this.calculator.insertOperator("+");
       this.calculator.insertQuantity({ quantityId: "plasma_pressure", unitId: "nPa", numberValue: 0.05 });
       this.calculator.insertCloseParen(1);
+      this.calculator.setCursorTarget({ scope: "root", index: this.calculator.tokens.length });
     } else if (presetKey === "presetBeta") {
-      // 電漿 Beta: (n * kB * T) / (B^2 / 2mu0)
-      this.calculator.insertQuantity({ quantityId: "number_density", unitId: "cm_minus3", numberValue: 5 });
-      this.calculator.insertOperator("*");
-      this.calculator.insertQuantity({ quantityId: "temperature", unitId: "eV", numberValue: 15 });
-      this.calculator.insertOperator("*");
-      this.calculator.insertConstant({ constantId: "kB" });
-      this.calculator.insertOperator("/");
-      this.calculator.insertQuantity({ quantityId: "magnetic_field", unitId: "nT", numberValue: 10, power: 2 });
-      this.calculator.insertOperator("*");
-      this.calculator.insertConstant({ constantId: "mu0", multiplier: 2 });
+      // 電漿 Beta: 直式大分式 (n * kB * T) / (B^2 / 2mu0)
+      const fracBeta = this.calculator.insertFraction();
+      this.calculator.insertQuantity({ quantityId: "number_density", unitId: "cm_minus3", numberValue: 5 }, { scope: "fraction", fractionId: fracBeta.id, part: "numerator", index: 0 });
+      this.calculator.insertOperator("*", { scope: "fraction", fractionId: fracBeta.id, part: "numerator", index: 1 });
+      this.calculator.insertConstant({ constantId: "kB" }, { scope: "fraction", fractionId: fracBeta.id, part: "numerator", index: 2 });
+      this.calculator.insertOperator("*", { scope: "fraction", fractionId: fracBeta.id, part: "numerator", index: 3 });
+      this.calculator.insertQuantity({ quantityId: "temperature", unitId: "eV", numberValue: 15 }, { scope: "fraction", fractionId: fracBeta.id, part: "numerator", index: 4 });
+
+      this.calculator.insertQuantity({ quantityId: "magnetic_field", unitId: "nT", numberValue: 10, power: 2 }, { scope: "fraction", fractionId: fracBeta.id, part: "denominator", index: 0 });
+      this.calculator.insertOperator("/", { scope: "fraction", fractionId: fracBeta.id, part: "denominator", index: 1 });
+      this.calculator.insertConstant({ constantId: "mu0", multiplier: 2 }, { scope: "fraction", fractionId: fracBeta.id, part: "denominator", index: 2 });
+      this.calculator.setCursorTarget({ scope: "root", index: 1 });
     } else if (presetKey === "presetVA") {
-      // 阿爾芬速度: B / (mu0^0.5 * mp^0.5 * n^0.5)
-      this.calculator.insertQuantity({ quantityId: "magnetic_field", unitId: "nT", numberValue: 5 });
-      this.calculator.insertOperator("/");
-      this.calculator.insertConstant({ constantId: "mu0", power: 0.5 });
-      this.calculator.insertOperator("/");
-      this.calculator.insertConstant({ constantId: "mp", power: 0.5 });
-      this.calculator.insertOperator("/");
-      this.calculator.insertQuantity({ quantityId: "number_density", unitId: "cm_minus3", numberValue: 5, power: 0.5 });
+      // 阿爾芬速度: 直式分式 B / (mu0^0.5 * mp^0.5 * n^0.5)
+      const fracVA = this.calculator.insertFraction();
+      this.calculator.insertQuantity({ quantityId: "magnetic_field", unitId: "nT", numberValue: 5 }, { scope: "fraction", fractionId: fracVA.id, part: "numerator", index: 0 });
+      this.calculator.insertConstant({ constantId: "mu0", power: 0.5 }, { scope: "fraction", fractionId: fracVA.id, part: "denominator", index: 0 });
+      this.calculator.insertOperator("*", { scope: "fraction", fractionId: fracVA.id, part: "denominator", index: 1 });
+      this.calculator.insertConstant({ constantId: "mp", power: 0.5 }, { scope: "fraction", fractionId: fracVA.id, part: "denominator", index: 2 });
+      this.calculator.insertOperator("*", { scope: "fraction", fractionId: fracVA.id, part: "denominator", index: 3 });
+      this.calculator.insertQuantity({ quantityId: "number_density", unitId: "cm_minus3", numberValue: 5, power: 0.5 }, { scope: "fraction", fractionId: fracVA.id, part: "denominator", index: 4 });
+      this.calculator.setCursorTarget({ scope: "root", index: 1 });
     }
 
     this.renderTermsList();

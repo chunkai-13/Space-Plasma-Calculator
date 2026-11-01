@@ -1,6 +1,6 @@
 /* styles.css - 樣式匯整入口檔案 (聚合四大子模組) */
 
-@import url("./css/base.css?v=2.7");
-@import url("./css/layout.css?v=2.7");
-@import url("./css/builder.css?v=2.7");
-@import url("./css/components.css?v=2.7");
+@import url("./css/base.css?v=2.8");
+@import url("./css/layout.css?v=2.8");
+@import url("./css/builder.css?v=2.8");
+@import url("./css/components.css?v=2.8");
