@@ -109,6 +109,7 @@ class BuilderTabController {
     if (this.btnEqual) {
       this.btnEqual.addEventListener("click", () => {
         try {
+          const dict = (typeof I18N !== "undefined" && I18N[this.app.currentLang]) || (typeof window !== "undefined" && window.dict) || {};
           const res = this.calculator.compute();
           this.renderResultBox(res);
         } catch (err) {

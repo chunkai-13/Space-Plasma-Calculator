@@ -117,7 +117,7 @@ class BuilderCardsListUI {
     if (!this.termsContainer) return;
     this.termsContainer.innerHTML = "";
     const isZh = this.app.currentLang === "zh";
-    const dict = I18N[this.app.currentLang];
+    const dict = (typeof I18N !== "undefined" && I18N[this.app.currentLang]) || (typeof window !== "undefined" && window.dict) || {};
     const eqRep = this.calculator.generateEquationRepresentation();
     const total = this.calculator.tokens.length;
 

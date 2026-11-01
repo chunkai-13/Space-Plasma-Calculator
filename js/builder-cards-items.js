@@ -18,7 +18,7 @@ class BuilderCardsItemsUI {
   // 渲染分式結構內部的子項目卡片 (分子或分母)
   renderSubItemCard(subTerm, subIndex, list, part, parentFrac, container) {
     const isZh = this.app.currentLang === "zh";
-    const dict = I18N[this.app.currentLang];
+    const dict = (typeof I18N !== "undefined" && I18N[this.app.currentLang]) || (typeof window !== "undefined" && window.dict) || {};
     const subCard = document.createElement("div");
     subCard.id = `term-card-${subTerm.id}`;
 

@@ -50,7 +50,7 @@ class BuilderPreviewUI {
     if (this.btnRedo) this.btnRedo.disabled = !this.calculator.canRedo();
 
     const isZh = this.app.currentLang === "zh";
-    const dict = I18N[this.app.currentLang];
+    const dict = (typeof I18N !== "undefined" && I18N[this.app.currentLang]) || (typeof window !== "undefined" && window.dict) || {};
     const eqRep = this.calculator.generateEquationRepresentation();
     const curTarget = this.calculator.cursorTarget;
 
@@ -252,7 +252,7 @@ class BuilderPreviewUI {
     if (!this.resultOutputBox) return;
 
     const isZh = this.app.currentLang === "zh";
-    const dict = I18N[this.app.currentLang];
+    const dict = (typeof I18N !== "undefined" && I18N[this.app.currentLang]) || (typeof window !== "undefined" && window.dict) || {};
 
     if (!res) {
       this.resultOutputBox.innerHTML = `

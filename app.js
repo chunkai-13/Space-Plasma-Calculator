@@ -95,7 +95,8 @@ class SpacePlasmaApp {
   applyLanguage(lang) {
     this.currentLang = lang;
     localStorage.setItem("sp_lang", lang);
-    const dict = I18N[lang];
+    const dict = I18N[lang] || I18N.zh;
+    window.dict = dict;
 
     document.querySelectorAll("[data-i18n]").forEach(el => {
       const key = el.getAttribute("data-i18n");

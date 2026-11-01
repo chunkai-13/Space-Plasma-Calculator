@@ -248,3 +248,9 @@ const I18N = {
     paramInputs: "Input Parameters & Units:"
   }
 };
+
+// 全域字典宣告 (防止任何舊版快取或未區域宣告時拋出 ReferenceError: Can't find variable: dict)
+if (typeof window !== "undefined") {
+  window.I18N = I18N;
+  window.dict = I18N.zh;
+}
