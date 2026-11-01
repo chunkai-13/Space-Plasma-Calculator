@@ -160,10 +160,13 @@ class SpacePlasmaApp {
     this.termsContainer = document.getElementById("terms-container");
     this.btnAddQty = document.getElementById("btn-add-qty");
     this.btnAddConst = document.getElementById("btn-add-const");
+    this.btnAddFraction = document.getElementById("btn-add-fraction");
     this.btnAddOpenParen = document.getElementById("btn-add-open-paren");
     this.btnAddCloseParen = document.getElementById("btn-add-close-paren");
     this.btnClearTerms = document.getElementById("btn-clear-terms");
     this.btnEqual = document.getElementById("btn-equal");
+    this.btnUndo = document.getElementById("btn-undo");
+    this.btnRedo = document.getElementById("btn-redo");
     this.resultOutputBox = document.getElementById("result-output-box");
     this.sysRadios = document.querySelectorAll("input[name='display-system']");
 
@@ -228,6 +231,14 @@ class SpacePlasmaApp {
       });
     });
 
+    // 插入分式
+    if (this.btnAddFraction) {
+      this.btnAddFraction.addEventListener("click", () => {
+        this.calculator.insertFraction();
+        this.renderTermsList();
+      });
+    }
+
     // 插入物理量
     if (this.btnAddQty) {
       this.btnAddQty.addEventListener("click", () => {
@@ -244,7 +255,7 @@ class SpacePlasmaApp {
       });
     }
 
-    // 插入左括號
+    // 插入開括號 (自動變換為小中大括號)
     if (this.btnAddOpenParen) {
       this.btnAddOpenParen.addEventListener("click", () => {
         this.calculator.insertOpenParen();
@@ -252,13 +263,48 @@ class SpacePlasmaApp {
       });
     }
 
-    // 插入右括號
+    // 插入閉括號 (自動變換為小中大括號)
     if (this.btnAddCloseParen) {
       this.btnAddCloseParen.addEventListener("click", () => {
         this.calculator.insertCloseParen(1);
         this.renderTermsList();
       });
     }
+
+    // 上一步 (Undo)
+    if (this.btnUndo) {
+      this.btnUndo.addEventListener("click", () => {
+        if (this.calculator.undo()) {
+          this.renderTermsList();
+        }
+      });
+    }
+
+    // 下一步 (Redo)
+    if (this.btnRedo) {
+      this.btnRedo.addEventListener("click", () => {
+        if (this.calculator.redo()) {
+          this.renderTermsList();
+        }
+      });
+    }
+
+    // 鍵盤快捷鍵 (Command + Z / Command + Shift + Z)
+    window.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && !e.altKey) {
+        if (e.key.toLowerCase() === "z") {
+          e.preventDefault();
+          if (e.shiftKey) {
+            if (this.calculator.redo()) this.renderTermsList();
+          } else {
+            if (this.calculator.undo()) this.renderTermsList();
+          }
+        } else if (e.key.toLowerCase() === "y") {
+          e.preventDefault();
+          if (this.calculator.redo()) this.renderTermsList();
+        }
+      }
+    });
 
     // 清空
     if (this.btnClearTerms) {
@@ -423,10 +469,11 @@ class SpacePlasmaApp {
     this.calculator.clear();
 
     if (presetKey === "presetPB") {
-      // 磁壓力: B^2 / (2 * mu0)
-      this.calculator.insertQuantity({ quantityId: "magnetic_field", unitId: "nT", numberValue: 10, power: 2 });
-      this.calculator.insertOperator("/");
-      this.calculator.insertConstant({ constantId: "mu0", multiplier: 2, power: 1 });
+      // 磁壓力: 直式分式 B^2 / (2 * mu0)
+      const frac = this.calculator.insertFraction();
+      this.calculator.insertQuantity({ quantityId: "magnetic_field", unitId: "nT", numberValue: 10, power: 2 }, { scope: "fraction", fractionId: frac.id, part: "numerator", index: 0 });
+      this.calculator.insertConstant({ constantId: "mu0", multiplier: 2 }, { scope: "fraction", fractionId: frac.id, part: "denominator", index: 0 });
+      this.calculator.setCursorTarget({ scope: "root", index: 1 });
     } else if (presetKey === "presetTotalP") {
       // 總壓力: (n * kB * T) + (B^2 / 2mu0)
       this.calculator.insertQuantity({ quantityId: "number_density", unitId: "cm_minus3", numberValue: 5 });
@@ -476,88 +523,171 @@ class SpacePlasmaApp {
     this.renderResultBox(res);
   }
 
-  // 更新頂部方程式呈現看板 (可點選任意位置切換插入點)
+  // 更新頂部方程式呈現看板 (支援點選任意位置切換插入點、分式直式槽位與括號層級)
   updateEquationPreview() {
     if (!this.interactiveFormulaContainer) return;
 
+    // 更新歷史復原/重做按鈕狀態
+    if (this.btnUndo) this.btnUndo.disabled = !this.calculator.canUndo();
+    if (this.btnRedo) this.btnRedo.disabled = !this.calculator.canRedo();
+
     const isZh = this.currentLang === "zh";
     const eqRep = this.calculator.generateEquationRepresentation();
-    const curIdx = this.calculator.cursorIndex;
+    const curTarget = this.calculator.cursorTarget;
 
     this.interactiveFormulaContainer.innerHTML = "";
 
-    // 若尚未新增項目
-    if (this.calculator.tokens.length === 0) {
+    // 輔助函式：建立一個插入游標槽位
+    const createCaretSlot = (target, isActive) => {
       const slot = document.createElement("div");
-      slot.className = "formula-caret-slot active";
-      slot.title = "點擊在此插入";
-      slot.addEventListener("click", () => {
-        this.calculator.setCursor(0);
+      slot.className = `formula-caret-slot ${isActive ? "active" : ""}`;
+      slot.title = `點擊切換插入游標至此`;
+      slot.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this.calculator.setCursorTarget(target);
         this.updateEquationPreview();
       });
+      return slot;
+    };
 
+    // 輔助函式：遞迴渲染 Token 序列 (頂層或分式的分子/分母)
+    const renderTokensSequence = (tokens, displayElements, scope, fracId, part, container) => {
+      const isCurrentScope = curTarget.scope === scope && (scope === "root" || (curTarget.fractionId === fracId && curTarget.part === part));
+      const activeIdx = isCurrentScope ? curTarget.index : -1;
+
+      for (let i = 0; i <= tokens.length; i++) {
+        // 游標插入槽位
+        const slotTarget = scope === "root"
+          ? { scope: "root", index: i }
+          : { scope: "fraction", fractionId: fracId, part, index: i };
+        container.appendChild(createCaretSlot(slotTarget, activeIdx === i));
+
+        if (i < tokens.length) {
+          const t = tokens[i];
+          const itemRep = displayElements && displayElements[i] ? displayElements[i] : null;
+
+          if (t.type === "fraction") {
+            // 直式分式展示區塊 (包含分子槽位、分數線、分母槽位)
+            const fracBlock = document.createElement("div");
+            fracBlock.className = "formula-fraction-block";
+            fracBlock.id = `formula-token-${t.id}`;
+
+            // 分子槽位
+            const numSlot = document.createElement("div");
+            const isNumActive = curTarget.scope === "fraction" && curTarget.fractionId === t.id && curTarget.part === "numerator";
+            numSlot.className = `fraction-slot fraction-numerator-slot ${t.numerator.length === 0 ? "empty" : ""} ${isNumActive ? "active-slot" : ""}`;
+            numSlot.title = "分式分子格 (點擊選取)";
+
+            if (t.numerator.length === 0) {
+              const placeholder = document.createElement("span");
+              placeholder.className = "fraction-slot-placeholder";
+              placeholder.textContent = isZh ? "點此填寫分子" : "Numerator";
+              numSlot.appendChild(placeholder);
+              numSlot.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.calculator.setCursorTarget({ scope: "fraction", fractionId: t.id, part: "numerator", index: 0 });
+                this.updateEquationPreview();
+              });
+            } else {
+              const numRep = itemRep && itemRep.numeratorRep ? itemRep.numeratorRep.displayElements : [];
+              renderTokensSequence(t.numerator, numRep, "fraction", t.id, "numerator", numSlot);
+            }
+
+            // 分數線
+            const fLine = document.createElement("div");
+            fLine.className = "fraction-line";
+
+            // 分母槽位
+            const denSlot = document.createElement("div");
+            const isDenActive = curTarget.scope === "fraction" && curTarget.fractionId === t.id && curTarget.part === "denominator";
+            denSlot.className = `fraction-slot fraction-denominator-slot ${t.denominator.length === 0 ? "empty" : ""} ${isDenActive ? "active-slot" : ""}`;
+            denSlot.title = "分式分母格 (點擊選取)";
+
+            if (t.denominator.length === 0) {
+              const placeholder = document.createElement("span");
+              placeholder.className = "fraction-slot-placeholder";
+              placeholder.textContent = isZh ? "點此填寫分母" : "Denominator";
+              denSlot.appendChild(placeholder);
+              denSlot.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.calculator.setCursorTarget({ scope: "fraction", fractionId: t.id, part: "denominator", index: 0 });
+                this.updateEquationPreview();
+              });
+            } else {
+              const denRep = itemRep && itemRep.denominatorRep ? itemRep.denominatorRep.displayElements : [];
+              renderTokensSequence(t.denominator, denRep, "fraction", t.id, "denominator", denSlot);
+            }
+
+            fracBlock.appendChild(numSlot);
+            fracBlock.appendChild(fLine);
+            fracBlock.appendChild(denSlot);
+            container.appendChild(fracBlock);
+
+          } else {
+            // 一般 Token Chip (物理量、常數、獨立運算符、自動層級括號)
+            const chip = document.createElement("div");
+            chip.className = `formula-token-chip token-${t.type === "quantity" ? "qty" : t.type === "constant" ? "const" : t.type === "operator" ? "op" : "paren"}`;
+            chip.title = `點擊定位第 #${i + 1} 項`;
+
+            // KaTeX 渲染：單獨括號晶片使用 chipOpenLatex / chipCloseLatex，絕不出現 \left(
+            if (window.katex && itemRep && itemRep.latex) {
+              try {
+                window.katex.render(itemRep.latex, chip, { throwOnError: false });
+              } catch (e) {
+                chip.textContent = itemRep.label;
+              }
+            } else {
+              chip.textContent = itemRep ? itemRep.label : t.type;
+            }
+
+            chip.addEventListener("click", (e) => {
+              e.stopPropagation();
+              const nextTarget = scope === "root"
+                ? { scope: "root", index: i + 1 }
+                : { scope: "fraction", fractionId: fracId, part, index: i + 1 };
+              this.calculator.setCursorTarget(nextTarget);
+              this.updateEquationPreview();
+
+              const targetCard = document.getElementById(`term-card-${t.id}`);
+              if (targetCard) {
+                targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+                targetCard.style.outline = "2px solid var(--brand-primary)";
+                setTimeout(() => { targetCard.style.outline = ""; }, 1200);
+              }
+            });
+
+            container.appendChild(chip);
+          }
+        }
+      }
+    };
+
+    if (this.calculator.tokens.length === 0) {
+      const slot = createCaretSlot({ scope: "root", index: 0 }, true);
       const emptyHint = document.createElement("span");
       emptyHint.style.color = "var(--text-muted)";
       emptyHint.style.fontSize = "0.95rem";
-      emptyHint.textContent = isZh ? "（算式目前為空，請點擊下方按鈕加入項目）" : "(Expression is empty, click buttons below)";
-
+      emptyHint.textContent = isZh ? "（算式目前為空，請點擊下方按鈕加入項目或分式）" : "(Expression is empty, click buttons below)";
       this.interactiveFormulaContainer.appendChild(slot);
       this.interactiveFormulaContainer.appendChild(emptyHint);
     } else {
-      // 逐一建立 Caret Slot 與 Token Chip
-      for (let i = 0; i <= this.calculator.tokens.length; i++) {
-        // 插入游標槽位 (Caret Slot i)
-        const slot = document.createElement("div");
-        slot.className = `formula-caret-slot ${curIdx === i ? "active" : ""}`;
-        slot.title = `插入位置 #${i} (點擊切換)`;
-        slot.addEventListener("click", () => {
-          this.calculator.setCursor(i);
-          this.updateEquationPreview();
-        });
-        this.interactiveFormulaContainer.appendChild(slot);
-
-        // 如果還有 token，放置 token chip
-        if (i < this.calculator.tokens.length) {
-          const t = this.calculator.tokens[i];
-          const chip = document.createElement("div");
-          chip.className = `formula-token-chip token-${t.type === "quantity" ? "qty" : t.type === "constant" ? "const" : t.type === "operator" ? "op" : "paren"}`;
-          chip.title = `點擊選取並定位第 #${i + 1} 項`;
-
-          // 標籤內容
-          const itemRep = eqRep.displayElements[i];
-          if (window.katex && itemRep && itemRep.latex) {
-            try {
-              window.katex.render(itemRep.latex, chip, { throwOnError: false });
-            } catch (e) {
-              chip.textContent = itemRep.label;
-            }
-          } else {
-            chip.textContent = itemRep ? itemRep.label : t.type;
-          }
-
-          // 點擊 token：將光標移至此項後方，並滾動至下方對應卡片
-          chip.addEventListener("click", () => {
-            this.calculator.setCursor(i + 1);
-            this.updateEquationPreview();
-            const targetCard = document.getElementById(`term-card-${t.id}`);
-            if (targetCard) {
-              targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
-              targetCard.style.outline = "2px solid var(--brand-primary)";
-              setTimeout(() => { targetCard.style.outline = ""; }, 1200);
-            }
-          });
-
-          this.interactiveFormulaContainer.appendChild(chip);
-        }
-      }
+      renderTokensSequence(this.calculator.tokens, eqRep.displayElements, "root", null, null, this.interactiveFormulaContainer);
     }
 
     // 更新游標位置提示標籤
     if (this.previewCursorHint) {
-      this.previewCursorHint.innerHTML = `
-        <span>📌 當前插入位置：<span class="cursor-pos-badge">第 ${curIdx} / ${this.calculator.tokens.length} 項</span></span>
-        <span style="color: var(--text-muted); font-size: 0.8rem;">（點擊公式中任何符號或兩側的光標 ⏐ 即可變更插入點）</span>
-      `;
+      if (curTarget.scope === "fraction") {
+        const partName = curTarget.part === "numerator" ? (isZh ? "分子" : "Numerator") : (isZh ? "分母" : "Denominator");
+        this.previewCursorHint.innerHTML = `
+          <span>📌 當前插入位置：<span class="cursor-pos-badge">分式 #${curTarget.fractionId} 之【${partName}】第 ${curTarget.index} 格</span></span>
+          <span style="color: var(--text-muted); font-size: 0.8rem;">（點擊公式中任何間隙或分母/分子格即可切換插入目標）</span>
+        `;
+      } else {
+        this.previewCursorHint.innerHTML = `
+          <span>📌 當前插入位置：<span class="cursor-pos-badge">頂層第 ${curTarget.index} / ${this.calculator.tokens.length} 項</span></span>
+          <span style="color: var(--text-muted); font-size: 0.8rem;">（點擊公式中任何間隙或分母/分子格即可切換插入目標）</span>
+        `;
+      }
     }
 
     // 更新因次檢驗狀態
@@ -603,12 +733,13 @@ class SpacePlasmaApp {
     }
   }
 
-  // 渲染下方項目編輯清單
+  // 渲染下方項目編輯清單 (支援分式結構、括號層級與獨立運算符)
   renderTermsList() {
     if (!this.termsContainer) return;
 
     this.termsContainer.innerHTML = "";
     const isZh = this.currentLang === "zh";
+    const eqRep = this.calculator.generateEquationRepresentation();
 
     this.calculator.tokens.forEach((term, index) => {
       const card = document.createElement("div");
@@ -638,6 +769,7 @@ class SpacePlasmaApp {
         const opBtns = card.querySelectorAll(".op-switch-group .btn-op");
         opBtns.forEach(b => {
           b.addEventListener("click", () => {
+            this.calculator.pushHistory();
             term.value = b.getAttribute("data-val");
             this.renderTermsList();
           });
@@ -671,8 +803,131 @@ class SpacePlasmaApp {
         return;
       }
 
-      // 分支二：左括號卡片
+      // 分支二：分式結構卡片 (分子與分母雙區塊)
+      if (term.type === "fraction") {
+        card.className = "term-card term-card-fraction";
+        card.innerHTML = `
+          <div class="term-header">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span class="term-idx">#${index + 1}</span>
+              <span style="font-weight: 700; color: #3b82f6;">⬚/⬚ 分式結構 (Fraction)</span>
+            </div>
+            <div class="term-ctrl-btns">
+              ${index > 0 ? `<button type="button" class="btn-move btn-move-up" title="往前移">⬆</button>` : ''}
+              ${index < this.calculator.tokens.length - 1 ? `<button type="button" class="btn-move btn-move-down" title="往後移">⬇</button>` : ''}
+              <button type="button" class="btn-delete" title="刪除此分式">✕</button>
+            </div>
+          </div>
+          <div class="fraction-card-container">
+            <!-- 分子區塊 -->
+            <div class="fraction-card-section">
+              <div class="fraction-card-header">
+                <span>【分子 Numerator】 (${term.numerator.length} 項)</span>
+                <div style="display: flex; gap: 0.35rem;">
+                  <button type="button" class="btn btn-secondary btn-sm btn-frac-add-qty" data-part="numerator">＋ 物理量</button>
+                  <button type="button" class="btn btn-secondary btn-sm btn-frac-add-const" data-part="numerator">＋ 常數</button>
+                </div>
+              </div>
+              <div class="fraction-subitems-list" id="frac-num-list-${term.id}">
+                ${term.numerator.length === 0 ? `<span style="font-size: 0.8rem; color: var(--text-muted);">（分子為空，點擊上方按鈕或公式看板中的分子格加入）</span>` : ''}
+              </div>
+            </div>
+
+            <!-- 分母區塊 -->
+            <div class="fraction-card-section">
+              <div class="fraction-card-header">
+                <span>【分母 Denominator】 (${term.denominator.length} 項)</span>
+                <div style="display: flex; gap: 0.35rem;">
+                  <button type="button" class="btn btn-secondary btn-sm btn-frac-add-qty" data-part="denominator">＋ 物理量</button>
+                  <button type="button" class="btn btn-secondary btn-sm btn-frac-add-const" data-part="denominator">＋ 常數</button>
+                </div>
+              </div>
+              <div class="fraction-subitems-list" id="frac-den-list-${term.id}">
+                ${term.denominator.length === 0 ? `<span style="font-size: 0.8rem; color: var(--text-muted);">（分母為空，點擊上方按鈕或公式看板中的分母格加入）</span>` : ''}
+              </div>
+            </div>
+
+            <!-- 分式整體係數與次方 -->
+            <div style="display: flex; gap: 1rem; align-items: center; padding-top: 0.25rem;">
+              <div class="form-group flex-half">
+                <label class="form-label">${isZh ? '分式整體係數' : 'Multiplier'}</label>
+                <input type="number" step="any" class="form-input term-frac-mult-input" value="${term.multiplier !== undefined ? term.multiplier : 1}">
+              </div>
+              <div class="form-group flex-half">
+                <label class="form-label">${isZh ? '分式整體次方' : 'Power'}</label>
+                <input type="number" step="any" class="form-input term-frac-pwr-input" value="${term.power !== undefined ? term.power : 1}">
+              </div>
+            </div>
+          </div>
+        `;
+
+        // 綁定分式控制
+        const btnUp = card.querySelector(".btn-move-up");
+        if (btnUp) {
+          btnUp.addEventListener("click", () => {
+            this.calculator.moveToken(index, index - 1);
+            this.renderTermsList();
+          });
+        }
+        const btnDown = card.querySelector(".btn-move-down");
+        if (btnDown) {
+          btnDown.addEventListener("click", () => {
+            this.calculator.moveToken(index, index + 1);
+            this.renderTermsList();
+          });
+        }
+        const btnDel = card.querySelector(".btn-delete");
+        if (btnDel) {
+          btnDel.addEventListener("click", () => {
+            this.calculator.removeTokenAt(index);
+            this.renderTermsList();
+          });
+        }
+
+        // 分子/分母新增按鈕
+        card.querySelectorAll(".btn-frac-add-qty").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const part = btn.getAttribute("data-part");
+            this.calculator.insertQuantity({}, { scope: "fraction", fractionId: term.id, part, index: (part === "numerator" ? term.numerator.length : term.denominator.length) });
+            this.renderTermsList();
+          });
+        });
+
+        card.querySelectorAll(".btn-frac-add-const").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const part = btn.getAttribute("data-part");
+            this.calculator.insertConstant({}, { scope: "fraction", fractionId: term.id, part, index: (part === "numerator" ? term.numerator.length : term.denominator.length) });
+            this.renderTermsList();
+          });
+        });
+
+        // 係數與次方輸入
+        const multInput = card.querySelector(".term-frac-mult-input");
+        if (multInput) {
+          multInput.addEventListener("input", () => {
+            this.calculator.pushHistory();
+            term.multiplier = parseFloat(multInput.value) || 1;
+            this.updateEquationPreview();
+          });
+        }
+
+        const pwrInput = card.querySelector(".term-frac-pwr-input");
+        if (pwrInput) {
+          pwrInput.addEventListener("input", () => {
+            this.calculator.pushHistory();
+            term.power = parseFloat(pwrInput.value) || 1;
+            this.updateEquationPreview();
+          });
+        }
+
+        this.termsContainer.appendChild(card);
+        return;
+      }
+
+      // 分支三：開括號卡片 (依層級自動變換為小中大括號)
       if (term.type === "open_paren") {
+        const repItem = eqRep.displayElements && eqRep.displayElements[index];
+        const bStyle = repItem && repItem.bracketInfo ? repItem.bracketInfo : { nameZh: "小括號 ( )", openText: "(" };
         card.className = "term-card term-card-paren";
         card.innerHTML = `
           <div class="term-header">
@@ -684,8 +939,8 @@ class SpacePlasmaApp {
             </div>
           </div>
           <div style="display: flex; align-items: center; padding: 0.25rem 0;">
-            <span class="paren-symbol-badge">(</span>
-            <span class="paren-desc-text">${isZh ? '左括號：開啟多項式分組子表達式' : 'Open Parenthesis'}</span>
+            <span class="paren-symbol-badge">${bStyle.openText}</span>
+            <span class="paren-desc-text">${isZh ? `開括號：${bStyle.nameZh}（依巢狀深度自動變換）` : `Open Bracket: ${bStyle.nameZh}`}</span>
           </div>
         `;
 
@@ -715,8 +970,10 @@ class SpacePlasmaApp {
         return;
       }
 
-      // 分支三：右括號卡片
+      // 分支四：閉括號卡片 (依層級自動變換為小中大括號)
       if (term.type === "close_paren") {
+        const repItem = eqRep.displayElements && eqRep.displayElements[index];
+        const bStyle = repItem && repItem.bracketInfo ? repItem.bracketInfo : { nameZh: "小括號 ( )", closeText: ")" };
         card.className = "term-card term-card-paren";
         card.innerHTML = `
           <div class="term-header">
@@ -729,8 +986,8 @@ class SpacePlasmaApp {
           </div>
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; padding: 0.25rem 0;">
             <div style="display: flex; align-items: center;">
-              <span class="paren-symbol-badge">)</span>
-              <span class="paren-desc-text">${isZh ? '右括號：閉合分組（可指定括號外整體次方）' : 'Close Parenthesis'}</span>
+              <span class="paren-symbol-badge">${bStyle.closeText}</span>
+              <span class="paren-desc-text">${isZh ? `閉括號：${bStyle.nameZh}（可指定整體次方）` : `Close Bracket: ${bStyle.nameZh}`}</span>
             </div>
             <div class="form-group flex-half" style="min-width: 120px;">
               <label class="form-label">${isZh ? '括號次方' : 'Power'}</label>
@@ -764,6 +1021,7 @@ class SpacePlasmaApp {
         const pwrInput = card.querySelector(".term-paren-power-input");
         if (pwrInput) {
           pwrInput.addEventListener("input", () => {
+            this.calculator.pushHistory();
             term.power = parseFloat(pwrInput.value) || 1;
             this.updateEquationPreview();
           });
@@ -773,7 +1031,7 @@ class SpacePlasmaApp {
         return;
       }
 
-      // 分支四：物理量或常數項目卡片
+      // 分支五：一般物理量或常數項目卡片
       card.className = "term-card";
 
       let itemSelectHtml = "";
@@ -874,6 +1132,7 @@ class SpacePlasmaApp {
         const qtySelect = card.querySelector(".term-qty-select");
         if (qtySelect) {
           qtySelect.addEventListener("change", () => {
+            this.calculator.pushHistory();
             term.quantityId = qtySelect.value;
             const newQ = this.calculator.getQuantityDef(term.quantityId);
             term.unitId = newQ.units[0].id;
@@ -884,6 +1143,7 @@ class SpacePlasmaApp {
         const unitSelect = card.querySelector(".term-unit-select");
         if (unitSelect) {
           unitSelect.addEventListener("change", () => {
+            this.calculator.pushHistory();
             term.unitId = unitSelect.value;
             this.updateEquationPreview();
           });
@@ -892,6 +1152,7 @@ class SpacePlasmaApp {
         const valInput = card.querySelector(".term-value-input");
         if (valInput) {
           valInput.addEventListener("input", () => {
+            this.calculator.pushHistory();
             term.numberValue = parseFloat(valInput.value) || 0;
             this.updateEquationPreview();
           });
@@ -900,6 +1161,7 @@ class SpacePlasmaApp {
         const constSelect = card.querySelector(".term-const-select");
         if (constSelect) {
           constSelect.addEventListener("change", () => {
+            this.calculator.pushHistory();
             term.constantId = constSelect.value;
             this.renderTermsList();
           });
@@ -909,6 +1171,7 @@ class SpacePlasmaApp {
       const multInput = card.querySelector(".term-mult-input");
       if (multInput) {
         multInput.addEventListener("input", () => {
+          this.calculator.pushHistory();
           term.multiplier = parseFloat(multInput.value) || 1;
           this.updateEquationPreview();
         });
@@ -917,6 +1180,7 @@ class SpacePlasmaApp {
       const powerInput = card.querySelector(".term-power-input");
       if (powerInput) {
         powerInput.addEventListener("input", () => {
+          this.calculator.pushHistory();
           term.power = parseFloat(powerInput.value) || 1;
           this.updateEquationPreview();
         });

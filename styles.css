@@ -240,6 +240,109 @@ body {
   color: #f43f5e;
 }
 
+/* 歷史復原與重做按鈕組 */
+.history-ctrl-group {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.btn-history {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.25rem 0.55rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-history:hover:not(:disabled) {
+  background: var(--bg-input);
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.btn-history:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn-accent-blue {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #3b82f6;
+  font-weight: 700;
+}
+
+.btn-accent-blue:hover {
+  background: rgba(59, 130, 246, 0.22);
+  border-color: #3b82f6;
+}
+
+/* 直式分式展示區塊 (包含分子格、分數線、分母格) */
+.formula-fraction-block {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  padding: 0.2rem 0.45rem;
+  margin: 0 0.3rem;
+  border-radius: var(--radius-sm);
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  transition: all 0.15s ease;
+}
+
+.formula-fraction-block:hover {
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+.fraction-slot {
+  display: inline-flex;
+  align-items: center;
+  min-width: 52px;
+  min-height: 34px;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.fraction-slot.empty {
+  border: 1.5px dashed var(--border-color);
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  justify-content: center;
+}
+
+.fraction-slot.empty:hover {
+  border-color: var(--brand-primary);
+  background: var(--brand-glow);
+}
+
+.fraction-slot.active-slot {
+  border: 1.5px solid var(--brand-primary) !important;
+  background: var(--brand-glow) !important;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.35);
+}
+
+.fraction-slot-placeholder {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.fraction-line {
+  width: 100%;
+  min-width: 48px;
+  height: 2px;
+  background-color: var(--text-primary);
+  margin: 3px 0;
+  border-radius: 1px;
+}
+
 /* 即時方程式可視化點擊看板 */
 .interactive-formula-container {
   display: flex;
@@ -467,6 +570,42 @@ body {
 .btn-move:hover {
   background: var(--bg-subtle);
   color: var(--text-primary);
+}
+
+/* 分式項目卡片 */
+.term-card-fraction {
+  border-left: 4px solid #3b82f6;
+  background: var(--bg-surface);
+}
+
+.fraction-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.fraction-card-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+}
+
+.fraction-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.fraction-subitems-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
 }
 
 .preview-formula-math {
