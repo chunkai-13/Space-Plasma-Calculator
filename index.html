@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="Plasma Calc">
 
   <!-- 樣式表與 KaTeX 數學排版庫 -->
-  <link rel="stylesheet" href="katex/katex.min.css?v=2.5">
-  <link rel="stylesheet" href="styles.css?v=2.5">
-  <script src="katex/katex.min.js?v=2.5"></script>
+  <link rel="stylesheet" href="katex/katex.min.css?v=2.6">
+  <link rel="stylesheet" href="styles.css?v=2.6">
+  <script src="katex/katex.min.js?v=2.6"></script>
 </head>
 <body>
 
@@ -266,7 +266,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=2.5').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=2.6').then(reg => {
           reg.update();
         }).catch(() => {});
       });
@@ -274,9 +274,9 @@
   </script>
 
   <!-- 載入腳本 (加入版本號以防瀏覽器快取舊版) -->
-  <script src="constants.js?v=2.5"></script>
-  <script src="equations.js?v=2.5"></script>
-  <script src="calculator.js?v=2.5"></script>
-  <script src="app.js?v=2.5"></script>
+  <script src="constants.js?v=2.6"></script>
+  <script src="equations.js?v=2.6"></script>
+  <script src="calculator.js?v=2.6"></script>
+  <script src="app.js?v=2.6"></script>
 </body>
 </html>

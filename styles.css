@@ -605,7 +605,47 @@ body {
 .fraction-subitems-list {
   display: flex;
   flex-direction: column;
+  gap: 0.55rem;
+}
+
+/* 分式內部子項目卡片 (分子/分母) */
+.subitem-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
   gap: 0.45rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.subitem-card.subitem-card-op {
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.25);
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.75rem;
+}
+
+.subitem-card.subitem-card-paren {
+  background: rgba(6, 182, 212, 0.05);
+  border-color: rgba(6, 182, 212, 0.25);
+}
+
+.subitem-card .term-body {
+  gap: 0.5rem;
+}
+
+.subitem-card .form-label {
+  font-size: 0.72rem;
+}
+
+.subitem-card .form-input,
+.subitem-card .form-select {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
 }
 
 .preview-formula-math {
