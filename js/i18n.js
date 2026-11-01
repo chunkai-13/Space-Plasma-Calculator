@@ -15,7 +15,7 @@ const I18N = {
     
     // Tab 1
     builderTitle: "自訂運算建構區",
-    builderDesc: "自由組合物理量與常數，支援獨立 ＋、－、×、÷ 運算符、分式與括號，點擊上方公式任意位置即可自由插入項目。",
+    builderDesc: "自由組合物理量與常數，支援獨立 ＋、－、·、/ 運算符、分式與括號，點擊上方公式任意位置即可自由插入項目。",
     previewTitle: "目前建構的方程式：",
     dimReady: "因次檢驗就緒",
     dimConsistent: "因次完全相符 ✓",
@@ -77,7 +77,7 @@ const I18N = {
 
     // Tab 1
     builderTitle: "Expression Builder",
-    builderDesc: "Build polynomial expressions with standalone +, -, ×, ÷, fractions & brackets. Click any position on the formula above to insert items.",
+    builderDesc: "Build polynomial expressions with standalone +, -, ·, /, fractions & brackets. Click any position on the formula above to insert items.",
     previewTitle: "Current Equation Preview:",
     dimReady: "Ready",
     dimConsistent: "Dimensions Match ✓",

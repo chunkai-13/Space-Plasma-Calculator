@@ -30,8 +30,8 @@ class BuilderCardsItemsUI {
           <div class="op-switch-group">
             <button type="button" class="btn-op ${subTerm.value === '+' ? 'active' : ''}" data-val="+">＋</button>
             <button type="button" class="btn-op ${subTerm.value === '-' ? 'active' : ''}" data-val="-">－</button>
-            <button type="button" class="btn-op ${subTerm.value === '*' ? 'active' : ''}" data-val="*">×</button>
-            <button type="button" class="btn-op ${subTerm.value === '/' ? 'active' : ''}" data-val="/">÷</button>
+            <button type="button" class="btn-op ${subTerm.value === '*' ? 'active' : ''}" data-val="*">·</button>
+            <button type="button" class="btn-op ${subTerm.value === '/' ? 'active' : ''}" data-val="/">/</button>
           </div>
           <span style="font-size: 0.75rem; color: var(--text-muted);">運算符</span>
         </div>

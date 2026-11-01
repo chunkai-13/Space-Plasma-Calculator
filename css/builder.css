@@ -185,12 +185,23 @@
   border: 1px solid rgba(139, 92, 246, 0.3);
 }
 
+/* 運算符號：無方塊背景，自然簡約數學呈現 */
 .formula-token-chip.token-op {
-  background: rgba(245, 158, 11, 0.12);
-  color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  font-size: 1.3rem;
-  padding: 0.2rem 0.55rem;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--text-primary);
+  font-size: 1.35rem;
+  padding: 0.1rem 0.35rem;
+  min-width: unset;
+  line-height: 1;
+}
+
+.formula-token-chip.token-op:hover {
+  transform: scale(1.15);
+  box-shadow: none;
+  border: none;
+  color: var(--brand-primary);
 }
 
 .formula-token-chip.token-paren {

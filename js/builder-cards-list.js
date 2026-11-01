@@ -39,8 +39,8 @@ class BuilderCardsListUI {
             <div class="op-switch-group">
               <button type="button" class="btn-op ${term.value === '+' ? 'active' : ''}" data-val="+">＋</button>
               <button type="button" class="btn-op ${term.value === '-' ? 'active' : ''}" data-val="-">－</button>
-              <button type="button" class="btn-op ${term.value === '*' ? 'active' : ''}" data-val="*">×</button>
-              <button type="button" class="btn-op ${term.value === '/' ? 'active' : ''}" data-val="/">÷</button>
+              <button type="button" class="btn-op ${term.value === '*' ? 'active' : ''}" data-val="*">·</button>
+              <button type="button" class="btn-op ${term.value === '/' ? 'active' : ''}" data-val="/">/</button>
             </div>
             <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">獨立運算符號</span>
           </div>

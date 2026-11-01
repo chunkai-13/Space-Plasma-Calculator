@@ -31,8 +31,8 @@ class CalculatorFormatter {
       let chipLatex = "";
 
       if (t.type === "operator") {
-        const opSym = t.value === "*" ? "×" : t.value === "/" ? "÷" : t.value;
-        const opLatex = t.value === "*" ? "\\times" : t.value === "/" ? "\\div" : t.value;
+        const opSym = t.value === "*" ? "·" : t.value === "/" ? "/" : t.value;
+        const opLatex = t.value === "*" ? "\\cdot" : t.value === "/" ? "/" : t.value;
         elemLabel = opSym;
         elemLatex = ` ${opLatex} `;
         chipLatex = opLatex;
@@ -42,7 +42,8 @@ class CalculatorFormatter {
           token: t,
           label: elemLabel,
           latex: chipLatex,
-          type: "operator"
+          type: "operator",
+          opValue: t.value
         });
 
       } else if (t.type === "open_paren") {
