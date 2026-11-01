@@ -251,16 +251,17 @@ class BuilderPreviewUI {
   renderResultBox(res) {
     if (!this.resultOutputBox) return;
 
+    const isZh = this.app.currentLang === "zh";
+    const dict = I18N[this.app.currentLang];
+
     if (!res) {
       this.resultOutputBox.innerHTML = `
         <div class="empty-state">
-          ${I18N[this.app.currentLang].resultPlaceholder}
+          ${dict.resultPlaceholder}
         </div>
       `;
       return;
     }
-
-    const isZh = this.app.currentLang === "zh";
 
     if (res.hasError) {
       this.resultOutputBox.innerHTML = `
