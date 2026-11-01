@@ -133,17 +133,27 @@ html.dark .katex {
   font-size: 1.4rem;
   font-weight: 800;
   color: var(--brand-primary);
+  white-space: nowrap !important;
+  font-variant-numeric: tabular-nums;
 }
 
 .eq-out-value .unit {
   font-size: 0.95rem;
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .eq-alt-units {
   font-size: 0.78rem;
   color: var(--text-muted);
   margin-top: 0.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.eq-alt-units span {
+  white-space: nowrap !important;
 }
 
 .calc-error {

@@ -91,4 +91,12 @@
   .calc-actions-row .btn {
     width: 100%;
   }
+
+  .result-main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alt-units-grid {
+    grid-template-columns: 1fr;
+  }
 }

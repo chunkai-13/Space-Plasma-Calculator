@@ -295,11 +295,12 @@ class BuilderPreviewUI {
         <div class="alt-units-grid">
           ${res.allUnits.map(u => {
             const v = Math.abs(u.value) < 1e-3 || Math.abs(u.value) >= 1e5 ? u.value.toExponential(4) : u.value.toLocaleString(undefined, { maximumFractionDigits: 4 });
+            const uName = isZh ? (u.labelZh || u.label) : (u.labelEn || u.label);
             return `
               <div class="alt-unit-pill ${u.system === res.system ? 'active' : ''}">
                 <span class="unit-system">[${u.system}]</span>
                 <span class="unit-val">${v}</span>
-                <span class="unit-name">${isZh ? (u.labelZh || u.label) : (u.labelEn || u.label)}</span>
+                <span class="unit-name" title="${uName}">${uName}</span>
               </div>
             `;
           }).join("")}

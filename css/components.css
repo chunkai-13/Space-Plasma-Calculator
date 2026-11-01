@@ -342,27 +342,122 @@
   margin-bottom: 1rem;
 }
 
+/* 自訂建構區結果面板主卡片網格 */
+.result-main-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.result-item-card {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.result-item-card.primary {
+  border-color: rgba(59, 130, 246, 0.35);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.res-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.res-value {
+  font-family: var(--font-mono);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--brand-primary);
+  white-space: nowrap !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  font-variant-numeric: tabular-nums;
+  padding: 0.1rem 0;
+}
+
+.res-sub {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 多制度單位膠囊網格 (防止科學記號連字號斷行) */
 .alt-units-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.65rem;
   margin-bottom: 1.25rem;
 }
 
 .alt-unit-pill {
   background: var(--bg-subtle);
   border: 1px solid var(--border-color);
-  padding: 0.55rem 0.75rem;
+  padding: 0.6rem 0.85rem;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
   font-size: 0.85rem;
+  min-width: 0;
+  transition: all 0.15s ease;
 }
 
 .alt-unit-pill.active {
   border-color: var(--border-focus);
   background: var(--brand-glow);
+  box-shadow: 0 0 0 1px var(--border-focus);
+}
+
+.alt-unit-pill .unit-system {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap !important;
+  flex-shrink: 0;
+}
+
+.alt-unit-pill.active .unit-system {
+  color: var(--brand-primary);
+}
+
+.alt-unit-pill .unit-val {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap !important;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.alt-unit-pill.active .unit-val {
+  color: var(--brand-primary);
+}
+
+.alt-unit-pill .unit-name {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  flex: 1;
+  min-width: 0;
 }
 
 .empty-state {
