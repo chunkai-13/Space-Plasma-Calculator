@@ -299,7 +299,7 @@ class BuilderPreviewUI {
               <div class="alt-unit-pill ${u.system === res.system ? 'active' : ''}">
                 <span class="unit-system">[${u.system}]</span>
                 <span class="unit-val">${v}</span>
-                <span class="unit-name">${u.label}</span>
+                <span class="unit-name">${isZh ? (u.labelZh || u.label) : (u.labelEn || u.label)}</span>
               </div>
             `;
           }).join("")}
@@ -332,7 +332,7 @@ class BuilderPreviewUI {
           <div class="res-value" style="font-size: 1.25rem;">
             ${isZh ? res.quantityNameZh : res.quantityNameEn}
           </div>
-          <div class="res-sub">${dict.dimensionExpr} ${res.dimensionStr}</div>
+          <div class="res-sub">${dict.dimensionExpr} ${isZh ? (res.dimensionStrZh || res.dimensionStr) : (res.dimensionStrEn || res.dimensionStr)}</div>
         </div>
 
         <div class="result-item-card">
@@ -340,7 +340,7 @@ class BuilderPreviewUI {
           <div class="res-value">
             ${formattedVal}
           </div>
-          <div class="res-sub">${res.unitLabel}</div>
+          <div class="res-sub">${isZh ? (res.unitLabelZh || res.unitLabel) : (res.unitLabelEn || res.unitLabel)}</div>
         </div>
 
         <div class="result-item-card">

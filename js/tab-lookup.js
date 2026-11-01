@@ -105,7 +105,10 @@ class LookupTabController {
       return q.nameZh.toLowerCase().includes(kw) ||
              q.nameEn.toLowerCase().includes(kw) ||
              q.symbol.toLowerCase().includes(kw) ||
-             q.units.some(u => u.label.toLowerCase().includes(kw) || u.id.toLowerCase().includes(kw));
+             q.units.some(u => (u.labelZh && u.labelZh.toLowerCase().includes(kw)) ||
+                               (u.labelEn && u.labelEn.toLowerCase().includes(kw)) ||
+                               u.label.toLowerCase().includes(kw) ||
+                               u.id.toLowerCase().includes(kw));
     });
 
     this.qtySelect.innerHTML = matches.map(q => `
@@ -133,16 +136,16 @@ class LookupTabController {
       this.unitSpecTable.innerHTML = q.units.map(u => `
         <tr>
           <td><span class="badge-system badge-${u.system.toLowerCase()}">${u.system}</span></td>
-          <td><strong>${u.label}</strong></td>
+          <td><strong>${isZh ? (u.labelZh || u.label) : (u.labelEn || u.label)}</strong></td>
           <td><code>${u.toBaseSI >= 1e-3 && u.toBaseSI <= 1e4 ? u.toBaseSI : u.toBaseSI.toExponential()} ${q.baseUnitSI}</code></td>
-          <td>${u.desc}</td>
+          <td>${isZh ? (u.descZh || u.desc) : (u.descEn || u.desc)}</td>
         </tr>
       `).join("");
     }
 
     if (this.convFromUnit && this.convToUnit) {
-      this.convFromUnit.innerHTML = q.units.map(u => `<option value="${u.id}">${u.label}</option>`).join("");
-      this.convToUnit.innerHTML = q.units.map(u => `<option value="${u.id}">${u.label}</option>`).join("");
+      this.convFromUnit.innerHTML = q.units.map(u => `<option value="${u.id}">${isZh ? (u.labelZh || u.label) : (u.labelEn || u.label)}</option>`).join("");
+      this.convToUnit.innerHTML = q.units.map(u => `<option value="${u.id}">${isZh ? (u.labelZh || u.label) : (u.labelEn || u.label)}</option>`).join("");
 
       if (q.units.length > 1) {
         this.convToUnit.selectedIndex = 1;

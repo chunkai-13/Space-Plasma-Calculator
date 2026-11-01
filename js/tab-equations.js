@@ -175,7 +175,7 @@ class EquationsTabController {
               <select class="form-select eq-param-unit" data-param="${input.id}">
                 ${qDef.units.map(u => `
                   <option value="${u.id}" ${u.id === input.defaultUnit ? "selected" : ""}>
-                    ${u.label}
+                    ${isZh ? (u.labelZh || u.label) : (u.labelEn || u.label)}
                   </option>
                 `).join("")}
               </select>
@@ -254,18 +254,21 @@ class EquationsTabController {
                   const av = Math.abs(a.value) < 1e-3 || Math.abs(a.value) >= 1e6
                     ? a.value.toExponential(4)
                     : a.value.toLocaleString(undefined, { maximumFractionDigits: 4 });
-                  return `<span>= <strong>${av}</strong> ${a.label}</span>`;
+                  const aLabel = isZh ? (a.labelZh || a.label) : (a.labelEn || a.label);
+                  return `<span>= <strong>${av}</strong> ${aLabel}</span>`;
                 }).join(" ")}
               </div>
             `;
           }
+
+          const outUnitDisplay = isZh ? (out.unitZh || out.unit) : (out.unitEn || out.unit);
 
           return `
             <div class="eq-output-card">
               <div class="eq-out-label">${isZh ? out.labelZh : out.labelEn}</div>
               <div class="eq-out-value">
                 <span class="val">${formatted}</span>
-                <span class="unit">${out.unit}</span>
+                <span class="unit">${outUnitDisplay}</span>
               </div>
               ${altHtml}
             </div>

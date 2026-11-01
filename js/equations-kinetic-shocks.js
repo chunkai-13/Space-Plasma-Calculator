@@ -85,11 +85,11 @@ const KINETIC_SHOCKS_EQUATIONS = [
       const B2 = inputs.B1 * r;
 
       return [
-        { labelZh: "密度壓縮比 (r = ρ₂/ρ₁)", labelEn: "Density Compression Ratio (r)", value: r, unit: "比值 (Ratio)" },
-        { labelZh: "壓力跳躍比 (P₂/P₁)", labelEn: "Pressure Jump Ratio (P₂/P₁)", value: P_ratio, unit: "比值 (Ratio)" },
-        { labelZh: "溫度跳躍比 (T₂/T₁)", labelEn: "Temperature Jump Ratio (T₂/T₁)", value: T_ratio, unit: "比值 (Ratio)" },
-        { labelZh: "下游估計密度 (n₂)", labelEn: "Downstream Density (n₂)", value: n2, unit: units.n1.label },
-        { labelZh: "下游估計垂直磁場 (B₂)", labelEn: "Downstream Field (B₂)", value: B2, unit: units.B1.label }
+        { labelZh: "密度壓縮比 (r = ρ₂/ρ₁)", labelEn: "Density Compression Ratio (r)", value: r, unitZh: "比值 (Ratio)", unitEn: "Ratio", unit: "比值 (Ratio)" },
+        { labelZh: "壓力跳躍比 (P₂/P₁)", labelEn: "Pressure Jump Ratio (P₂/P₁)", value: P_ratio, unitZh: "比值 (Ratio)", unitEn: "Ratio", unit: "比值 (Ratio)" },
+        { labelZh: "溫度跳躍比 (T₂/T₁)", labelEn: "Temperature Jump Ratio (T₂/T₁)", value: T_ratio, unitZh: "比值 (Ratio)", unitEn: "Ratio", unit: "比值 (Ratio)" },
+        { labelZh: "下游估計密度 (n₂)", labelEn: "Downstream Density (n₂)", value: n2, unitZh: (units.n1.labelZh || units.n1.label), unitEn: (units.n1.labelEn || units.n1.id), unit: units.n1.label },
+        { labelZh: "下游估計垂直磁場 (B₂)", labelEn: "Downstream Field (B₂)", value: B2, unitZh: (units.B1.labelZh || units.B1.label), unitEn: (units.B1.labelEn || units.B1.id), unit: units.B1.label }
       ];
     }
   },
@@ -295,8 +295,8 @@ const KINETIC_SHOCKS_EQUATIONS = [
 
       return [
         { labelZh: "特徵熱速度 (θ)", labelEn: "Thermal Speed (θ)", value: theta * 1e-3, unit: "km/s" },
-        { labelZh: "高能指數截斷因子", labelEn: "Exponential Cutoff Factor", value: cutoff, unit: "無因次 (≤ 1)" },
-        { labelZh: "相對未截斷 Kappa 比值", labelEn: "Ratio to Standard Kappa", value: cutoff, unit: "比值" }
+        { labelZh: "高能指數截斷因子", labelEn: "Exponential Cutoff Factor", value: cutoff, unitZh: "無因次 (≤ 1)", unitEn: "Dimensionless (≤ 1)", unit: "≤ 1" },
+        { labelZh: "相對未截斷 Kappa 比值", labelEn: "Ratio to Standard Kappa", value: cutoff, unitZh: "比值", unitEn: "Ratio", unit: "Ratio" }
       ];
     }
   },

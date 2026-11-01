@@ -159,7 +159,7 @@ class BuilderCardsItemsUI {
         <select class="term-unit-select form-select">
           ${qDef.units.map(u => `
             <option value="${u.id}" ${u.id === subTerm.unitId ? "selected" : ""}>
-              ${u.label} [${u.system}]
+              ${isZh ? (u.labelZh || u.label) : (u.labelEn || u.label)} [${u.system}]
             </option>
           `).join("")}
         </select>

@@ -296,7 +296,7 @@ class BuilderCardsListUI {
         `;
         unitSelectHtml = `
           <select class="term-unit-select form-select">
-            ${qDef.units.map(u => `<option value="${u.id}" ${u.id === term.unitId ? "selected" : ""}>${u.label} [${u.system}]</option>`).join("")}
+            ${qDef.units.map(u => `<option value="${u.id}" ${u.id === term.unitId ? "selected" : ""}>${isZh ? (u.labelZh || u.label) : (u.labelEn || u.label)} [${u.system}]</option>`).join("")}
           </select>
         `;
       } else {

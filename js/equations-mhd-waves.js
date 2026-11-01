@@ -152,7 +152,7 @@ const MHD_WAVES_EQUATIONS = [
       const beta = P_th / P_B;
 
       return [
-        { labelZh: "電漿貝他值 (β)", labelEn: "Plasma Beta (β)", value: beta, unit: "無因次 (dimensionless)" },
+        { labelZh: "電漿貝他值 (β)", labelEn: "Plasma Beta (β)", value: beta, unitZh: "無因次 (dimensionless)", unitEn: "Dimensionless", unit: "Dimensionless" },
         { labelZh: "熱壓力 (P_th)", labelEn: "Thermal Pressure (P_th)", value: P_th * 1e9, unit: "nPa", altUnits: [
           { label: "Pa", value: P_th }
         ]},
@@ -247,7 +247,7 @@ const MHD_WAVES_EQUATIONS = [
           { label: "cm", value: lambda_D * 100 },
           { label: "mm", value: lambda_D * 1000 }
         ]},
-        { labelZh: "德拜球粒子數 (N_D)", labelEn: "Debye Sphere Particles (N_D)", value: N_D, unit: "無因次 (準中性需 N_D ≫ 1)" }
+        { labelZh: "德拜球粒子數 (N_D)", labelEn: "Debye Sphere Particles (N_D)", value: N_D, unitZh: "無因次 (準中性需 N_D ≫ 1)", unitEn: "Dimensionless (N_D ≫ 1)", unit: "Dimensionless" }
       ];
     }
   },

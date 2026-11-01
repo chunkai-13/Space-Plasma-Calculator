@@ -103,7 +103,7 @@ const PARTICLE_EQUATIONS = [
       return [
         { labelZh: "迴旋半徑 (r_g / r_L)", labelEn: "Gyroradius (r_g / r_L)", value: r_L, unit: "m", altUnits: [
           { label: "km", value: r_L * 1e-3 },
-          { label: "R_E (地球半徑)", value: r_L / 6.371e6 }
+          { labelZh: "R_E (地球半徑)", labelEn: "R_E (Earth Radii)", label: "R_E", value: r_L / 6.371e6 }
         ]},
         { labelZh: "垂直運動速度 (v_⊥)", labelEn: "Perpendicular Speed (v_⊥)", value: v_perp, unit: "m/s", altUnits: [
           { label: "km/s", value: v_perp * 1e-3 }
@@ -164,7 +164,7 @@ const PARTICLE_EQUATIONS = [
       return [
         { labelZh: "迴旋半徑 (r_g / r_L)", labelEn: "Gyroradius (r_g / r_L)", value: r_L, unit: "m", altUnits: [
           { label: "km", value: r_L * 1e-3 },
-          { label: "R_E (地球半徑)", value: r_L / 6.371e6 }
+          { labelZh: "R_E (地球半徑)", labelEn: "R_E (Earth Radii)", label: "R_E", value: r_L / 6.371e6 }
         ]},
         { labelZh: "垂直動能 (E_⊥)", labelEn: "Perpendicular Energy (E_⊥)", value: E_perp_eV, unit: "eV", altUnits: [
           { label: "keV", value: E_perp_eV * 1e-3 },

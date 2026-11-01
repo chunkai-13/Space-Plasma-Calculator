@@ -117,6 +117,12 @@ class SpacePlasmaApp {
     // 觸發各控制器更新
     if (this.builderTab) {
       this.builderTab.renderTermsList();
+      if (this.builderTab.calculator && this.builderTab.calculator.lastResult) {
+        const sysRadio = document.querySelector("input[name='outputSystem']:checked");
+        const sys = sysRadio ? sysRadio.value : "Space";
+        const res = this.builderTab.calculator.formatResult(sys);
+        this.builderTab.renderResultBox(res);
+      }
     }
     if (this.lookupTab) {
       this.lookupTab.render();

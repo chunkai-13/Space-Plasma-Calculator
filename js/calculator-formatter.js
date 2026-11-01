@@ -173,6 +173,8 @@ class CalculatorFormatter {
         quantityNameEn: matchedQuantity.nameEn,
         value: displayVal,
         unitLabel: targetUnit.label,
+        unitLabelZh: targetUnit.labelZh || targetUnit.label,
+        unitLabelEn: targetUnit.labelEn || targetUnit.label,
         unitId: targetUnit.id,
         system: targetSystem,
         rawSI: valueSI,
@@ -181,6 +183,8 @@ class CalculatorFormatter {
         allUnits: matchedQuantity.units.map(u => ({
           system: u.system,
           label: u.label,
+          labelZh: u.labelZh || u.label,
+          labelEn: u.labelEn || u.label,
           id: u.id,
           value: valueSI / u.toBaseSI
         })),
@@ -197,11 +201,15 @@ class CalculatorFormatter {
         quantityNameEn: "Dimensionless Scalar",
         value: valueSI,
         unitLabel: "純數值 (無因次)",
+        unitLabelZh: "純數值 (無因次)",
+        unitLabelEn: "Dimensionless Scalar (1)",
         unitId: "1",
         system: targetSystem,
         rawSI: valueSI,
         baseUnitSI: "1",
         dimensionStr: "[無因次]",
+        dimensionStrZh: "[無因次]",
+        dimensionStrEn: "[Dimensionless]",
         allUnits: [],
         groups
       };
@@ -215,11 +223,15 @@ class CalculatorFormatter {
       quantityNameEn: "Composite Derived Quantity",
       value: valueSI,
       unitLabel: baseUnitStr,
+      unitLabelZh: baseUnitStr,
+      unitLabelEn: baseUnitStr,
       unitId: baseUnitStr,
       system: "SI",
       rawSI: valueSI,
       baseUnitSI: baseUnitStr,
       dimensionStr: CalculatorFormatter.formatDimensionString(dimension),
+      dimensionStrZh: CalculatorFormatter.formatDimensionString(dimension),
+      dimensionStrEn: CalculatorFormatter.formatDimensionString(dimension),
       allUnits: [],
       groups
     };
