@@ -50,6 +50,7 @@ class BuilderPreviewUI {
     if (this.btnRedo) this.btnRedo.disabled = !this.calculator.canRedo();
 
     const isZh = this.app.currentLang === "zh";
+    const dict = I18N[this.app.currentLang];
     const eqRep = this.calculator.generateEquationRepresentation();
     const curTarget = this.calculator.cursorTarget;
 
@@ -58,7 +59,7 @@ class BuilderPreviewUI {
     const createCaretSlot = (target, isActive) => {
       const slot = document.createElement("div");
       slot.className = `formula-caret-slot ${isActive ? "active" : ""}`;
-      slot.title = `點擊切換插入游標至此`;
+      slot.title = isZh ? "點擊切換插入游標至此" : "Click to place cursor here";
       slot.addEventListener("click", (e) => {
         e.stopPropagation();
         this.calculator.setCursorTarget(target);
@@ -90,12 +91,12 @@ class BuilderPreviewUI {
             const numSlot = document.createElement("div");
             const isNumActive = curTarget.scope === "fraction" && curTarget.fractionId === t.id && curTarget.part === "numerator";
             numSlot.className = `fraction-slot fraction-numerator-slot ${t.numerator.length === 0 ? "empty" : ""} ${isNumActive ? "active-slot" : ""}`;
-            numSlot.title = "分式分子格 (點擊選取)";
+            numSlot.title = isZh ? "分式分子格 (點擊選取)" : "Fraction numerator slot (click to select)";
 
             if (t.numerator.length === 0) {
               const placeholder = document.createElement("span");
               placeholder.className = "fraction-slot-placeholder";
-              placeholder.textContent = isZh ? "點此填寫分子" : "Numerator";
+              placeholder.textContent = dict.fillNumerator;
               numSlot.appendChild(placeholder);
               numSlot.addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -115,12 +116,12 @@ class BuilderPreviewUI {
             const denSlot = document.createElement("div");
             const isDenActive = curTarget.scope === "fraction" && curTarget.fractionId === t.id && curTarget.part === "denominator";
             denSlot.className = `fraction-slot fraction-denominator-slot ${t.denominator.length === 0 ? "empty" : ""} ${isDenActive ? "active-slot" : ""}`;
-            denSlot.title = "分式分母格 (點擊選取)";
+            denSlot.title = isZh ? "分式分母格 (點擊選取)" : "Fraction denominator slot (click to select)";
 
             if (t.denominator.length === 0) {
               const placeholder = document.createElement("span");
               placeholder.className = "fraction-slot-placeholder";
-              placeholder.textContent = isZh ? "點此填寫分母" : "Denominator";
+              placeholder.textContent = dict.fillDenominator;
               denSlot.appendChild(placeholder);
               denSlot.addEventListener("click", (e) => {
                 e.stopPropagation();
@@ -179,7 +180,7 @@ class BuilderPreviewUI {
       const emptyHint = document.createElement("span");
       emptyHint.style.color = "var(--text-muted)";
       emptyHint.style.fontSize = "0.95rem";
-      emptyHint.textContent = isZh ? "（算式目前為空，請點擊下方按鈕加入項目或分式）" : "(Expression is empty, click buttons below)";
+      emptyHint.textContent = dict.emptyExpression;
       this.interactiveFormulaContainer.appendChild(slot);
       this.interactiveFormulaContainer.appendChild(emptyHint);
     } else {
@@ -187,16 +188,20 @@ class BuilderPreviewUI {
     }
 
     if (this.previewCursorHint) {
+      const curLabel = isZh ? "📌 當前插入位置：" : "📌 Insertion Target: ";
+      const hintTail = isZh ? "（點擊公式中任何間隙或分母/分子格即可切換插入目標）" : "(Click any gap or slot in formula to move cursor)";
       if (curTarget.scope === "fraction") {
-        const partName = curTarget.part === "numerator" ? (isZh ? "分子" : "Numerator") : (isZh ? "分母" : "Denominator");
+        const partName = curTarget.part === "numerator" ? dict.numeratorName : dict.denominatorName;
+        const posText = isZh ? `分式 #${curTarget.fractionId} 之【${partName}】第 ${curTarget.index} 格` : `Fraction #${curTarget.fractionId} [${partName}] slot ${curTarget.index}`;
         this.previewCursorHint.innerHTML = `
-          <span>📌 當前插入位置：<span class="cursor-pos-badge">分式 #${curTarget.fractionId} 之【${partName}】第 ${curTarget.index} 格</span></span>
-          <span style="color: var(--text-muted); font-size: 0.8rem;">（點擊公式中任何間隙或分母/分子格即可切換插入目標）</span>
+          <span>${curLabel}<span class="cursor-pos-badge">${posText}</span></span>
+          <span style="color: var(--text-muted); font-size: 0.8rem;">${hintTail}</span>
         `;
       } else {
+        const posText = isZh ? `頂層第 ${curTarget.index} / ${this.calculator.tokens.length} 項` : `Root item ${curTarget.index} / ${this.calculator.tokens.length}`;
         this.previewCursorHint.innerHTML = `
-          <span>📌 當前插入位置：<span class="cursor-pos-badge">頂層第 ${curTarget.index} / ${this.calculator.tokens.length} 項</span></span>
-          <span style="color: var(--text-muted); font-size: 0.8rem;">（點擊公式中任何間隙或分母/分子格即可切換插入目標）</span>
+          <span>${curLabel}<span class="cursor-pos-badge">${posText}</span></span>
+          <span style="color: var(--text-muted); font-size: 0.8rem;">${hintTail}</span>
         `;
       }
     }
@@ -305,13 +310,13 @@ class BuilderPreviewUI {
     if (res.groups && res.groups.length > 1) {
       groupsBreakdownHtml = `
         <div style="margin: 1rem 0; font-size: 0.85rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
-          <div style="font-weight: 600; margin-bottom: 0.4rem; color: var(--text-secondary);">多項式各項計算貢獻分解：</div>
+          <div style="font-weight: 600; margin-bottom: 0.4rem; color: var(--text-secondary);">${dict.multContributions}</div>
           ${res.groups.map(g => {
             const signStr = g.sign === "-" ? "－ " : "＋ ";
             const valStr = Math.abs(g.valueSI) < 1e-3 || Math.abs(g.valueSI) >= 1e5 ? g.valueSI.toExponential(4) : g.valueSI.toLocaleString(undefined, { maximumFractionDigits: 4 });
             return `
               <div style="padding: 0.2rem 0; color: var(--text-muted);">
-                ${signStr}項 #${g.groupIndex} (${g.symbolExpression}): <strong>${valStr}</strong> SI (${g.dimensionStr})
+                ${signStr}${dict.termItem} #${g.groupIndex} (${g.symbolExpression}): <strong>${valStr}</strong> SI (${g.dimensionStr})
               </div>
             `;
           }).join("")}
@@ -322,15 +327,15 @@ class BuilderPreviewUI {
     this.resultOutputBox.innerHTML = `
       <div class="result-main-grid">
         <div class="result-item-card primary">
-          <div class="res-label">${isZh ? '匹配物理量類型' : 'Physical Quantity'}</div>
+          <div class="res-label">${dict.matchedQtyType}</div>
           <div class="res-value" style="font-size: 1.25rem;">
             ${isZh ? res.quantityNameZh : res.quantityNameEn}
           </div>
-          <div class="res-sub">因次式：${res.dimensionStr}</div>
+          <div class="res-sub">${dict.dimensionExpr} ${res.dimensionStr}</div>
         </div>
 
         <div class="result-item-card">
-          <div class="res-label">${isZh ? '計算數值' : 'Computed Value'} [${res.system}]</div>
+          <div class="res-label">${dict.computedValue} [${res.system}]</div>
           <div class="res-value">
             ${formattedVal}
           </div>
@@ -338,7 +343,7 @@ class BuilderPreviewUI {
         </div>
 
         <div class="result-item-card">
-          <div class="res-label">${isZh ? '標準 SI 基準值' : 'Base SI Value'}</div>
+          <div class="res-label">${dict.baseSIValue}</div>
           <div class="res-value" style="font-size: 1.15rem;">
             ${rawSIFormatted}
           </div>

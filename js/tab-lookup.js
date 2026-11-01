@@ -176,7 +176,8 @@ class LookupTabController {
       this.convResultDisplay.textContent = `${formattedVal} ${toUnit.id}`;
     }
     if (this.convFactorDisplay) {
-      this.convFactorDisplay.innerHTML = `1 ${fromUnit.id} = <strong>${factorStr}</strong> ${toUnit.id} (數值乘以 ${factorStr})`;
+      const convMultText = I18N[this.app.currentLang].conversionMultiplierText;
+      this.convFactorDisplay.innerHTML = `1 ${fromUnit.id} = <strong>${factorStr}</strong> ${toUnit.id} (${convMultText} ${factorStr})`;
     }
   }
 }

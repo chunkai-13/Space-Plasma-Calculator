@@ -1,11 +1,14 @@
 /* css/layout.css - 頂部導覽列、容器、分頁切換列與佈局骨架 */
 
-/* 頂部導覽列 */
+/* 頂部導覽列 (適配 iOS 安全區域狀態列) */
 .navbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.85rem 1.75rem;
+  padding-top: max(0.85rem, calc(env(safe-area-inset-top) + 0.5rem));
+  padding-bottom: 0.85rem;
+  padding-left: max(1.75rem, env(safe-area-inset-left));
+  padding-right: max(1.75rem, env(safe-area-inset-right));
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-color);
   position: sticky;
@@ -59,12 +62,12 @@
   background: var(--border-color);
 }
 
-/* 主要容器 */
+/* 主要容器 (考慮底部 Home Indicator 橫條安全區域) */
 .app-container {
   max-width: 1080px;
   width: 100%;
   margin: 0 auto;
-  padding: 1.5rem 1.25rem 3rem 1.25rem;
+  padding: 1.5rem 1.25rem calc(3rem + env(safe-area-inset-bottom)) 1.25rem;
   flex: 1;
 }
 

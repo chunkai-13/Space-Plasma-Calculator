@@ -1,0 +1,94 @@
+/* css/responsive.css - 手機版與響應式優化 (Mobile Optimization & iOS Safe Area) */
+
+@media (max-width: 768px) {
+  .navbar {
+    padding-top: max(1rem, calc(env(safe-area-inset-top) + 0.65rem));
+    padding-bottom: 0.75rem;
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+  
+  .brand-title {
+    font-size: 0.95rem;
+  }
+
+  .app-container {
+    padding: 1rem 0.75rem calc(3.5rem + env(safe-area-inset-bottom)) 0.75rem;
+  }
+
+  .tabs-header {
+    margin-bottom: 1.25rem;
+  }
+
+  .tab-btn {
+    font-size: 0.82rem;
+    padding: 0.5rem 0.4rem;
+  }
+
+  .card {
+    padding: 1.15rem;
+  }
+
+  /* 運算卡片排版防溢出 */
+  .term-card-operator {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.65rem 0.75rem;
+  }
+
+  .term-card-operator .op-title-text {
+    display: none;
+  }
+
+  .term-card-fraction {
+    padding: 0.85rem 0.65rem;
+  }
+
+  .fraction-card-header {
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .fraction-card-section {
+    padding: 0.55rem 0.65rem;
+  }
+
+  .subitem-card {
+    padding: 0.5rem 0.6rem;
+  }
+
+  .subitem-card.subitem-card-op {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .term-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .flex-1, .flex-2, .flex-half {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .number-display {
+    font-size: 1.75rem;
+  }
+
+  .unit-display {
+    font-size: 1.1rem;
+  }
+
+  .btn-large {
+    width: 100%;
+  }
+
+  .calc-actions-row {
+    flex-direction: column;
+  }
+
+  .calc-actions-row .btn {
+    width: 100%;
+  }
+}

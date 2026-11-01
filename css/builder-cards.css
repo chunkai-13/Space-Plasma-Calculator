@@ -1,0 +1,281 @@
+/* css/builder-cards.css - 自訂建構區卡片、分式、括號與收縮折疊樣式 */
+
+/* 獨立運算符卡片樣式 */
+.term-card-operator {
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.op-switch-group {
+  display: inline-flex;
+  gap: 0.35rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  padding: 3px;
+  border-radius: var(--radius-md);
+}
+
+/* 項目卡片右上角操作按鈕 (上移、下移、刪除) */
+.term-ctrl-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.btn-move {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+.btn-move:hover {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+/* 分式項目卡片 */
+.term-card-fraction {
+  border-left: 4px solid #3b82f6;
+  background: var(--bg-surface);
+}
+
+.fraction-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.fraction-card-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+}
+
+.fraction-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.fraction-subitems-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+/* 分式內部子項目卡片 (分子/分母) */
+.subitem-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.subitem-card.subitem-card-op {
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.25);
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.75rem;
+}
+
+.subitem-card.subitem-card-paren {
+  background: rgba(6, 182, 212, 0.05);
+  border-color: rgba(6, 182, 212, 0.25);
+}
+
+.subitem-card .term-body {
+  gap: 0.5rem;
+}
+
+.subitem-card .form-label {
+  font-size: 0.72rem;
+}
+
+.subitem-card .form-input,
+.subitem-card .form-select {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+}
+
+/* 括號項目卡片樣式 */
+.term-card-paren {
+  background: rgba(14, 165, 233, 0.05);
+  border: 1px dashed var(--brand-primary);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 1rem;
+}
+
+.paren-symbol-badge {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--brand-primary);
+  margin-right: 0.75rem;
+  line-height: 1;
+}
+
+.paren-desc-text {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* 運算符號選擇列 (Operator Selector Bar) */
+.term-op-selector {
+  display: inline-flex;
+  gap: 0.25rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  padding: 3px;
+  border-radius: var(--radius-md);
+}
+
+.btn-op {
+  width: 32px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 800;
+  font-size: 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn-op:hover {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+.btn-op.active {
+  background: var(--brand-primary);
+  color: #ffffff;
+  box-shadow: 0 1px 3px var(--brand-glow);
+}
+
+/* 項目清單標頭與項目卡片收縮/展開功能樣式 */
+.terms-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.25rem;
+  margin-bottom: 0.65rem;
+  padding: 0 0.25rem;
+}
+
+.terms-header-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.btn-collapse-all {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.28rem 0.65rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s ease;
+}
+
+.btn-collapse-all:hover {
+  background: var(--bg-subtle);
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.btn-toggle-collapse {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.8rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, color 0.15s ease;
+  border-radius: var(--radius-sm);
+}
+
+.btn-toggle-collapse:hover {
+  color: var(--text-primary);
+  background: var(--bg-subtle);
+}
+
+.term-card.is-collapsed .btn-toggle-collapse,
+.term-card-operator.is-collapsed .btn-toggle-collapse {
+  transform: rotate(-90deg);
+}
+
+.term-summary-badge {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 0.18rem 0.55rem;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  display: none;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.term-card.is-collapsed .term-summary-badge,
+.term-card-operator.is-collapsed .term-summary-badge {
+  display: inline-block;
+}
+
+.term-card.is-collapsed {
+  padding-bottom: 0.55rem !important;
+}
+
+.term-card.is-collapsed .term-body,
+.term-card.is-collapsed .fraction-card-container,
+.term-card.is-collapsed .paren-desc-row {
+  display: none !important;
+}
+
+.term-card-operator.is-collapsed {
+  padding: 0.45rem 0.75rem !important;
+}
+
+.term-card-operator.is-collapsed .op-switch-group,
+.term-card-operator.is-collapsed .op-title-text {
+  display: none !important;
+}

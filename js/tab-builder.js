@@ -36,9 +36,17 @@ class BuilderTabController {
     this.dimStatusBadge = document.getElementById("dim-status-badge");
     this.mismatchWarningCard = document.getElementById("mismatch-warning-card");
     this.previewCursorHint = document.getElementById("preview-cursor-hint");
+    this.btnCollapseAll = document.getElementById("btn-collapse-all");
   }
 
   bindEvents() {
+    // 全部收合 / 展開按鈕
+    if (this.btnCollapseAll) {
+      this.btnCollapseAll.addEventListener("click", () => {
+        this.cardsListUI.toggleCollapseAll();
+      });
+    }
+
     // 獨立運算符點擊 (在當前游標處插入)
     document.querySelectorAll(".btn-op-action").forEach(btn => {
       btn.addEventListener("click", () => {

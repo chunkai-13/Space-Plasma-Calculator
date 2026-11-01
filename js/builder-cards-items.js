@@ -18,6 +18,7 @@ class BuilderCardsItemsUI {
   // 渲染分式結構內部的子項目卡片 (分子或分母)
   renderSubItemCard(subTerm, subIndex, list, part, parentFrac, container) {
     const isZh = this.app.currentLang === "zh";
+    const dict = I18N[this.app.currentLang];
     const subCard = document.createElement("div");
     subCard.id = `term-card-${subTerm.id}`;
 
@@ -33,12 +34,12 @@ class BuilderCardsItemsUI {
             <button type="button" class="btn-op ${subTerm.value === '*' ? 'active' : ''}" data-val="*">·</button>
             <button type="button" class="btn-op ${subTerm.value === '/' ? 'active' : ''}" data-val="/">/</button>
           </div>
-          <span style="font-size: 0.75rem; color: var(--text-muted);">運算符</span>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">${dict.standaloneOp}</span>
         </div>
         <div class="term-ctrl-btns">
-          ${subIndex > 0 ? `<button type="button" class="btn-move btn-sub-up" title="往前移">⬆</button>` : ''}
-          ${subIndex < list.length - 1 ? `<button type="button" class="btn-move btn-sub-down" title="往後移">⬇</button>` : ''}
-          <button type="button" class="btn-delete btn-sub-del" title="刪除此符號">✕</button>
+          ${subIndex > 0 ? `<button type="button" class="btn-move btn-sub-up" title="${dict.moveUp}">⬆</button>` : ''}
+          ${subIndex < list.length - 1 ? `<button type="button" class="btn-move btn-sub-down" title="${dict.moveDown}">⬇</button>` : ''}
+          <button type="button" class="btn-delete btn-sub-del" title="${dict.deleteOp}">✕</button>
         </div>
       `;
 
@@ -84,9 +85,9 @@ class BuilderCardsItemsUI {
         <div class="term-header">
           <span class="term-idx">#${subIndex + 1}</span>
           <div class="term-ctrl-btns">
-            ${subIndex > 0 ? `<button type="button" class="btn-move btn-sub-up" title="往前移">⬆</button>` : ''}
-            ${subIndex < list.length - 1 ? `<button type="button" class="btn-move btn-sub-down" title="往後移">⬇</button>` : ''}
-            <button type="button" class="btn-delete btn-sub-del" title="刪除此括號">✕</button>
+            ${subIndex > 0 ? `<button type="button" class="btn-move btn-sub-up" title="${dict.moveUp}">⬆</button>` : ''}
+            ${subIndex < list.length - 1 ? `<button type="button" class="btn-move btn-sub-down" title="${dict.moveDown}">⬇</button>` : ''}
+            <button type="button" class="btn-delete btn-sub-del" title="${dict.deleteBracket}">✕</button>
           </div>
         </div>
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; padding: 0.15rem 0;">
@@ -96,7 +97,7 @@ class BuilderCardsItemsUI {
           </div>
           ${!isOpen ? `
           <div class="form-group flex-half" style="min-width: 100px;">
-            <label class="form-label">${isZh ? '括號次方' : 'Power'}</label>
+            <label class="form-label">${dict.bracketPower}</label>
             <input type="number" step="any" class="form-input term-sub-power-input" value="${subTerm.power !== undefined ? subTerm.power : 1}">
           </div>
           ` : ''}
@@ -180,32 +181,32 @@ class BuilderCardsItemsUI {
       <div class="term-header">
         <span class="term-idx">#${subIndex + 1}</span>
         <div class="term-ctrl-btns">
-          ${subIndex > 0 ? `<button type="button" class="btn-move btn-sub-up" title="往前移">⬆</button>` : ''}
-          ${subIndex < list.length - 1 ? `<button type="button" class="btn-move btn-sub-down" title="往後移">⬇</button>` : ''}
-          <button type="button" class="btn-delete btn-sub-del" title="刪除此項">✕</button>
+          ${subIndex > 0 ? `<button type="button" class="btn-move btn-sub-up" title="${dict.moveUp}">⬆</button>` : ''}
+          ${subIndex < list.length - 1 ? `<button type="button" class="btn-move btn-sub-down" title="${dict.moveDown}">⬇</button>` : ''}
+          <button type="button" class="btn-delete btn-sub-del" title="${dict.deleteItem}">✕</button>
         </div>
       </div>
       <div class="term-body">
         <div class="form-group flex-2">
-          <label class="form-label">${isZh ? '物理量 / 常數' : 'Quantity / Constant'}</label>
+          <label class="form-label">${dict.qtyOrConst}</label>
           ${itemSelectHtml}
         </div>
         ${subTerm.type === 'quantity' ? `
         <div class="form-group flex-1">
-          <label class="form-label">${isZh ? '數值' : 'Value'}</label>
+          <label class="form-label">${dict.valLabel}</label>
           <input type="number" step="any" class="form-input term-value-input" value="${subTerm.numberValue !== undefined ? subTerm.numberValue : 10}">
         </div>
         ` : ''}
         <div class="form-group flex-1">
-          <label class="form-label">${isZh ? '單位 / 符號' : 'Unit'}</label>
+          <label class="form-label">${dict.unitLabel}</label>
           ${unitSelectHtml}
         </div>
         <div class="form-group flex-half">
-          <label class="form-label">${isZh ? '係數' : 'Coeff'}</label>
+          <label class="form-label">${dict.coeffLabel}</label>
           <input type="number" step="any" class="form-input term-mult-input" value="${subTerm.multiplier !== undefined ? subTerm.multiplier : 1}">
         </div>
         <div class="form-group flex-half">
-          <label class="form-label">${isZh ? '次方' : 'Power'}</label>
+          <label class="form-label">${dict.powerLabel}</label>
           <input type="number" step="any" class="form-input term-power-input" value="${subTerm.power !== undefined ? subTerm.power : 1}">
         </div>
       </div>

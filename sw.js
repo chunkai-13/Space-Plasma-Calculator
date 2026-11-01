@@ -1,31 +1,34 @@
-const CACHE_NAME = 'plasma-calc-v2.9';
+const CACHE_NAME = 'plasma-calc-v3.0';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=2.9',
-  './css/base.css?v=2.9',
-  './css/layout.css?v=2.9',
-  './css/builder.css?v=2.9',
-  './css/components.css?v=2.9',
-  './constants.js?v=2.9',
-  './js/i18n.js?v=2.9',
-  './js/equations-particle.js?v=2.9',
-  './js/equations-mhd-waves.js?v=2.9',
-  './js/equations-kinetic-shocks.js?v=2.9',
-  './equations.js?v=2.9',
-  './js/calculator-core.js?v=2.9',
-  './js/calculator-evaluator.js?v=2.9',
-  './js/calculator-formatter.js?v=2.9',
-  './calculator.js?v=2.9',
-  './js/builder-cards-items.js?v=2.9',
-  './js/builder-cards-list.js?v=2.9',
-  './js/builder-preview.js?v=2.9',
-  './js/tab-builder.js?v=2.9',
-  './js/tab-lookup.js?v=2.9',
-  './js/tab-equations.js?v=2.9',
-  './app.js?v=2.9',
-  './katex/katex.min.js?v=2.9',
-  './katex/katex.min.css?v=2.9',
+  './styles.css?v=3.0',
+  './css/base.css?v=3.0',
+  './css/layout.css?v=3.0',
+  './css/components.css?v=3.0',
+  './css/builder.css?v=3.0',
+  './css/builder-cards.css?v=3.0',
+  './css/lookup-equations.css?v=3.0',
+  './css/responsive.css?v=3.0',
+  './constants.js?v=3.0',
+  './js/i18n.js?v=3.0',
+  './js/equations-particle.js?v=3.0',
+  './js/equations-mhd-waves.js?v=3.0',
+  './js/equations-kinetic-shocks.js?v=3.0',
+  './equations.js?v=3.0',
+  './js/calculator-core.js?v=3.0',
+  './js/calculator-evaluator.js?v=3.0',
+  './js/calculator-formatter.js?v=3.0',
+  './calculator.js?v=3.0',
+  './js/builder-cards-items.js?v=3.0',
+  './js/builder-cards-list.js?v=3.0',
+  './js/builder-preview.js?v=3.0',
+  './js/tab-builder.js?v=3.0',
+  './js/tab-lookup.js?v=3.0',
+  './js/tab-equations.js?v=3.0',
+  './app.js?v=3.0',
+  './katex/katex.min.js?v=3.0',
+  './katex/katex.min.css?v=3.0',
   './icon.png',
   './icon-192.png',
   './icon-512.png',
@@ -52,18 +55,15 @@ self.addEventListener('activate', (e) => {
           }
         })
       );
-    }).then(() => self.clients.claim())
+    })
   );
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', (e) => {
   e.respondWith(
-    fetch(e.request).then((networkRes) => {
-      if (networkRes && networkRes.status === 200) {
-        const resClone = networkRes.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(e.request, resClone));
-      }
-      return networkRes;
-    }).catch(() => caches.match(e.request))
+    caches.match(e.request).then((res) => {
+      return res || fetch(e.request);
+    })
   );
 });
