@@ -1,0 +1,618 @@
+/* css/builder.css - 自訂建構區專用樣式 (即時方程式看板、分式卡片、游標槽位、呼吸光標、歷史按鈕) */
+
+/* 即時方程式看板 (Equation Preview Board) */
+.equation-preview-board {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--brand-primary);
+  border-radius: var(--radius-md);
+  padding: 1.15rem 1.35rem;
+  margin: 1rem 0 1.25rem 0;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.preview-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.dim-status-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.dim-status-badge.warning {
+  background: rgba(244, 63, 94, 0.15);
+  color: #f43f5e;
+}
+
+/* 歷史復原與重做按鈕組 */
+.history-ctrl-group {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.btn-history {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.25rem 0.55rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-history:hover:not(:disabled) {
+  background: var(--bg-input);
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
+.btn-history:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn-accent-blue {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #3b82f6;
+  font-weight: 700;
+}
+
+.btn-accent-blue:hover {
+  background: rgba(59, 130, 246, 0.22);
+  border-color: #3b82f6;
+}
+
+/* 直式分式展示區塊 (包含分子格、分數線、分母格) */
+.formula-fraction-block {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  padding: 0.2rem 0.45rem;
+  margin: 0 0.3rem;
+  border-radius: var(--radius-sm);
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  transition: all 0.15s ease;
+}
+
+.formula-fraction-block:hover {
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+.fraction-slot {
+  display: inline-flex;
+  align-items: center;
+  min-width: 52px;
+  min-height: 34px;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.fraction-slot.empty {
+  border: 1.5px dashed var(--border-color);
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  justify-content: center;
+}
+
+.fraction-slot.empty:hover {
+  border-color: var(--brand-primary);
+  background: var(--brand-glow);
+}
+
+.fraction-slot.active-slot {
+  border: 1.5px solid var(--brand-primary) !important;
+  background: var(--brand-glow) !important;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.35);
+}
+
+.fraction-slot-placeholder {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.fraction-line {
+  width: 100%;
+  min-width: 48px;
+  height: 2px;
+  background-color: var(--text-primary);
+  margin: 3px 0;
+  border-radius: 1px;
+}
+
+/* 即時方程式可視化點擊看板 */
+.interactive-formula-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.75rem 0.5rem;
+  min-height: 58px;
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  margin: 0.5rem 0;
+}
+
+/* 方程式中的 Token 晶片 */
+.formula-token-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.15rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.formula-token-chip.token-qty {
+  background: var(--bg-subtle);
+  color: var(--brand-primary);
+  border: 1px solid var(--border-color);
+}
+
+.formula-token-chip.token-const {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--accent-purple);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.formula-token-chip.token-op {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  font-size: 1.3rem;
+  padding: 0.2rem 0.55rem;
+}
+
+.formula-token-chip.token-paren {
+  background: rgba(6, 182, 212, 0.1);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  font-size: 1.35rem;
+  padding: 0.15rem 0.45rem;
+}
+
+.formula-token-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  border-color: var(--brand-primary);
+}
+
+/* 點擊插入游標槽位 (Caret Slot) */
+.formula-caret-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 38px;
+  cursor: pointer;
+  position: relative;
+  border-radius: 3px;
+  transition: background-color 0.15s ease;
+}
+
+.formula-caret-slot::after {
+  content: "";
+  width: 2px;
+  height: 22px;
+  background-color: transparent;
+  border-radius: 1px;
+}
+
+.formula-caret-slot:hover {
+  background-color: var(--brand-glow);
+}
+
+.formula-caret-slot:hover::after {
+  background-color: var(--text-muted);
+}
+
+/* 被選中的當前插入點：呼吸閃爍光標 */
+.formula-caret-slot.active {
+  background-color: var(--brand-glow);
+}
+
+.formula-caret-slot.active::after {
+  background-color: var(--brand-primary);
+  animation: blinkCaret 1s infinite;
+  box-shadow: 0 0 8px var(--brand-primary);
+}
+
+@keyframes blinkCaret {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+.preview-cursor-hint {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+.cursor-pos-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  background: var(--brand-glow);
+  color: var(--brand-primary);
+}
+
+/* 獨立工具列卡片 */
+.builder-toolbar-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.15rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.toolbar-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  min-width: 100px;
+}
+
+.op-btn-group, .action-btn-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-op-action {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-weight: 800;
+  font-size: 1rem;
+  padding: 0.45rem 1rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-op-action:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.btn-danger-text {
+  color: var(--accent-rose);
+}
+
+.btn-danger-text:hover {
+  background: rgba(244, 63, 94, 0.1);
+  border-color: var(--accent-rose);
+}
+
+/* 獨立運算符卡片樣式 */
+.term-card-operator {
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.op-switch-group {
+  display: inline-flex;
+  gap: 0.35rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  padding: 3px;
+  border-radius: var(--radius-md);
+}
+
+/* 項目卡片右上角操作按鈕 (上移、下移、刪除) */
+.term-ctrl-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.btn-move {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+.btn-move:hover {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+/* 分式項目卡片 */
+.term-card-fraction {
+  border-left: 4px solid #3b82f6;
+  background: var(--bg-surface);
+}
+
+.fraction-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.fraction-card-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+}
+
+.fraction-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.fraction-subitems-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+/* 分式內部子項目卡片 (分子/分母) */
+.subitem-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.subitem-card.subitem-card-op {
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.25);
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.75rem;
+}
+
+.subitem-card.subitem-card-paren {
+  background: rgba(6, 182, 212, 0.05);
+  border-color: rgba(6, 182, 212, 0.25);
+}
+
+.subitem-card .term-body {
+  gap: 0.5rem;
+}
+
+.subitem-card .form-label {
+  font-size: 0.72rem;
+}
+
+.subitem-card .form-input,
+.subitem-card .form-select {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+}
+
+.preview-formula-math {
+  font-family: var(--font-mono);
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  line-height: 1.8;
+  overflow-x: auto;
+  padding: 0.35rem 0;
+}
+
+.preview-formula-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* 數學分式與上標排版 */
+.math-term-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.math-op {
+  font-size: 1.2rem;
+  color: var(--accent-amber);
+  font-weight: 800;
+}
+
+.math-fraction {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  padding: 0 0.35rem;
+}
+
+.math-num {
+  border-bottom: 2px solid currentColor;
+  padding-bottom: 2px;
+  text-align: center;
+  font-size: 0.95em;
+}
+
+.math-denom {
+  padding-top: 2px;
+  text-align: center;
+  font-size: 0.95em;
+}
+
+.math-factor sup {
+  font-size: 0.65em;
+  color: var(--accent-cyan);
+}
+
+/* 單位不符警告卡片 */
+.mismatch-warning-card {
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  color: #fda4af;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.mismatch-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f43f5e;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mismatch-list {
+  list-style: none;
+  font-size: 0.85rem;
+  margin-bottom: 0.6rem;
+  line-height: 1.6;
+}
+
+.mismatch-list li {
+  padding-left: 1.1rem;
+  position: relative;
+}
+
+.mismatch-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #f43f5e;
+  font-weight: bold;
+}
+
+.mismatch-advice {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  border-top: 1px dashed rgba(244, 63, 94, 0.2);
+  padding-top: 0.45rem;
+}
+
+/* 括號項目卡片樣式 */
+.term-card-paren {
+  background: rgba(14, 165, 233, 0.05);
+  border: 1px dashed var(--brand-primary);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 1rem;
+}
+
+.paren-symbol-badge {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--brand-primary);
+  margin-right: 0.75rem;
+  line-height: 1;
+}
+
+.paren-desc-text {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* 運算符號選擇列 (Operator Selector Bar) */
+.term-op-selector {
+  display: inline-flex;
+  gap: 0.25rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  padding: 3px;
+  border-radius: var(--radius-md);
+}
+
+.btn-op {
+  width: 32px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 800;
+  font-size: 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn-op:hover {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+.btn-op.active {
+  background: var(--brand-primary);
+  color: #ffffff;
+  box-shadow: 0 1px 3px var(--brand-glow);
+}

@@ -1,0 +1,80 @@
+/* css/base.css - 現代極簡、高質感太空物理計算機主題基礎樣式與變數 */
+
+:root {
+  /* 淺色模式配色 (Light Mode) */
+  --bg-primary: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --bg-input: #ffffff;
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  
+  --border-color: #e2e8f0;
+  --border-focus: #0ea5e9;
+  
+  --brand-primary: #0284c7;
+  --brand-hover: #0369a1;
+  --brand-glow: rgba(14, 165, 233, 0.15);
+  
+  --accent-cyan: #06b6d4;
+  --accent-purple: #8b5cf6;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 9999px;
+  
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+/* 深色模式配色 (Dark Mode) */
+html.dark {
+  --bg-primary: #090d16;
+  --bg-surface: #0f172a;
+  --bg-card: #131c31;
+  --bg-subtle: #1e293b;
+  --bg-input: #0b1120;
+  
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-focus: #38bdf8;
+  
+  --brand-primary: #38bdf8;
+  --brand-hover: #0ea5e9;
+  --brand-glow: rgba(56, 189, 248, 0.25);
+  
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.5);
+}
+
+/* 基礎重置 */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
