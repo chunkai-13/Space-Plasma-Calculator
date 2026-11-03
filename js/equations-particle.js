@@ -8,7 +8,7 @@ const PARTICLE_EQUATIONS = [
     id: "gyro_frequency",
     category: "particle_motion",
     nameZh: "迴旋頻率 (回旋/拉莫爾頻率)",
-    nameEn: "Gyro-frequency (Cyclotron Frequency)",
+    nameEn: "Gyro-frequency (Cyclotron / Larmor Frequency)",
     formulaLatex: "\\omega_c = \\frac{|q| B}{m}, \\quad f_c = \\frac{\\omega_c}{2\\pi}",
     descZh: "帶電粒子在磁場中繞磁力線迴旋的特徵頻率。電子頻率較高（約數百 kHz），質子頻率較低（約數 Hz）。",
     descEn: "Rate at which a charged particle gyrates around a magnetic field line.",

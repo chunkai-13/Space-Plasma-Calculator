@@ -95,20 +95,65 @@ class LookupTabController {
   searchQuantities(keyword) {
     if (!this.qtySelect) return;
     const isZh = this.app.currentLang === "zh";
-    const kw = keyword.trim().toLowerCase();
-    if (!kw) {
+    const rawKw = keyword.trim().toLowerCase();
+    const cleanKw = rawKw.replace(/[-\s_]/g, "");
+    if (!rawKw) {
       this.filterQuantitiesByCategory(this.catSelect ? this.catSelect.value : "all");
       return;
     }
 
+    // 次方符號正規化處理 (例如將 cm^-3 與 cm⁻³ 互通)
+    const normExponent = (str) => {
+      if (!str) return "";
+      const supMap = { "⁻": "-", "⁺": "+", "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9" };
+      return str.replace(/[⁻⁺⁰¹²³⁴⁵⁶⁷⁸⁹]/g, c => supMap[c] || c).replace(/\^/g, "").replace(/_/g, "");
+    };
+    const normKw = normExponent(rawKw);
+
     const matches = PHYSICAL_QUANTITIES.filter(q => {
-      return q.nameZh.toLowerCase().includes(kw) ||
-             q.nameEn.toLowerCase().includes(kw) ||
-             q.symbol.toLowerCase().includes(kw) ||
-             q.units.some(u => (u.labelZh && u.labelZh.toLowerCase().includes(kw)) ||
-                               (u.labelEn && u.labelEn.toLowerCase().includes(kw)) ||
-                               u.label.toLowerCase().includes(kw) ||
-                               u.id.toLowerCase().includes(kw));
+      const nameZh = q.nameZh.toLowerCase();
+      const nameEn = q.nameEn.toLowerCase();
+      const cleanNameEn = nameEn.replace(/[-\s_]/g, "");
+      const cleanId = q.id.toLowerCase().replace(/[-\s_]/g, "");
+      const symbol = q.symbol.toLowerCase();
+      const descZh = (q.descZh || "").toLowerCase();
+      const descEn = (q.descEn || "").toLowerCase();
+
+      // 所屬分類大類名稱比對
+      const catObj = QUANTITY_CATEGORIES.find(c => c.id === q.category);
+      const catNameZh = catObj ? catObj.nameZh.toLowerCase() : "";
+      const catNameEn = catObj ? catObj.nameEn.toLowerCase() : "";
+
+      // 基本資訊比對（名稱、ID、符號、描述、分類）
+      if (nameZh.includes(rawKw) ||
+          nameEn.includes(rawKw) ||
+          cleanNameEn.includes(cleanKw) ||
+          cleanId.includes(cleanKw) ||
+          symbol.includes(rawKw) ||
+          descZh.includes(rawKw) ||
+          descEn.includes(rawKw) ||
+          catNameZh.includes(rawKw) ||
+          catNameEn.includes(rawKw)) {
+        return true;
+      }
+
+      // 單位清單比對 (含次方符號正規化)
+      return q.units.some(u => {
+        const uId = u.id.toLowerCase();
+        const uLabelZh = (u.labelZh || u.label || "").toLowerCase();
+        const uLabelEn = (u.labelEn || "").toLowerCase();
+        const uDescZh = (u.descZh || u.desc || "").toLowerCase();
+        const uDescEn = (u.descEn || "").toLowerCase();
+
+        return uId.includes(rawKw) ||
+               uLabelZh.includes(rawKw) ||
+               uLabelEn.includes(rawKw) ||
+               uDescZh.includes(rawKw) ||
+               uDescEn.includes(rawKw) ||
+               normExponent(uId).includes(normKw) ||
+               normExponent(uLabelZh).includes(normKw) ||
+               normExponent(uLabelEn).includes(normKw);
+      });
     });
 
     this.qtySelect.innerHTML = matches.map(q => `

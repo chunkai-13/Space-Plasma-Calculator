@@ -87,28 +87,59 @@ class EquationsTabController {
   searchEquations(keyword) {
     if (!this.eqSelect) return;
     const isZh = this.app.currentLang === "zh";
-    const kw = keyword.trim().toLowerCase();
-    const cleanKw = kw.replace(/[-\s_]/g, "");
-    if (!kw) {
+    const rawKw = keyword.trim().toLowerCase();
+    const cleanKw = rawKw.replace(/[-\s_]/g, "");
+    if (!rawKw) {
       this.filterEquationsByCategory(this.eqCatSelect ? this.eqCatSelect.value : "all");
       return;
     }
+
+    // 震波 / 激波同義詞轉換
+    const synKws = [rawKw];
+    if (rawKw.includes("震波")) synKws.push(rawKw.replace(/震波/g, "激波"));
+    if (rawKw.includes("激波")) synKws.push(rawKw.replace(/激波/g, "震波"));
+    if (rawKw.includes("shock")) synKws.push("jump");
 
     const matches = EQUATIONS_DATABASE.filter(e => {
       const nameZh = e.nameZh.toLowerCase();
       const nameEn = e.nameEn.toLowerCase();
       const cleanNameEn = nameEn.replace(/[-\s_]/g, "");
-      const idStr = e.id.toLowerCase().replace(/[-\s_]/g, "");
+      const cleanId = e.id.toLowerCase().replace(/[-\s_]/g, "");
       const descZh = (e.descZh || "").toLowerCase();
       const descEn = (e.descEn || "").toLowerCase();
+      const latex = (e.formulaLatex || "").toLowerCase();
 
-      return nameZh.includes(kw) ||
-             nameEn.includes(kw) ||
-             cleanNameEn.includes(cleanKw) ||
-             idStr.includes(cleanKw) ||
-             descZh.includes(kw) ||
-             descEn.includes(kw) ||
-             e.formulaLatex.toLowerCase().includes(kw);
+      // 所屬分類名稱比對
+      const catObj = EQUATION_CATEGORIES.find(c => c.id === e.category);
+      const catNameZh = catObj ? catObj.nameZh.toLowerCase() : "";
+      const catNameEn = catObj ? catObj.nameEn.toLowerCase() : "";
+
+      // 基本比對與同義詞檢索
+      const basicMatch = synKws.some(k => {
+        return nameZh.includes(k) ||
+               nameEn.includes(k) ||
+               descZh.includes(k) ||
+               descEn.includes(k) ||
+               latex.includes(k) ||
+               catNameZh.includes(k) ||
+               catNameEn.includes(k);
+      });
+
+      if (basicMatch || cleanNameEn.includes(cleanKw) || cleanId.includes(cleanKw)) {
+        return true;
+      }
+
+      // 輸入變數名稱與代號比對
+      if (e.inputs && e.inputs.length > 0) {
+        return e.inputs.some(inp => {
+          const inpId = (inp.id || "").toLowerCase();
+          const inpNameZh = (inp.nameZh || "").toLowerCase();
+          const inpNameEn = (inp.nameEn || "").toLowerCase();
+          return inpId.includes(rawKw) || inpNameZh.includes(rawKw) || inpNameEn.includes(rawKw);
+        });
+      }
+
+      return false;
     });
 
     this.eqSelect.innerHTML = matches.map(e => `
