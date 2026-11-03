@@ -14,6 +14,8 @@ class LookupTabController {
     this.catSelect = document.getElementById("lookup-cat-select");
     this.qtySelect = document.getElementById("lookup-qty-select");
     this.lookupSearch = document.getElementById("lookup-search-input");
+    this.btnClearSearch = document.getElementById("btn-clear-lookup-search");
+    this.searchFeedback = document.getElementById("lookup-search-feedback");
     this.unitSpecTable = document.getElementById("unit-spec-table-body");
     this.convInputVal = document.getElementById("conv-input-value");
     this.convFromUnit = document.getElementById("conv-from-unit");
@@ -36,13 +38,31 @@ class LookupTabController {
         if (q) {
           this.selectedQuantity = q;
           this.renderQuantityDetail();
+          this.highlightTable();
         }
       });
     }
 
     if (this.lookupSearch) {
-      this.lookupSearch.addEventListener("input", () => {
+      const handleSearch = () => {
         this.searchQuantities(this.lookupSearch.value);
+      };
+      this.lookupSearch.addEventListener("input", handleSearch);
+      this.lookupSearch.addEventListener("change", handleSearch);
+      this.lookupSearch.addEventListener("compositionend", handleSearch);
+
+      this.lookupSearch.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          this.searchQuantities(this.lookupSearch.value);
+          this.highlightTable();
+        }
+      });
+    }
+
+    if (this.btnClearSearch) {
+      this.btnClearSearch.addEventListener("click", () => {
+        this.clearSearch();
       });
     }
 
@@ -57,6 +77,23 @@ class LookupTabController {
     }
   }
 
+  clearSearch() {
+    if (this.lookupSearch) this.lookupSearch.value = "";
+    if (this.btnClearSearch) this.btnClearSearch.style.display = "none";
+    if (this.searchFeedback) this.searchFeedback.innerHTML = "";
+    this.filterQuantitiesByCategory(this.catSelect ? this.catSelect.value : "all");
+    this.renderQuantityDetail();
+  }
+
+  highlightTable() {
+    const tableCard = document.querySelector(".table-responsive");
+    if (tableCard) {
+      tableCard.classList.remove("highlight-flash");
+      void tableCard.offsetWidth; // 強制重繪
+      tableCard.classList.add("highlight-flash");
+    }
+  }
+
   render() {
     if (!this.catSelect) return;
     const isZh = this.app.currentLang === "zh";
@@ -68,8 +105,12 @@ class LookupTabController {
       `).join("")}
     `;
 
-    this.filterQuantitiesByCategory("all");
-    this.renderQuantityDetail();
+    if (this.lookupSearch && this.lookupSearch.value.trim()) {
+      this.searchQuantities(this.lookupSearch.value);
+    } else {
+      this.filterQuantitiesByCategory("all");
+      this.renderQuantityDetail();
+    }
   }
 
   filterQuantitiesByCategory(catId) {
@@ -97,9 +138,14 @@ class LookupTabController {
     const isZh = this.app.currentLang === "zh";
     const rawKw = keyword.trim().toLowerCase();
     const cleanKw = rawKw.replace(/[-\s_]/g, "");
+
     if (!rawKw) {
-      this.filterQuantitiesByCategory(this.catSelect ? this.catSelect.value : "all");
+      this.clearSearch();
       return;
+    }
+
+    if (this.btnClearSearch) {
+      this.btnClearSearch.style.display = "block";
     }
 
     // 次方符號正規化處理 (例如將 cm^-3 與 cm⁻³ 互通)
@@ -156,15 +202,91 @@ class LookupTabController {
       });
     });
 
-    this.qtySelect.innerHTML = matches.map(q => `
-      <option value="${q.id}">
-        ${isZh ? q.nameZh : q.nameEn} (${q.symbol})
-      </option>
-    `).join("");
-
     if (matches.length > 0) {
       this.selectedQuantity = matches[0];
+      this.qtySelect.innerHTML = matches.map(q => `
+        <option value="${q.id}">
+          ${isZh ? q.nameZh : q.nameEn} (${q.symbol})
+        </option>
+      `).join("");
+      this.qtySelect.value = matches[0].id;
+
+      if (this.catSelect) {
+        this.catSelect.value = matches[0].category;
+      }
+
       this.renderQuantityDetail();
+      this.renderSearchFeedback(matches, rawKw);
+    } else {
+      this.qtySelect.innerHTML = `
+        <option value="">${isZh ? "（查無相符物理量）" : "(No matching quantity)"}</option>
+      `;
+      this.renderSearchEmpty(rawKw);
+    }
+  }
+
+  renderSearchFeedback(matches, kw) {
+    if (!this.searchFeedback) return;
+    const isZh = this.app.currentLang === "zh";
+
+    const countText = isZh
+      ? `找到 ${matches.length} 個與「${kw}」相符的物理量：`
+      : `Found ${matches.length} matching result(s) for "${kw}":`;
+
+    this.searchFeedback.innerHTML = `
+      <div class="search-count-text">${countText}</div>
+      <div class="search-chips-list">
+        ${matches.map(q => `
+          <button type="button" class="search-chip ${q.id === this.selectedQuantity.id ? 'active' : ''}" data-qid="${q.id}">
+            ${isZh ? q.nameZh : q.nameEn} (${q.symbol})
+          </button>
+        `).join("")}
+      </div>
+    `;
+
+    // 點擊候選膠囊秒速切換
+    this.searchFeedback.querySelectorAll(".search-chip").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const qid = btn.getAttribute("data-qid");
+        const targetQ = PHYSICAL_QUANTITIES.find(x => x.id === qid);
+        if (targetQ) {
+          this.selectedQuantity = targetQ;
+          if (this.qtySelect) this.qtySelect.value = targetQ.id;
+          if (this.catSelect) this.catSelect.value = targetQ.category;
+          this.renderQuantityDetail();
+          this.highlightTable();
+
+          this.searchFeedback.querySelectorAll(".search-chip").forEach(c => {
+            c.classList.toggle("active", c.getAttribute("data-qid") === qid);
+          });
+        }
+      });
+    });
+  }
+
+  renderSearchEmpty(kw) {
+    if (!this.searchFeedback) return;
+    const isZh = this.app.currentLang === "zh";
+
+    this.searchFeedback.innerHTML = `
+      <div class="search-empty-hint">
+        ${isZh
+          ? `⚠️ 查無與「<strong>${kw}</strong>」相符的物理量。請嘗試物理量名稱（如磁場、速度）、英文（如 B、eV）或單位（如 nT、Pa）。`
+          : `⚠️ No physical quantity matched "<strong>${kw}</strong>". Try searching by name (e.g. Magnetic Field), symbol (B), or unit (nT).`}
+      </div>
+    `;
+
+    if (this.unitSpecTable) {
+      this.unitSpecTable.innerHTML = `
+        <tr>
+          <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+            ${isZh ? "查無相符單位規格資料" : "No unit specifications match the query"}
+          </td>
+        </tr>
+      `;
+    }
+    if (this.descBox) {
+      this.descBox.textContent = isZh ? "請修改或清空搜尋字詞以重新檢視規格。" : "Please clear or revise your search keywords.";
     }
   }
 

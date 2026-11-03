@@ -14,6 +14,8 @@ class EquationsTabController {
     this.eqCatSelect = document.getElementById("eq-cat-select");
     this.eqSelect = document.getElementById("eq-select");
     this.eqSearch = document.getElementById("eq-search-input");
+    this.btnClearSearch = document.getElementById("btn-clear-eq-search");
+    this.searchFeedback = document.getElementById("eq-search-feedback");
     this.eqInputsContainer = document.getElementById("eq-inputs-container");
     this.btnComputeEq = document.getElementById("btn-compute-eq");
     this.eqResultBox = document.getElementById("eq-result-box");
@@ -34,13 +36,31 @@ class EquationsTabController {
         if (eq) {
           this.selectedEquation = eq;
           this.renderEquationDetail();
+          this.highlightFormula();
         }
       });
     }
 
     if (this.eqSearch) {
-      this.eqSearch.addEventListener("input", () => {
+      const handleSearch = () => {
         this.searchEquations(this.eqSearch.value);
+      };
+      this.eqSearch.addEventListener("input", handleSearch);
+      this.eqSearch.addEventListener("change", handleSearch);
+      this.eqSearch.addEventListener("compositionend", handleSearch);
+
+      this.eqSearch.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          this.searchEquations(this.eqSearch.value);
+          this.highlightFormula();
+        }
+      });
+    }
+
+    if (this.btnClearSearch) {
+      this.btnClearSearch.addEventListener("click", () => {
+        this.clearSearch();
       });
     }
 
@@ -48,6 +68,23 @@ class EquationsTabController {
       this.btnComputeEq.addEventListener("click", () => {
         this.computeCurrentEquation();
       });
+    }
+  }
+
+  clearSearch() {
+    if (this.eqSearch) this.eqSearch.value = "";
+    if (this.btnClearSearch) this.btnClearSearch.style.display = "none";
+    if (this.searchFeedback) this.searchFeedback.innerHTML = "";
+    this.filterEquationsByCategory(this.eqCatSelect ? this.eqCatSelect.value : "all");
+    this.renderEquationDetail();
+  }
+
+  highlightFormula() {
+    const card = document.querySelector("#tab-equations .formula-display-card") || this.formulaEl;
+    if (card) {
+      card.classList.remove("highlight-flash");
+      void card.offsetWidth;
+      card.classList.add("highlight-flash");
     }
   }
 
@@ -62,8 +99,12 @@ class EquationsTabController {
       `).join("")}
     `;
 
-    this.filterEquationsByCategory("all");
-    this.renderEquationDetail();
+    if (this.eqSearch && this.eqSearch.value.trim()) {
+      this.searchEquations(this.eqSearch.value);
+    } else {
+      this.filterEquationsByCategory("all");
+      this.renderEquationDetail();
+    }
   }
 
   filterEquationsByCategory(catId) {
@@ -89,9 +130,14 @@ class EquationsTabController {
     const isZh = this.app.currentLang === "zh";
     const rawKw = keyword.trim().toLowerCase();
     const cleanKw = rawKw.replace(/[-\s_]/g, "");
+
     if (!rawKw) {
-      this.filterEquationsByCategory(this.eqCatSelect ? this.eqCatSelect.value : "all");
+      this.clearSearch();
       return;
+    }
+
+    if (this.btnClearSearch) {
+      this.btnClearSearch.style.display = "block";
     }
 
     // 震波 / 激波同義詞轉換
@@ -142,13 +188,85 @@ class EquationsTabController {
       return false;
     });
 
-    this.eqSelect.innerHTML = matches.map(e => `
-      <option value="${e.id}">${isZh ? e.nameZh : e.nameEn}</option>
-    `).join("");
-
     if (matches.length > 0) {
       this.selectedEquation = matches[0];
+      this.eqSelect.innerHTML = matches.map(e => `
+        <option value="${e.id}">${isZh ? e.nameZh : e.nameEn}</option>
+      `).join("");
+      this.eqSelect.value = matches[0].id;
+
+      if (this.eqCatSelect) {
+        this.eqCatSelect.value = matches[0].category;
+      }
+
       this.renderEquationDetail();
+      this.renderSearchFeedback(matches, rawKw);
+    } else {
+      this.eqSelect.innerHTML = `
+        <option value="">${isZh ? "（查無相符方程式）" : "(No matching equation)"}</option>
+      `;
+      this.renderSearchEmpty(rawKw);
+    }
+  }
+
+  renderSearchFeedback(matches, kw) {
+    if (!this.searchFeedback) return;
+    const isZh = this.app.currentLang === "zh";
+
+    const countText = isZh
+      ? `找到 ${matches.length} 個與「${kw}」相符的方程式：`
+      : `Found ${matches.length} matching equation(s) for "${kw}":`;
+
+    this.searchFeedback.innerHTML = `
+      <div class="search-count-text">${countText}</div>
+      <div class="search-chips-list">
+        ${matches.map(e => `
+          <button type="button" class="search-chip ${e.id === this.selectedEquation.id ? 'active' : ''}" data-eid="${e.id}">
+            ${isZh ? e.nameZh : e.nameEn}
+          </button>
+        `).join("")}
+      </div>
+    `;
+
+    this.searchFeedback.querySelectorAll(".search-chip").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const eid = btn.getAttribute("data-eid");
+        const targetEq = EQUATIONS_DATABASE.find(x => x.id === eid);
+        if (targetEq) {
+          this.selectedEquation = targetEq;
+          if (this.eqSelect) this.eqSelect.value = targetEq.id;
+          if (this.eqCatSelect) this.eqCatSelect.value = targetEq.category;
+          this.renderEquationDetail();
+          this.highlightFormula();
+
+          this.searchFeedback.querySelectorAll(".search-chip").forEach(c => {
+            c.classList.toggle("active", c.getAttribute("data-eid") === eid);
+          });
+        }
+      });
+    });
+  }
+
+  renderSearchEmpty(kw) {
+    if (!this.searchFeedback) return;
+    const isZh = this.app.currentLang === "zh";
+
+    this.searchFeedback.innerHTML = `
+      <div class="search-empty-hint">
+        ${isZh
+          ? `⚠️ 查無與「<strong>${kw}</strong>」相符的方程式。請嘗試輸入方程式名稱（如 Alfven、迴旋、Kappa）、代號（如 v_A、debye）或分類。`
+          : `⚠️ No equation matched "<strong>${kw}</strong>". Try searching by equation name (e.g. Alfven, Gyro), symbol (v_A), or category.`}
+      </div>
+    `;
+
+    if (this.formulaEl) {
+      this.formulaEl.textContent = isZh ? "（查無符合方程式）" : "(No matching equation)";
+    }
+    if (this.descEl) {
+      this.descEl.textContent = isZh ? "請修改或清空搜尋字詞以重新瀏覽方程式庫。" : "Please clear or revise your search keywords.";
+    }
+    if (this.eqInputsContainer) {
+      this.eqInputsContainer.innerHTML = "";
     }
   }
 
