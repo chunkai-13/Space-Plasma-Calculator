@@ -140,19 +140,16 @@ class BuilderCardsItemsUI {
 
     // 物理量或常數
     subCard.className = "subitem-card";
-    let itemSelectHtml = "";
+    let itemDisplayHtml = "";
     let unitSelectHtml = "";
 
     if (subTerm.type === "quantity") {
       const qDef = this.calculator.getQuantityDef(subTerm.quantityId);
-      itemSelectHtml = `
-        <select class="term-qty-select form-select">
-          ${PHYSICAL_QUANTITIES.map(q => `
-            <option value="${q.id}" ${q.id === subTerm.quantityId ? "selected" : ""}>
-              ${isZh ? q.nameZh : q.nameEn} (${q.symbol})
-            </option>
-          `).join("")}
-        </select>
+      itemDisplayHtml = `
+        <div class="selected-qty-chip">
+          <strong class="chip-symbol">${qDef.symbol}</strong>
+          <span class="chip-name">${isZh ? qDef.nameZh : qDef.nameEn}</span>
+        </div>
       `;
 
       unitSelectHtml = `
@@ -165,16 +162,14 @@ class BuilderCardsItemsUI {
         </select>
       `;
     } else if (subTerm.type === "constant") {
-      itemSelectHtml = `
-        <select class="term-const-select form-select">
-          ${Object.values(PHYSICAL_CONSTANTS).map(c => `
-            <option value="${c.id}" ${c.id === subTerm.constantId ? "selected" : ""}>
-              ${c.symbol} - ${isZh ? c.nameZh : c.nameEn}
-            </option>
-          `).join("")}
-        </select>
+      const cDef = this.calculator.getConstantDef(subTerm.constantId);
+      itemDisplayHtml = `
+        <div class="selected-qty-chip">
+          <strong class="chip-symbol">${cDef.symbol}</strong>
+          <span class="chip-name">${isZh ? cDef.nameZh : cDef.nameEn}</span>
+        </div>
       `;
-      unitSelectHtml = `<span class="const-unit-badge">${this.calculator.getConstantDef(subTerm.constantId).unit}</span>`;
+      unitSelectHtml = `<span class="const-unit-badge">${cDef.unit}</span>`;
     }
 
     subCard.innerHTML = `
@@ -187,9 +182,9 @@ class BuilderCardsItemsUI {
         </div>
       </div>
       <div class="term-body">
-        <div class="form-group flex-2">
-          <label class="form-label">${dict.qtyOrConst}</label>
-          ${itemSelectHtml}
+        <div class="form-group flex-item-badge">
+          <label class="form-label">${isZh ? (subTerm.type === 'quantity' ? '物理量' : '物理常數') : (subTerm.type === 'quantity' ? 'Quantity' : 'Constant')}</label>
+          ${itemDisplayHtml}
         </div>
         ${subTerm.type === 'quantity' ? `
         <div class="form-group flex-1">
@@ -235,17 +230,6 @@ class BuilderCardsItemsUI {
     }
 
     if (subTerm.type === "quantity") {
-      const qtySelect = subCard.querySelector(".term-qty-select");
-      if (qtySelect) {
-        qtySelect.addEventListener("change", () => {
-          this.calculator.pushHistory();
-          subTerm.quantityId = qtySelect.value;
-          const newQ = this.calculator.getQuantityDef(subTerm.quantityId);
-          subTerm.unitId = newQ.units[0].id;
-          this.builder.renderTermsList();
-        });
-      }
-
       const unitSelect = subCard.querySelector(".term-unit-select");
       if (unitSelect) {
         unitSelect.addEventListener("change", () => {
@@ -261,15 +245,6 @@ class BuilderCardsItemsUI {
           this.calculator.pushHistory();
           subTerm.numberValue = parseFloat(valInput.value) || 0;
           this.builder.updateEquationPreview();
-        });
-      }
-    } else if (subTerm.type === "constant") {
-      const constSelect = subCard.querySelector(".term-const-select");
-      if (constSelect) {
-        constSelect.addEventListener("change", () => {
-          this.calculator.pushHistory();
-          subTerm.constantId = constSelect.value;
-          this.builder.renderTermsList();
         });
       }
     }

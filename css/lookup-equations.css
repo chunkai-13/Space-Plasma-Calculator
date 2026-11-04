@@ -254,3 +254,25 @@ html.dark .katex {
   font-size: 0.9rem;
   margin-top: 1rem;
 }
+
+/* 單位制度識別標籤 (太空常用制 / SI / CGS) */
+.unit-sys-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  margin-left: 0.4rem;
+  vertical-align: middle;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.unit-sys-tag {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 0.2rem;
+}

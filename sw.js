@@ -1,4 +1,4 @@
-const CACHE_NAME = 'plasma-calc-v4.4';
+const CACHE_NAME = 'plasma-calc-v4.5';
 const ASSETS = [
   './',
   './index.html',

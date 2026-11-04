@@ -279,3 +279,57 @@
 .term-card-operator.is-collapsed .op-title-text {
   display: none !important;
 }
+
+/* 已選物理量 / 常數精簡徽章展示 (取代冗長選單) */
+.flex-item-badge {
+  flex: 1.5;
+  min-width: 140px;
+}
+
+.selected-qty-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.65rem;
+  min-height: 38px;
+  box-sizing: border-box;
+}
+
+.selected-qty-chip .chip-symbol {
+  font-family: var(--font-mono-code);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.selected-qty-chip .chip-name {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.const-unit-badge {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.65rem;
+  font-family: var(--font-mono-code);
+  font-size: 0.825rem;
+  color: var(--text-muted);
+  min-height: 38px;
+  box-sizing: border-box;
+  white-space: nowrap;
+}
