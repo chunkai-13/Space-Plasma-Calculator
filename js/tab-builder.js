@@ -47,55 +47,6 @@ class BuilderTabController {
       });
     }
 
-    // 獨立運算符點擊 (在當前游標處插入)
-    document.querySelectorAll(".btn-op-action").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const op = btn.getAttribute("data-insert-op");
-        this.calculator.insertOperator(op);
-        this.renderTermsList();
-      });
-    });
-
-    // 插入分式
-    if (this.btnAddFraction) {
-      this.btnAddFraction.addEventListener("click", () => {
-        this.calculator.insertFraction();
-        this.renderTermsList();
-      });
-    }
-
-    // 插入物理量
-    if (this.btnAddQty) {
-      this.btnAddQty.addEventListener("click", () => {
-        this.calculator.insertQuantity();
-        this.renderTermsList();
-      });
-    }
-
-    // 插入常數
-    if (this.btnAddConst) {
-      this.btnAddConst.addEventListener("click", () => {
-        this.calculator.insertConstant();
-        this.renderTermsList();
-      });
-    }
-
-    // 插入開括號
-    if (this.btnAddOpenParen) {
-      this.btnAddOpenParen.addEventListener("click", () => {
-        this.calculator.insertOpenParen();
-        this.renderTermsList();
-      });
-    }
-
-    // 插入閉括號
-    if (this.btnAddCloseParen) {
-      this.btnAddCloseParen.addEventListener("click", () => {
-        this.calculator.insertCloseParen(1);
-        this.renderTermsList();
-      });
-    }
-
     // 清空全部
     if (this.btnClearTerms) {
       this.btnClearTerms.addEventListener("click", () => {
