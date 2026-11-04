@@ -105,6 +105,26 @@ const I18N = {
     symOpOpenParen: "開括號",
     symOpCloseParen: "閉括號",
 
+    // 建構看板與卡片細部字典
+    emptyExpression: "（目前算式為空，請點選下方符號或常數開始建構）",
+    fillNumerator: "點擊填入分子",
+    fillDenominator: "點擊填入分母",
+    numeratorName: "分子",
+    denominatorName: "分母",
+    resultPlaceholder: "點擊「＝ 計算結果」按鈕以檢視各制度輸出",
+    multContributions: "各項獨立多項式貢獻度：",
+    termItem: "項",
+    matchedQtyType: "匹配物理量類型",
+    dimensionExpr: "因次表達式：",
+    computedValue: "計算數值",
+    baseSIValue: "SI 基準純數值",
+    moveUp: "上移此項",
+    moveDown: "下移此項",
+    deleteOp: "刪除運算符",
+    deleteFrac: "刪除分式",
+    deleteBracket: "刪除括號",
+    deleteItem: "刪除此項",
+
     // Tab 3: 單位手冊
     lookupTitle: "單位與常數手冊",
     searchPlaceholder: "輸入物理量名稱、英文或代號搜尋 (例如: 磁場, B, Alfven, 密度)...",
@@ -225,6 +245,26 @@ const I18N = {
     symOpFrac: "Fraction",
     symOpOpenParen: "Open Paren",
     symOpCloseParen: "Close Paren",
+
+    // Builder Preview & Cards Details
+    emptyExpression: "(Formula is currently empty, click symbols or constants below to construct)",
+    fillNumerator: "Click to fill numerator",
+    fillDenominator: "Click to fill denominator",
+    numeratorName: "Numerator",
+    denominatorName: "Denominator",
+    resultPlaceholder: "Click '= Compute Result' to view outputs",
+    multContributions: "Individual Term Contributions:",
+    termItem: "Term",
+    matchedQtyType: "Matched Quantity Type",
+    dimensionExpr: "Dimension Expression: ",
+    computedValue: "Computed Value",
+    baseSIValue: "Base SI Value",
+    moveUp: "Move Up",
+    moveDown: "Move Down",
+    deleteOp: "Delete Operator",
+    deleteFrac: "Delete Fraction",
+    deleteBracket: "Delete Bracket",
+    deleteItem: "Delete Item",
 
     // Tab 3
     lookupTitle: "Units & Constants Manual",

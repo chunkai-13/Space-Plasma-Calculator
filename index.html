@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="Plasma Calc">
 
   <!-- 樣式表與 KaTeX 數學排版庫 -->
-  <link rel="stylesheet" href="katex/katex.min.css?v=4.2">
-  <link rel="stylesheet" href="styles.css?v=4.2">
-  <script src="katex/katex.min.js?v=4.2"></script>
+  <link rel="stylesheet" href="katex/katex.min.css?v=4.3">
+  <link rel="stylesheet" href="styles.css?v=4.3">
+  <script src="katex/katex.min.js?v=4.3"></script>
 </head>
 <body>
 
@@ -206,6 +206,15 @@
           </div>
         </div>
 
+        <!-- 多項式詳細參數卡片清單 (支援個別數值輸入、單位選擇、次方與移動刪除) -->
+        <div class="terms-section" style="margin-top: 1.25rem;">
+          <div class="terms-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h3 class="terms-section-title" data-i18n="itemsListTitle" style="font-size: 1rem; font-weight: 600; color: var(--text-secondary); margin: 0;">多項式項目清單</h3>
+            <button type="button" class="btn-toggle-all btn-copy-chip" id="btn-collapse-all" data-i18n="collapseAll">全部收合</button>
+          </div>
+          <div class="terms-container" id="terms-container"></div>
+        </div>
+
         <!-- 運算執行按鈕列 -->
         <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
           <button type="button" class="btn btn-large" id="btn-equal" data-i18n="btnEqual" style="flex: 2;">＝ 計算結果</button>
@@ -316,7 +325,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=4.2').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=4.3').then(reg => {
           reg.update();
         }).catch(() => {});
 
@@ -332,34 +341,34 @@
   </script>
 
   <!-- 基礎常量與多語系字典 -->
-  <script src="constants.js?v=4.2"></script>
-  <script src="js/i18n.js?v=4.2"></script>
-  <script src="js/plasma-core.js?v=4.2"></script>
+  <script src="constants.js?v=4.3"></script>
+  <script src="js/i18n.js?v=4.3"></script>
+  <script src="js/plasma-core.js?v=4.3"></script>
 
   <!-- 方程式庫模組與入口 -->
-  <script src="js/equations-particle.js?v=4.2"></script>
-  <script src="js/equations-mhd-waves.js?v=4.2"></script>
-  <script src="js/equations-kinetic-shocks.js?v=4.2"></script>
-  <script src="equations.js?v=4.2"></script>
+  <script src="js/equations-particle.js?v=4.3"></script>
+  <script src="js/equations-mhd-waves.js?v=4.3"></script>
+  <script src="js/equations-kinetic-shocks.js?v=4.3"></script>
+  <script src="equations.js?v=4.3"></script>
 
   <!-- 計算機核心引擎 (模組化拆分) -->
-  <script src="js/calculator-core.js?v=4.2"></script>
-  <script src="js/calculator-evaluator.js?v=4.2"></script>
-  <script src="js/calculator-formatter.js?v=4.2"></script>
-  <script src="calculator.js?v=4.2"></script>
+  <script src="js/calculator-core.js?v=4.3"></script>
+  <script src="js/calculator-evaluator.js?v=4.3"></script>
+  <script src="js/calculator-formatter.js?v=4.3"></script>
+  <script src="calculator.js?v=4.3"></script>
 
   <!-- 分頁控制器模組 -->
-  <script src="js/builder-cards-items.js?v=4.2"></script>
-  <script src="js/builder-cards-list.js?v=4.2"></script>
-  <script src="js/builder-preview.js?v=4.2"></script>
-  <script src="js/tab-builder.js?v=4.2"></script>
-  <script src="js/tab-lookup.js?v=4.2"></script>
-  <script src="js/tab-equations.js?v=4.2"></script>
+  <script src="js/builder-cards-items.js?v=4.3"></script>
+  <script src="js/builder-cards-list.js?v=4.3"></script>
+  <script src="js/builder-preview.js?v=4.3"></script>
+  <script src="js/tab-builder.js?v=4.3"></script>
+  <script src="js/tab-lookup.js?v=4.3"></script>
+  <script src="js/tab-equations.js?v=4.3"></script>
 
   <!-- 現代 UI 互動控制器 -->
-  <script src="js/app-ui.js?v=4.2"></script>
+  <script src="js/app-ui.js?v=4.3"></script>
 
   <!-- 總調度入口 -->
-  <script src="app.js?v=4.2"></script>
+  <script src="app.js?v=4.3"></script>
 </body>
 </html>

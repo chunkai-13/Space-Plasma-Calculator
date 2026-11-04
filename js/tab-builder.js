@@ -123,6 +123,8 @@ class BuilderTabController {
       this.btnUndo.addEventListener("click", () => {
         if (this.calculator.undo()) {
           this.renderTermsList();
+          this.updateEquationPreview();
+          if (this.app.modernUI) this.app.modernUI.syncToLatexInput();
         }
       });
     }
@@ -132,6 +134,8 @@ class BuilderTabController {
       this.btnRedo.addEventListener("click", () => {
         if (this.calculator.redo()) {
           this.renderTermsList();
+          this.updateEquationPreview();
+          if (this.app.modernUI) this.app.modernUI.syncToLatexInput();
         }
       });
     }
@@ -161,16 +165,32 @@ class BuilderTabController {
         if (e.key.toLowerCase() === "z") {
           e.preventDefault();
           if (e.shiftKey) {
-            if (this.calculator.redo()) this.renderTermsList();
+            if (this.calculator.redo()) {
+              this.renderTermsList();
+              this.updateEquationPreview();
+              if (this.app.modernUI) this.app.modernUI.syncToLatexInput();
+            }
           } else {
-            if (this.calculator.undo()) this.renderTermsList();
+            if (this.calculator.undo()) {
+              this.renderTermsList();
+              this.updateEquationPreview();
+              if (this.app.modernUI) this.app.modernUI.syncToLatexInput();
+            }
           }
         } else if (e.key.toLowerCase() === "y") {
           e.preventDefault();
-          if (this.calculator.redo()) this.renderTermsList();
+          if (this.calculator.redo()) {
+            this.renderTermsList();
+            this.updateEquationPreview();
+            if (this.app.modernUI) this.app.modernUI.syncToLatexInput();
+          }
         }
       }
     });
+  }
+
+  loadPresetFormula(presetKey) {
+    this.loadPreset(presetKey);
   }
 
   loadPreset(presetKey) {
@@ -233,20 +253,33 @@ class BuilderTabController {
     }
 
     this.renderTermsList();
+    this.updateEquationPreview();
     const res = this.calculator.compute();
     this.renderResultBox(res);
+    if (this.app.modernUI) {
+      this.app.modernUI.syncToLatexInput();
+      this.app.modernUI.updateDimensionBadge();
+    }
   }
 
   // 委派介面：保持對外與其他分頁呼叫契約 100% 相容
   updateEquationPreview() {
+    this.updateHistoryButtons();
     return this.previewUI.updateEquationPreview();
   }
 
+  updateHistoryButtons() {
+    if (this.btnUndo) this.btnUndo.disabled = !this.calculator.canUndo();
+    if (this.btnRedo) this.btnRedo.disabled = !this.calculator.canRedo();
+  }
+
   renderResultBox(res) {
+    this.updateHistoryButtons();
     return this.previewUI.renderResultBox(res);
   }
 
   renderTermsList() {
+    this.updateHistoryButtons();
     return this.cardsListUI.renderTermsList();
   }
 

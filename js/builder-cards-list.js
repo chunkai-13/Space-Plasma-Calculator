@@ -124,8 +124,12 @@ class BuilderCardsListUI {
     const collapseAllBtn = document.getElementById("btn-collapse-all");
     if (collapseAllBtn) {
       const isAllCollapsed = total > 0 && this.collapsedIds.size >= total;
-      const labelSpan = collapseAllBtn.querySelector(".collapse-all-text");
-      if (labelSpan) labelSpan.textContent = isAllCollapsed ? dict.expandAll : dict.collapseAll;
+      const labelSpan = collapseAllBtn.querySelector ? collapseAllBtn.querySelector(".collapse-all-text") : null;
+      if (labelSpan) {
+        labelSpan.textContent = isAllCollapsed ? dict.expandAll : dict.collapseAll;
+      } else {
+        collapseAllBtn.textContent = isAllCollapsed ? dict.expandAll : dict.collapseAll;
+      }
     }
 
     this.calculator.tokens.forEach((term, index) => {

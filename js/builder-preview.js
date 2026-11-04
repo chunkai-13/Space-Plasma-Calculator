@@ -189,21 +189,35 @@ class BuilderPreviewUI {
 
     if (this.previewCursorHint) {
       const curLabel = isZh ? "📌 當前插入位置：" : "📌 Insertion Target: ";
-      const hintTail = isZh ? "（點擊公式中任何間隙或分母/分子格即可切換插入目標）" : "(Click any gap or slot in formula to move cursor)";
-      if (curTarget.scope === "fraction") {
-        const partName = curTarget.part === "numerator" ? dict.numeratorName : dict.denominatorName;
-        const posText = isZh ? `分式 #${curTarget.fractionId} 之【${partName}】第 ${curTarget.index} 格` : `Fraction #${curTarget.fractionId} [${partName}] slot ${curTarget.index}`;
-        this.previewCursorHint.innerHTML = `
-          <span>${curLabel}<span class="cursor-pos-badge">${posText}</span></span>
-          <span style="color: var(--text-muted); font-size: 0.8rem;">${hintTail}</span>
-        `;
+      const hintTail = isZh ? "（點擊上方公式中任何間隙或符號前後即可切換插入游標）" : "(Click any gap or slot in formula to move cursor)";
+      let posText = "";
+
+      if (this.calculator.tokens.length === 0) {
+        posText = isZh ? "最開頭（公式起點）" : "Formula Start";
+      } else if (curTarget.scope === "fraction") {
+        const partName = curTarget.part === "numerator" ? (dict.numeratorName || "分子") : (dict.denominatorName || "分母");
+        const fracIndex = this.calculator.tokens.findIndex(t => t.id === curTarget.fractionId);
+        const fracLabel = fracIndex >= 0 ? `#${fracIndex + 1}` : "";
+        if (curTarget.index === 0) {
+          posText = isZh ? `分式 ${fracLabel} 之【${partName}】開頭` : `Fraction ${fracLabel} [${partName}] start`;
+        } else {
+          posText = isZh ? `分式 ${fracLabel} 之【${partName}】第 ${curTarget.index} 格` : `Fraction ${fracLabel} [${partName}] slot ${curTarget.index}`;
+        }
       } else {
-        const posText = isZh ? `頂層第 ${curTarget.index} / ${this.calculator.tokens.length} 項` : `Root item ${curTarget.index} / ${this.calculator.tokens.length}`;
-        this.previewCursorHint.innerHTML = `
-          <span>${curLabel}<span class="cursor-pos-badge">${posText}</span></span>
-          <span style="color: var(--text-muted); font-size: 0.8rem;">${hintTail}</span>
-        `;
+        const total = this.calculator.tokens.length;
+        if (curTarget.index === 0) {
+          posText = isZh ? "最開頭（第 1 項之前）" : "At Beginning (Before #1)";
+        } else if (curTarget.index >= total) {
+          posText = isZh ? `末尾（接續第 ${total} 項之後）` : `At End (After item #${total})`;
+        } else {
+          posText = isZh ? `第 ${curTarget.index} 項與第 ${curTarget.index + 1} 項之間` : `Between item #${curTarget.index} & #${curTarget.index + 1}`;
+        }
       }
+
+      this.previewCursorHint.innerHTML = `
+        <span>${curLabel}<span class="cursor-pos-badge">${posText}</span></span>
+        <span style="color: var(--text-muted); font-size: 0.8rem;">${hintTail}</span>
+      `;
     }
 
     if (!this.dimStatusBadge) return;
