@@ -146,24 +146,38 @@ class CalculatorCore {
     }, target);
   }
 
+  addConstant(symOrObj, target = this.cursorTarget) {
+    const p = typeof symOrObj === "string" ? { constantId: symOrObj } : (symOrObj || {});
+    return this.insertConstant(p, target);
+  }
+
+  addQuantity(symOrObj, target = this.cursorTarget) {
+    const p = typeof symOrObj === "string" ? { quantityId: symOrObj } : (symOrObj || {});
+    return this.insertQuantity(p, target);
+  }
+
   insertQuantity(preset = {}, target = this.cursorTarget) {
-    const defaultQty = PHYSICAL_QUANTITIES[0];
+    const p = typeof preset === "string" ? { quantityId: preset } : (preset || {});
+    const targetQid = p.quantityId || (PHYSICAL_QUANTITIES[0] && PHYSICAL_QUANTITIES[0].id) || "magnetic_field";
+    const foundQty = PHYSICAL_QUANTITIES.find(q => q.id === targetQid) || PHYSICAL_QUANTITIES[0];
+    const defaultUnit = foundQty && foundQty.units ? (foundQty.units[1] || foundQty.units[0]) : null;
     return this.insertToken({
       type: "quantity",
-      quantityId: preset.quantityId || defaultQty.id,
-      unitId: preset.unitId || defaultQty.units[1].id,
-      numberValue: preset.numberValue !== undefined ? preset.numberValue : 10,
-      multiplier: preset.multiplier !== undefined ? preset.multiplier : 1,
-      power: preset.power !== undefined ? preset.power : 1
+      quantityId: targetQid,
+      unitId: p.unitId || (defaultUnit ? defaultUnit.id : "T"),
+      numberValue: p.numberValue !== undefined ? p.numberValue : 1,
+      multiplier: p.multiplier !== undefined ? p.multiplier : 1,
+      power: p.power !== undefined ? p.power : 1
     }, target);
   }
 
   insertConstant(preset = {}, target = this.cursorTarget) {
+    const p = typeof preset === "string" ? { constantId: preset } : (preset || {});
     return this.insertToken({
       type: "constant",
-      constantId: preset.constantId || "mu0",
-      multiplier: preset.multiplier !== undefined ? preset.multiplier : 1,
-      power: preset.power !== undefined ? preset.power : 1
+      constantId: p.constantId || "e",
+      multiplier: p.multiplier !== undefined ? p.multiplier : 1,
+      power: p.power !== undefined ? p.power : 1
     }, target);
   }
 

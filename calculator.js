@@ -11,6 +11,18 @@ class PlasmaCustomCalculator extends CalculatorCore {
     super();
   }
 
+  // 快捷插入物理常數 (相容字串與物件傳參)
+  addConstant(symOrObj, target = this.cursorTarget) {
+    const preset = typeof symOrObj === "string" ? { constantId: symOrObj } : (symOrObj || {});
+    return this.insertConstant(preset, target);
+  }
+
+  // 快捷插入物理量 (相容字串與物件傳參)
+  addQuantity(symOrObj, target = this.cursorTarget) {
+    const preset = typeof symOrObj === "string" ? { quantityId: symOrObj } : (symOrObj || {});
+    return this.insertQuantity(preset, target);
+  }
+
   // 評估因子
   evaluateFactor(token) {
     return CalculatorEvaluator.evaluateFactor(token, this);

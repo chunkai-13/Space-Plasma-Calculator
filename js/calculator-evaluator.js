@@ -82,7 +82,7 @@ class CalculatorEvaluator {
         coreInstance
       );
 
-      if (Math.abs(denEval.baseValue) < 1e-30) {
+      if (!isFinite(denEval.baseValue) || isNaN(denEval.baseValue) || Math.abs(denEval.baseValue) < 1e-99) {
         throw new Error("分式的分母值不可為 0。");
       }
 
@@ -165,7 +165,7 @@ class CalculatorEvaluator {
 
       g.factors.forEach(f => {
         if (f.op === "/") {
-          if (Math.abs(f.factor.baseValue) < 1e-30) {
+          if (!isFinite(f.factor.baseValue) || isNaN(f.factor.baseValue) || Math.abs(f.factor.baseValue) < 1e-99) {
             throw new Error("運算過程發生除以零錯誤。");
           }
           gVal /= f.factor.baseValue;

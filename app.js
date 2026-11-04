@@ -158,6 +158,12 @@ class SpacePlasmaApp {
           this.calculator.insertCloseParen(1);
         }
 
+        if (this.builderTab) {
+          this.builderTab.renderTermsList();
+          if (this.builderTab.previewUI) {
+            this.builderTab.previewUI.updateEquationPreview();
+          }
+        }
         if (this.modernUI) {
           this.modernUI.syncToLatexInput();
         }

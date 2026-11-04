@@ -467,21 +467,19 @@ class EquationsTabController {
 
           return `
             <div class="modern-result-card">
-              <div class="result-main-grid">
-                <div class="result-val-block">
-                  <div class="result-val-title">${isZh ? out.labelZh : out.labelEn}</div>
-                  <div class="result-val-display">
-                    <span class="val">${formatted}</span>
-                    <span class="unit-str">${outUnitDisplay}</span>
-                  </div>
-                  ${altHtml}
-                </div>
+              <div class="result-card-header">
+                <div class="result-val-title">${isZh ? out.labelZh : out.labelEn}</div>
                 <div class="result-actions-bar">
-                  <button type="button" class="btn-copy-chip" data-copy-text="${copyVal}" title="複製純數值">📋 數值</button>
-                  <button type="button" class="btn-copy-chip" data-copy-text="${copyWithUnit}" title="複製數值與單位">📋 帶單位</button>
-                  <button type="button" class="btn-copy-chip" data-copy-text="${copyLatex}" title="複製 LaTeX 語法">📋 LaTeX</button>
+                  <button type="button" class="btn-copy-chip" data-copy-text="${copyVal}" title="${isZh ? '複製數值' : 'Copy value'}">${isZh ? '📋 數值' : '📋 Value'}</button>
+                  <button type="button" class="btn-copy-chip" data-copy-text="${copyWithUnit}" title="${isZh ? '複製帶單位' : 'Copy with unit'}">${isZh ? '📋 帶單位' : '📋 With Unit'}</button>
+                  <button type="button" class="btn-copy-chip" data-copy-text="${copyLatex}" title="LaTeX">📋 LaTeX</button>
                 </div>
               </div>
+              <div class="result-val-display">
+                <span class="val">${formatted}</span>
+                <span class="unit-str">${outUnitDisplay}</span>
+              </div>
+              ${altHtml}
               ${meterHtml}
             </div>
           `;

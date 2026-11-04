@@ -166,11 +166,14 @@ html:not(.dark) {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 1.25rem;
-  margin-top: 1.25rem;
+  padding: 1.15rem;
+  margin-top: 1rem;
   box-shadow: var(--shadow-md);
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
 }
 
 .modern-result-card::before {
@@ -183,33 +186,38 @@ html:not(.dark) {
   background: linear-gradient(90deg, var(--brand-primary), var(--accent-cyan));
 }
 
-.result-main-grid {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 1rem;
-}
-
-.result-val-block {
+.result-card-header {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .result-val-title {
-  font-size: 0.8rem;
+  font-size: 0.825rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
 }
 
+.result-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+}
+
 .result-val-display {
   font-family: var(--font-mono-code);
-  font-size: 1.85rem;
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--text-primary);
-  line-height: 1.2;
-  word-break: break-all;
+  line-height: 1.25;
+  white-space: nowrap !important;
+  overflow-x: auto;
+  word-break: normal !important;
+  padding-bottom: 2px;
 }
 
 .result-val-display .unit-str {
@@ -217,19 +225,13 @@ html:not(.dark) {
   font-weight: 500;
   color: var(--brand-primary);
   margin-left: 0.35rem;
+  white-space: nowrap !important;
 }
 
 .result-val-sub {
   font-family: var(--font-mono-code);
   font-size: 0.85rem;
   color: var(--text-muted);
-}
-
-.result-actions-bar {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
 }
 
 .btn-copy-chip {
