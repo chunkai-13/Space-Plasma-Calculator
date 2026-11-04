@@ -460,3 +460,31 @@ html:not(.dark) {
   z-index: 5;
   box-shadow: 0 1px 0 var(--border-color);
 }
+
+/* 11. 物理邊界防禦警告與場景過渡動效 */
+.input-highlight-pulse { animation: inputPulse 0.8s ease-out; }
+@keyframes inputPulse {
+  0% { background-color: rgba(14, 165, 233, 0.3) !important; border-color: var(--brand-primary) !important; }
+  100% { background-color: transparent !important; }
+}
+.smart-input-error {
+  border-color: var(--color-rose) !important;
+  box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.3) !important;
+}
+.calc-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid var(--color-rose);
+  border-radius: var(--radius-md);
+  color: var(--color-rose);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+.env-pill-btn.is-customized {
+  border-style: dashed;
+  border-color: var(--color-amber);
+  color: var(--color-amber);
+}

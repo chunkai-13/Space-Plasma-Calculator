@@ -108,13 +108,13 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* 分頁內容 */
+/* 分頁內容 (互斥切換，純 CSS 顯示/隱藏，絕不銷毀 DOM) */
 .tab-content {
-  display: none;
+  display: none !important;
 }
 
 .tab-content.active {
-  display: block;
+  display: block !important;
   animation: fadeIn 0.25s ease-out;
 }
 

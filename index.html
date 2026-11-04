@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="Plasma Calc">
 
   <!-- 樣式表與 KaTeX 數學排版庫 -->
-  <link rel="stylesheet" href="katex/katex.min.css?v=4.0">
-  <link rel="stylesheet" href="styles.css?v=4.0">
-  <script src="katex/katex.min.js?v=4.0"></script>
+  <link rel="stylesheet" href="katex/katex.min.css?v=4.1">
+  <link rel="stylesheet" href="styles.css?v=4.1">
+  <script src="katex/katex.min.js?v=4.1"></script>
 </head>
 <body>
 
@@ -43,19 +43,19 @@
 
     <!-- 三大分頁切換列 (預設啟用方程式速算庫) -->
     <nav class="tabs-header">
-      <button type="button" class="tab-btn active" data-tab="equations">
+      <button type="button" class="tab-btn active" data-tab="presets">
         <span>📐</span> <span data-i18n="tabEq">方程式速算庫</span>
       </button>
-      <button type="button" class="tab-btn" data-tab="calc">
+      <button type="button" class="tab-btn" data-tab="builder">
         <span>⚡</span> <span data-i18n="tabCalc">自訂運算工作台</span>
       </button>
-      <button type="button" class="tab-btn" data-tab="lookup">
+      <button type="button" class="tab-btn" data-tab="units">
         <span>📖</span> <span data-i18n="tabLookup">單位與常數手冊</span>
       </button>
     </nav>
 
     <!-- 分頁一 (首頁)：太空物理方程式速算庫 -->
-    <section class="tab-content active" id="tab-equations">
+    <section class="tab-content active" id="section-presets">
       <div class="card">
         <h2 class="card-title" data-i18n="eqTitle">太空物理方程式速算庫</h2>
 
@@ -120,7 +120,7 @@
     </section>
 
     <!-- 分頁二：自訂運算工作台 (Custom Builder) -->
-    <section class="tab-content" id="tab-calc">
+    <section class="tab-content" id="section-builder">
       <div class="card">
         <h2 class="card-title" data-i18n="builderTitle">自訂運算工作台</h2>
         <p class="card-desc" data-i18n="builderDesc">自由組合物理量與常數，支援所見即所得點擊游標定位與 LaTeX 快捷語法雙軌輸入，即時因次檢驗。</p>
@@ -200,45 +200,17 @@
             <button type="button" class="symbol-pill" data-sym-type="operator" data-sym-id="-"><strong>－</strong> 減法</button>
             <button type="button" class="symbol-pill" data-sym-type="operator" data-sym-id="*"><strong>·</strong> 乘法</button>
             <button type="button" class="symbol-pill" data-sym-type="operator" data-sym-id="/"><strong>/</strong> 除法</button>
+            <button type="button" class="symbol-pill" data-sym-type="fraction" id="btn-add-fraction"><strong>⬚/⬚</strong> 分式</button>
+            <button type="button" class="symbol-pill" data-sym-type="open_paren" id="btn-add-open-paren"><strong>(</strong> 開括號</button>
+            <button type="button" class="symbol-pill" data-sym-type="close_paren" id="btn-add-close-paren"><strong>)</strong> 閉括號</button>
           </div>
         </div>
 
-        <!-- 獨立工具列：運算符號與插入控制 -->
-        <div class="builder-toolbar-card">
-          <div class="toolbar-section">
-            <span class="toolbar-label" data-i18n="opLabel">獨立運算符：</span>
-            <div class="op-btn-group">
-              <button type="button" class="btn btn-op-action" data-insert-op="+" data-i18n="btnOpAdd" title="在光標處插入加號">＋ 加</button>
-              <button type="button" class="btn btn-op-action" data-insert-op="-" data-i18n="btnOpSub" title="在光標處插入減號">－ 減</button>
-              <button type="button" class="btn btn-op-action" data-insert-op="*" data-i18n="btnOpMul" title="在光標處插入乘號">· 乘</button>
-              <button type="button" class="btn btn-op-action" data-insert-op="/" data-i18n="btnOpDiv" title="在光標處插入除號">/ 除</button>
-            </div>
-          </div>
-          <div class="toolbar-section">
-            <span class="toolbar-label" data-i18n="structLabel">插入結構與括號：</span>
-            <div class="action-btn-group">
-              <button type="button" class="btn btn-secondary btn-accent-blue" id="btn-add-fraction" data-i18n="btnAddFrac" title="插入分式結構 (分子與分母空格)">＋ ⬚/⬚ 分式</button>
-              <button type="button" class="btn btn-secondary" id="btn-add-qty" data-i18n="btnAddQty">＋ 物理量</button>
-              <button type="button" class="btn btn-secondary" id="btn-add-const" data-i18n="btnAddConst">＋ 物理常數</button>
-              <button type="button" class="btn btn-secondary" id="btn-add-open-paren" data-i18n="btnAddOpenParen" title="插入開括號">＋ ( 開括號</button>
-              <button type="button" class="btn btn-secondary" id="btn-add-close-paren" data-i18n="btnAddCloseParen" title="插入閉括號">＋ ) 閉括號</button>
-              <button type="button" class="btn btn-secondary btn-danger-text" id="btn-clear-terms" data-i18n="btnClear">清空全部</button>
-              <button type="button" class="btn btn-large" id="btn-equal" data-i18n="btnEqual">＝ 計算結果</button>
-            </div>
-          </div>
+        <!-- 運算執行按鈕列 -->
+        <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+          <button type="button" class="btn btn-large" id="btn-equal" data-i18n="btnEqual" style="flex: 2;">＝ 計算結果</button>
+          <button type="button" class="btn btn-secondary btn-danger-text" id="btn-clear-terms" data-i18n="btnClear" style="flex: 1;">清空全部</button>
         </div>
-
-        <!-- 項目列表標頭與全部收合/展開控制 -->
-        <div class="terms-header-bar">
-          <span class="terms-header-title" data-i18n="itemsListTitle">多項式項目清單</span>
-          <button type="button" class="btn-collapse-all" id="btn-collapse-all">
-            <span class="collapse-icon">↕</span>
-            <span class="collapse-all-text" data-i18n="collapseAll">全部收合</span>
-          </button>
-        </div>
-
-        <!-- 項目列表容器 -->
-        <div class="terms-list" id="terms-container"></div>
       </div>
 
       <!-- 計算結果輸出區塊 -->
@@ -265,8 +237,8 @@
       </div>
     </section>
 
-    <!-- 分頁三：查找單位與換算 -->
-    <section class="tab-content" id="tab-lookup">
+    <!-- 分頁三：查找單位與換算 (Units Manual) -->
+    <section class="tab-content" id="section-units">
       <div class="card">
         <h2 class="card-title" data-i18n="lookupTitle">單位與常數手冊</h2>
 
@@ -300,10 +272,11 @@
           <table class="unit-table">
             <thead>
               <tr>
-                <th style="width: 15%;" data-i18n="tableThSys">制度</th>
-                <th style="width: 25%;" data-i18n="tableThUnit">單位符號與名稱</th>
-                <th style="width: 25%;" data-i18n="tableThFactor">SI 基準換算係數</th>
-                <th style="width: 35%;" data-i18n="tableThDesc">常用情境與說明</th>
+                <th style="width: 12%;" data-i18n="tableThSys">制度</th>
+                <th style="width: 23%;" data-i18n="tableThUnit">單位符號與名稱</th>
+                <th style="width: 20%;" data-i18n="tableThFactor">SI 基準換算係數</th>
+                <th style="width: 30%;" data-i18n="tableThDesc">常用情境與說明</th>
+                <th style="width: 15%; text-align: center;" data-i18n="tableThAction">操作</th>
               </tr>
             </thead>
             <tbody id="unit-spec-table-body"></tbody>
@@ -343,7 +316,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=4.0').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=4.1').then(reg => {
           reg.update();
         }).catch(() => {});
 
@@ -359,34 +332,34 @@
   </script>
 
   <!-- 基礎常量與多語系字典 -->
-  <script src="constants.js?v=4.0"></script>
-  <script src="js/i18n.js?v=4.0"></script>
-  <script src="js/plasma-core.js?v=4.0"></script>
+  <script src="constants.js?v=4.1"></script>
+  <script src="js/i18n.js?v=4.1"></script>
+  <script src="js/plasma-core.js?v=4.1"></script>
 
   <!-- 方程式庫模組與入口 -->
-  <script src="js/equations-particle.js?v=4.0"></script>
-  <script src="js/equations-mhd-waves.js?v=4.0"></script>
-  <script src="js/equations-kinetic-shocks.js?v=4.0"></script>
-  <script src="equations.js?v=4.0"></script>
+  <script src="js/equations-particle.js?v=4.1"></script>
+  <script src="js/equations-mhd-waves.js?v=4.1"></script>
+  <script src="js/equations-kinetic-shocks.js?v=4.1"></script>
+  <script src="equations.js?v=4.1"></script>
 
   <!-- 計算機核心引擎 (模組化拆分) -->
-  <script src="js/calculator-core.js?v=4.0"></script>
-  <script src="js/calculator-evaluator.js?v=4.0"></script>
-  <script src="js/calculator-formatter.js?v=4.0"></script>
-  <script src="calculator.js?v=4.0"></script>
+  <script src="js/calculator-core.js?v=4.1"></script>
+  <script src="js/calculator-evaluator.js?v=4.1"></script>
+  <script src="js/calculator-formatter.js?v=4.1"></script>
+  <script src="calculator.js?v=4.1"></script>
 
   <!-- 分頁控制器模組 -->
-  <script src="js/builder-cards-items.js?v=4.0"></script>
-  <script src="js/builder-cards-list.js?v=4.0"></script>
-  <script src="js/builder-preview.js?v=4.0"></script>
-  <script src="js/tab-builder.js?v=4.0"></script>
-  <script src="js/tab-lookup.js?v=4.0"></script>
-  <script src="js/tab-equations.js?v=4.0"></script>
+  <script src="js/builder-cards-items.js?v=4.1"></script>
+  <script src="js/builder-cards-list.js?v=4.1"></script>
+  <script src="js/builder-preview.js?v=4.1"></script>
+  <script src="js/tab-builder.js?v=4.1"></script>
+  <script src="js/tab-lookup.js?v=4.1"></script>
+  <script src="js/tab-equations.js?v=4.1"></script>
 
   <!-- 現代 UI 互動控制器 -->
-  <script src="js/app-ui.js?v=4.0"></script>
+  <script src="js/app-ui.js?v=4.1"></script>
 
   <!-- 總調度入口 -->
-  <script src="app.js?v=4.0"></script>
+  <script src="app.js?v=4.1"></script>
 </body>
 </html>

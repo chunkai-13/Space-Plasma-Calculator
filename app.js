@@ -1,6 +1,7 @@
 /**
  * app.js - 應用程式主控入口
- * 負責頂部導覽列、深淺色主題、多語系切換與三大功能控制器調度：
+ * 負責頂部導覽列、Tab 互斥切換與網址 Hash 同步、深淺色主題、多語系切換與控制器調度：
+ *   - ModernUIController (js/app-ui.js)
  *   - BuilderTabController (js/tab-builder.js)
  *   - LookupTabController (js/tab-lookup.js)
  *   - EquationsTabController (js/tab-equations.js)
@@ -18,6 +19,10 @@ class SpacePlasmaApp {
 
     this.applyTheme(this.currentTheme);
     this.applyLanguage(this.currentLang);
+
+    // 依據 URL Hash 初始化 Tab 狀態 (預設首頁為 presets)
+    this.initTabFromHash();
+    window.addEventListener("hashchange", () => this.initTabFromHash());
   }
 
   initDOM() {
@@ -28,25 +33,54 @@ class SpacePlasmaApp {
   }
 
   initControllers() {
-    // 實例化現代 UI 輔助控制器與三大分頁控制器
     this.modernUI = new ModernUIController(this);
     this.builderTab = new BuilderTabController(this);
     this.lookupTab = new LookupTabController(this);
     this.equationsTab = new EquationsTabController(this);
   }
 
+  initTabFromHash() {
+    const rawHash = window.location.hash.replace("#section-", "").replace("#", "").trim();
+    const validTabs = ["presets", "builder", "units"];
+    const targetTab = validTabs.includes(rawHash) ? rawHash : "presets";
+    this.switchTab(targetTab, false);
+  }
+
+  // 互斥切換工作區 Tab (純 CSS 顯示/隱藏，絕不銷毀 DOM 以保全計算狀態)
+  switchTab(tabKey, updateHash = true) {
+    const validTabs = ["presets", "builder", "units"];
+    const activeTab = validTabs.includes(tabKey) ? tabKey : "presets";
+
+    if (this.tabBtns) {
+      this.tabBtns.forEach(b => {
+        b.classList.toggle("active", b.getAttribute("data-tab") === activeTab);
+      });
+    }
+
+    if (this.tabContents) {
+      this.tabContents.forEach(c => {
+        const isTarget = c.id === `section-${activeTab}`;
+        c.classList.toggle("active", isTarget);
+      });
+    }
+
+    if (updateHash) {
+      window.location.hash = `section-${activeTab}`;
+    }
+  }
+
   bindEvents() {
-    // 分頁切換
+    // 1. 分頁按鈕點擊
     if (this.tabBtns) {
       this.tabBtns.forEach(btn => {
         btn.addEventListener("click", () => {
           const targetTab = btn.getAttribute("data-tab");
-          this.switchTab(targetTab);
+          this.switchTab(targetTab, true);
         });
       });
     }
 
-    // 深淺色主題切換
+    // 2. 深淺色主題切換
     if (this.themeToggleBtn) {
       this.themeToggleBtn.addEventListener("click", () => {
         this.currentTheme = this.currentTheme === "dark" ? "light" : "dark";
@@ -54,7 +88,7 @@ class SpacePlasmaApp {
       });
     }
 
-    // 語言切換
+    // 3. 語言切換
     if (this.langToggleBtn) {
       this.langToggleBtn.addEventListener("click", () => {
         this.currentLang = this.currentLang === "zh" ? "en" : "zh";
@@ -62,10 +96,9 @@ class SpacePlasmaApp {
       });
     }
 
-    // 太空環境典型預設場景代入
+    // 4. 太空環境典型預設場景代入
     document.querySelectorAll(".env-pill-btn").forEach(btn => {
       btn.addEventListener("click", () => {
-        document.querySelectorAll(".env-pill-btn").forEach(b => b.classList.toggle("active", b === btn));
         const presetId = btn.getAttribute("data-env-preset");
         if (this.modernUI) {
           this.modernUI.applyEnvironmentPreset(presetId);
@@ -73,7 +106,7 @@ class SpacePlasmaApp {
       });
     });
 
-    // 方程式篩選標籤快速過濾
+    // 5. 方程式篩選標籤快速過濾
     document.querySelectorAll(".eq-filter-pill").forEach(pill => {
       pill.addEventListener("click", () => {
         document.querySelectorAll(".eq-filter-pill").forEach(p => p.classList.toggle("active", p === pill));
@@ -84,26 +117,26 @@ class SpacePlasmaApp {
       });
     });
 
-    // 雙模公式建構：LaTeX 快速語法解析
+    // 6. 雙模公式建構：單一資料源 (SSOT) 雙向綁定
     const latexInput = document.getElementById("latex-quick-input");
     const btnParseLatex = document.getElementById("btn-parse-latex");
-    if (latexInput && btnParseLatex) {
-      const doParse = () => {
+    if (latexInput) {
+      // 鍵盤輸入即時解析更新畫布與因次檢查
+      latexInput.addEventListener("input", (e) => {
         if (this.modernUI) {
-          this.modernUI.parseAndApplyLaTeX(latexInput.value);
-          latexInput.value = "";
+          this.modernUI.syncFromLatexInput(e.target.value);
         }
-      };
-      btnParseLatex.addEventListener("click", doParse);
-      latexInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          doParse();
+      });
+    }
+    if (btnParseLatex && latexInput) {
+      btnParseLatex.addEventListener("click", () => {
+        if (this.modernUI) {
+          this.modernUI.syncFromLatexInput(latexInput.value);
         }
       });
     }
 
-    // 符號庫分類標籤切換與點擊插入
+    // 7. 符號庫分類標籤切換與點擊插入 (更新狀態並反向回填 LaTeX)
     if (this.modernUI) {
       this.modernUI.initSymbolPillTabs();
     }
@@ -117,23 +150,53 @@ class SpacePlasmaApp {
           this.calculator.addQuantity(symId);
         } else if (symType === "operator") {
           this.calculator.insertOperator(symId);
+        } else if (symType === "fraction") {
+          this.calculator.insertFraction();
+        } else if (symType === "open_paren") {
+          this.calculator.insertOpenParen();
+        } else if (symType === "close_paren") {
+          this.calculator.insertCloseParen(1);
         }
-        if (this.builderTab) {
-          this.builderTab.renderTermsList();
+
+        if (this.modernUI) {
+          this.modernUI.syncToLatexInput();
         }
       });
     });
-  }
 
-  // 切換分頁
-  switchTab(tabId) {
-    if (this.tabBtns) {
-      this.tabBtns.forEach(b => b.classList.toggle("active", b.getAttribute("data-tab") === tabId));
+    // 8. 自訂工作台經典範例點擊
+    document.querySelectorAll(".preset-btn[data-preset]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const pid = btn.getAttribute("data-preset");
+        if (this.builderTab) {
+          this.builderTab.loadPresetFormula(pid);
+          if (this.modernUI) {
+            this.modernUI.syncToLatexInput();
+          }
+        }
+      });
+    });
+
+    // 9. 清空與計算按鈕
+    const btnClear = document.getElementById("btn-clear-terms");
+    if (btnClear) {
+      btnClear.addEventListener("click", () => {
+        this.calculator.clear();
+        if (this.modernUI) {
+          this.modernUI.syncToLatexInput();
+        }
+      });
     }
-    if (this.tabContents) {
-      this.tabContents.forEach(c => {
-        const isTarget = c.id === `tab-${tabId}`;
-        c.classList.toggle("active", isTarget);
+    const btnEqual = document.getElementById("btn-equal");
+    if (btnEqual) {
+      btnEqual.addEventListener("click", () => {
+        if (this.builderTab) {
+          const res = this.calculator.compute();
+          this.builderTab.renderResultBox(res);
+          if (this.modernUI) {
+            this.modernUI.updateDimensionBadge();
+          }
+        }
       });
     }
   }
@@ -177,21 +240,17 @@ class SpacePlasmaApp {
     }
     this.applyTheme(this.currentTheme);
 
-    // 觸發各控制器更新
-    if (this.builderTab) {
-      this.builderTab.renderTermsList();
-      if (this.builderTab.calculator && this.builderTab.calculator.lastResult) {
-        const sysRadio = document.querySelector("input[name='outputSystem']:checked");
-        const sys = sysRadio ? sysRadio.value : "Space";
-        const res = this.builderTab.calculator.formatResult(sys);
-        this.builderTab.renderResultBox(res);
-      }
+    if (this.builderTab && this.builderTab.previewUI) {
+      this.builderTab.previewUI.updateEquationPreview();
     }
     if (this.lookupTab) {
       this.lookupTab.render();
     }
     if (this.equationsTab) {
       this.equationsTab.render();
+    }
+    if (this.modernUI) {
+      this.modernUI.updateDimensionBadge();
     }
   }
 }

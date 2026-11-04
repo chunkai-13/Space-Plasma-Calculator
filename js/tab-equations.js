@@ -355,9 +355,15 @@ class EquationsTabController {
   computeCurrentEquation() {
     const eq = this.selectedEquation;
     if (!eq || !this.eqInputsContainer) return;
+    const isZh = this.app.currentLang === "zh";
 
     const inputs = {};
     const units = {};
+
+    // 清除既有錯誤標記
+    this.eqInputsContainer.querySelectorAll(".smart-input-group, .form-input").forEach(el => {
+      el.classList.remove("smart-input-error");
+    });
 
     try {
       eq.inputs.forEach(param => {
@@ -367,23 +373,52 @@ class EquationsTabController {
           inputs[param.id] = chosen;
         } else {
           const inputEl = this.eqInputsContainer.querySelector(`.eq-param-input[data-param="${param.id}"]`);
-          inputs[param.id] = inputEl ? (parseFloat(inputEl.value) || 0) : (param.default || 0);
+          const rawVal = inputEl ? parseFloat(inputEl.value) : (param.default || 0);
+          const parentGroup = inputEl ? inputEl.closest(".smart-input-group") || inputEl : null;
 
           if (param.unitCategory) {
             const unitEl = this.eqInputsContainer.querySelector(`.eq-param-unit[data-param="${param.id}"]`);
             const qDef = PHYSICAL_QUANTITIES.find(q => q.id === param.unitCategory);
             const uDef = qDef ? qDef.units.find(u => u.id === (unitEl ? unitEl.value : param.defaultUnit)) : null;
             units[param.id] = uDef;
+
+            // 物理邊界防禦斷言
+            if (param.unitCategory === "magnetic_field" && rawVal <= 0) {
+              if (parentGroup) parentGroup.classList.add("smart-input-error");
+              throw new RangeError(isZh ? "磁場強度必須大於 0 (B > 0)" : "Magnetic field B must be greater than 0");
+            }
+            if (param.unitCategory === "density" && rawVal <= 0) {
+              if (parentGroup) parentGroup.classList.add("smart-input-error");
+              throw new RangeError(isZh ? "數密度必須大於 0 (n > 0)" : "Number density n must be greater than 0");
+            }
+            if (param.unitCategory === "temperature") {
+              const valK = uDef && uDef.id === "eV" ? rawVal * 11604.518 : rawVal;
+              if (valK < 0) {
+                if (parentGroup) parentGroup.classList.add("smart-input-error");
+                throw new RangeError(isZh ? "熱力學溫度不可低於絕對零度 (T ≥ 0 K)" : "Temperature cannot be below 0 K");
+              }
+            }
           }
+
+          inputs[param.id] = isNaN(rawVal) ? 0 : rawVal;
         }
       });
 
       const outputs = eq.calculate(inputs, units);
+
+      // 檢查輸出結果防禦
+      if (!outputs || outputs.some(o => isNaN(o.value) || !isFinite(o.value))) {
+        throw new RangeError(isZh ? "數值超出物理計算範圍 (產生除以零或無效值)" : "Calculation resulted in an invalid or infinite value");
+      }
+
       this.renderEquationOutputs(outputs);
     } catch (err) {
       if (this.eqResultBox) {
         this.eqResultBox.innerHTML = `
-          <div class="calc-error">⚠️ ${err.message}</div>
+          <div class="calc-error-banner">
+            <span class="error-icon">⚠️</span>
+            <div><strong>${isZh ? "【物理邊界防禦警告】" : "[Physical Boundary Warning]"}</strong> ${err.message}</div>
+          </div>
         `;
       }
     }

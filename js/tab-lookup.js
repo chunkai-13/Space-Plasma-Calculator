@@ -306,8 +306,31 @@ class LookupTabController {
           <td><strong>${isZh ? (u.labelZh || u.label) : (u.labelEn || u.label)}</strong></td>
           <td><code>${u.toBaseSI >= 1e-3 && u.toBaseSI <= 1e4 ? u.toBaseSI : u.toBaseSI.toExponential()} ${q.baseUnitSI}</code></td>
           <td>${isZh ? (u.descZh || u.desc) : (u.descEn || u.desc)}</td>
+          <td style="text-align: center;">
+            <button type="button" class="btn-copy-chip btn-apply-conv" data-unit-id="${u.id}" title="${isZh ? '將此單位帶入下方換算器來源端' : 'Set as converter source'}">
+              🔄 ${isZh ? '帶入換算' : 'Convert'}
+            </button>
+          </td>
         </tr>
       `).join("");
+
+      // 綁定「帶入換算」按鈕事件
+      this.unitSpecTable.querySelectorAll(".btn-apply-conv").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const uid = btn.getAttribute("data-unit-id");
+          if (this.convFromUnit && uid) {
+            this.convFromUnit.value = uid;
+            this.updateConversion();
+            const convBox = document.querySelector(".converter-box");
+            if (convBox) {
+              convBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+              convBox.classList.remove("highlight-flash");
+              void convBox.offsetWidth;
+              convBox.classList.add("highlight-flash");
+            }
+          }
+        });
+      });
     }
 
     if (this.convFromUnit && this.convToUnit) {
