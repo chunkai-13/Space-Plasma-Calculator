@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="Plasma Calc">
 
   <!-- 樣式表與 KaTeX 數學排版庫 -->
-  <link rel="stylesheet" href="katex/katex.min.css?v=3.7">
-  <link rel="stylesheet" href="styles.css?v=3.7">
-  <script src="katex/katex.min.js?v=3.7"></script>
+  <link rel="stylesheet" href="katex/katex.min.css?v=4.0">
+  <link rel="stylesheet" href="styles.css?v=4.0">
+  <script src="katex/katex.min.js?v=4.0"></script>
 </head>
 <body>
 
@@ -41,24 +41,89 @@
   <!-- 主容器 -->
   <main class="app-container">
 
-    <!-- 三大分頁切換列 -->
+    <!-- 三大分頁切換列 (預設啟用方程式速算庫) -->
     <nav class="tabs-header">
-      <button type="button" class="tab-btn active" data-tab="calc">
-        <span>⚡</span> <span data-i18n="tabCalc">自訂物理量計算</span>
+      <button type="button" class="tab-btn active" data-tab="equations">
+        <span>📐</span> <span data-i18n="tabEq">方程式速算庫</span>
+      </button>
+      <button type="button" class="tab-btn" data-tab="calc">
+        <span>⚡</span> <span data-i18n="tabCalc">自訂運算工作台</span>
       </button>
       <button type="button" class="tab-btn" data-tab="lookup">
-        <span>📖</span> <span data-i18n="tabLookup">查找單位與換算</span>
-      </button>
-      <button type="button" class="tab-btn" data-tab="equations">
-        <span>📐</span> <span data-i18n="tabEq">太空物理方程式</span>
+        <span>📖</span> <span data-i18n="tabLookup">單位與常數手冊</span>
       </button>
     </nav>
 
-    <!-- 分頁一：自訂物理量組合計算機 -->
-    <section class="tab-content active" id="tab-calc">
+    <!-- 分頁一 (首頁)：太空物理方程式速算庫 -->
+    <section class="tab-content active" id="tab-equations">
       <div class="card">
-        <h2 class="card-title" data-i18n="builderTitle">自訂運算建構區</h2>
-        <p class="card-desc" data-i18n="builderDesc">自由組合物理量與常數，設定分子、分母、係數與次方量進行計算。</p>
+        <h2 class="card-title" data-i18n="eqTitle">太空物理方程式速算庫</h2>
+
+        <!-- 太空環境典型場景快捷列 (Environment Presets Bar) -->
+        <div class="env-presets-container">
+          <span class="env-presets-title" data-i18n="envPresetsTitle">太空環境典型場景：</span>
+          <button type="button" class="env-pill-btn active" data-env-preset="solar_wind_1au" data-i18n="envSolarWind">⚡ 1 AU 太陽風</button>
+          <button type="button" class="env-pill-btn" data-env-preset="magnetopause" data-i18n="envMagnetopause">🛡️ 地球磁層頂</button>
+          <button type="button" class="env-pill-btn" data-env-preset="magnetotail" data-i18n="envMagnetotail">🌌 地球磁尾</button>
+          <button type="button" class="env-pill-btn" data-env-preset="ionosphere_f" data-i18n="envIonosphere">🌍 電離層 F層</button>
+        </div>
+
+        <!-- 方程式分類快捷篩選標籤 (Category Filter Pills) -->
+        <div class="eq-filter-pills">
+          <button type="button" class="eq-filter-pill active" data-cat="all" data-i18n="filterAll">全部</button>
+          <button type="button" class="eq-filter-pill" data-cat="characteristic_scales" data-i18n="filterFreq">特徵頻率</button>
+          <button type="button" class="eq-filter-pill" data-cat="particle_motion" data-i18n="filterLength">長度尺度</button>
+          <button type="button" class="eq-filter-pill" data-cat="waves_mhd" data-i18n="filterMhd">MHD 波動</button>
+          <button type="button" class="eq-filter-pill" data-cat="jump_conditions" data-i18n="filterDimensionless">無因次參數</button>
+        </div>
+
+        <!-- 關鍵字搜尋框 -->
+        <div class="search-box eq-search-wrapper">
+          <input type="text" id="eq-search-input" class="form-input" placeholder="搜尋方程式 (例如: Alfven, 迴旋, Kappa, Rankine, 德拜)..." data-i18n="eqSearchPlaceholder">
+          <button type="button" id="btn-clear-eq-search" class="btn-clear-search" style="display: none;" title="清除搜尋">✕</button>
+        </div>
+        <!-- 即時搜尋候選結果回饋列 -->
+        <div id="eq-search-feedback" class="search-feedback-bar"></div>
+
+        <!-- 兩層分類下拉選單 -->
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label class="form-label" data-i18n="eqCatLabel">方程式類別：</label>
+            <select id="eq-cat-select" class="form-select"></select>
+          </div>
+          <div class="form-group flex-2">
+            <label class="form-label" data-i18n="selectEq">選擇方程式：</label>
+            <select id="eq-select" class="form-select"></select>
+          </div>
+        </div>
+
+        <!-- 方程式數學公式卡片 -->
+        <div class="formula-display-card" style="margin-top: 1.25rem;">
+          <div class="formula-math" id="eq-formula-display">--</div>
+          <div class="formula-desc" id="eq-desc-display">--</div>
+        </div>
+
+        <!-- 智慧參數輸入表單 (Smart Inputs) -->
+        <h3 class="card-title" style="margin-top: 1.5rem;" data-i18n="paramInputs">智慧參數輸入：</h3>
+        <div id="eq-inputs-container"></div>
+
+        <div style="margin-top: 1.25rem;">
+          <button type="button" class="btn btn-large" id="btn-compute-eq" data-i18n="btnComputeEq">計算此方程式</button>
+        </div>
+
+        <!-- 計算結果輸出 -->
+        <div style="margin-top: 1.5rem;">
+          <h3 class="card-title" data-i18n="eqResultTitle">方程式解算結果</h3>
+          <div id="eq-result-box"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 分頁二：自訂運算工作台 (Custom Builder) -->
+    <section class="tab-content" id="tab-calc">
+      <div class="card">
+        <h2 class="card-title" data-i18n="builderTitle">自訂運算工作台</h2>
+        <p class="card-desc" data-i18n="builderDesc">自由組合物理量與常數，支援所見即所得點擊游標定位與 LaTeX 快捷語法雙軌輸入，即時因次檢驗。</p>
 
         <!-- 經典預設範例按鈕列 -->
         <div class="presets-bar">
@@ -70,29 +135,73 @@
           <button type="button" class="preset-btn" data-preset="presetVA" data-i18n="presetVA">阿爾芬速度 (B / √(μ₀ ρ))</button>
         </div>
 
-        <!-- 即時方程式呈現看板 (Equation Preview Board) -->
-        <div class="equation-preview-board">
-          <div class="preview-header">
-            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-              <span class="preview-title" data-i18n="previewTitle">目前建構的方程式：</span>
-              <div class="history-ctrl-group">
-                <button type="button" class="btn-history" id="btn-undo" title="上一步 (Command + Z)" data-i18n="btnUndo" disabled>↶ 上一步</button>
-                <button type="button" class="btn-history" id="btn-redo" title="下一步 (Command + Shift + Z)" data-i18n="btnRedo" disabled>↷ 下一步</button>
+        <!-- 雙模公式輸入區 (WYSIWYG KaTeX + Quick LaTeX) -->
+        <div class="dual-mode-box">
+          <div class="equation-preview-board">
+            <div class="preview-header">
+              <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <span class="preview-title" data-i18n="previewTitle">目前建構的方程式：</span>
+                <div class="history-ctrl-group">
+                  <button type="button" class="btn-history" id="btn-undo" title="上一步 (Command + Z)" data-i18n="btnUndo" disabled>↶ 上一步</button>
+                  <button type="button" class="btn-history" id="btn-redo" title="下一步 (Command + Shift + Z)" data-i18n="btnRedo" disabled>↷ 下一步</button>
+                </div>
               </div>
+              <span class="dim-status-badge dim-badge-modern valid" id="dim-status-badge">因次檢驗就緒</span>
             </div>
-            <span class="dim-status-badge" id="dim-status-badge">因次檢驗就緒</span>
+            <!-- 點擊聚焦方程式可視化看板 -->
+            <div class="interactive-formula-container" id="interactive-formula-container">
+              <div class="preview-formula-math" id="preview-formula-math">--</div>
+            </div>
+            <div class="preview-cursor-hint" id="preview-cursor-hint" data-i18n="previewCursorTip">
+              💡 點擊上方公式的任何符號前後或分式的分子/分母格，即可將光標移至該處插入新項目。
+            </div>
           </div>
-          <!-- 點擊聚焦方程式可視化看板 -->
-          <div class="interactive-formula-container" id="interactive-formula-container">
-            <div class="preview-formula-math" id="preview-formula-math">--</div>
-          </div>
-          <div class="preview-cursor-hint" id="preview-cursor-hint" data-i18n="previewCursorTip">
-            💡 點擊上方公式的任何符號前後或分式的分子/分母格，即可將光標移至該處插入新項目。
+
+          <!-- LaTeX 快速輸入列 -->
+          <div class="latex-quick-input-bar">
+            <span style="font-size: 0.825rem; font-weight: 600; color: var(--text-muted);">⌨️ LaTeX:</span>
+            <input type="text" id="latex-quick-input" class="latex-quick-input" placeholder="貼上或輸入 LaTeX 語法，例如 \frac{B^2}{2\mu_0}..." data-i18n="quickLatexPlaceholder">
+            <button type="button" id="btn-parse-latex" class="btn-parse-latex" data-i18n="btnParseLatex">解析套用</button>
           </div>
         </div>
 
         <!-- 單位不符警示橫幅 -->
         <div class="mismatch-warning-card" id="mismatch-warning-card" style="display: none;"></div>
+
+        <!-- 收合式標籤分類符號庫 (Categorized Pill Tabs) -->
+        <div class="symbol-pill-panel">
+          <div class="symbol-tab-nav" id="symbol-tab-nav">
+            <button type="button" class="symbol-tab-btn active" data-sym-cat="const">物理常數 (Constants)</button>
+            <button type="button" class="symbol-tab-btn" data-sym-cat="field">場量 (Fields)</button>
+            <button type="button" class="symbol-tab-btn" data-sym-cat="fluid">流體與動力學量 (Fluids)</button>
+            <button type="button" class="symbol-tab-btn" data-sym-cat="op">運算結構 (Operators)</button>
+          </div>
+          <div class="symbol-pills-row" data-sym-cat="const">
+            <button type="button" class="symbol-pill" data-sym-type="constant" data-sym-id="e"><strong>e</strong> 基本電荷</button>
+            <button type="button" class="symbol-pill" data-sym-type="constant" data-sym-id="me"><strong>m_e</strong> 電子質量</button>
+            <button type="button" class="symbol-pill" data-sym-type="constant" data-sym-id="mp"><strong>m_p</strong> 質子質量</button>
+            <button type="button" class="symbol-pill" data-sym-type="constant" data-sym-id="eps0"><strong>ε₀</strong> 介電常數</button>
+            <button type="button" class="symbol-pill" data-sym-type="constant" data-sym-id="mu0"><strong>μ₀</strong> 磁導率</button>
+            <button type="button" class="symbol-pill" data-sym-type="constant" data-sym-id="kB"><strong>k_B</strong> 玻茲曼常數</button>
+            <button type="button" class="symbol-pill" data-sym-type="constant" data-sym-id="c"><strong>c</strong> 光速</button>
+          </div>
+          <div class="symbol-pills-row" data-sym-cat="field" style="display: none;">
+            <button type="button" class="symbol-pill" data-sym-type="quantity" data-sym-id="magnetic_field"><strong>B</strong> 磁場強度</button>
+            <button type="button" class="symbol-pill" data-sym-type="quantity" data-sym-id="electric_field"><strong>E</strong> 電場強度</button>
+          </div>
+          <div class="symbol-pills-row" data-sym-cat="fluid" style="display: none;">
+            <button type="button" class="symbol-pill" data-sym-type="quantity" data-sym-id="density"><strong>n</strong> 數密度</button>
+            <button type="button" class="symbol-pill" data-sym-type="quantity" data-sym-id="temperature"><strong>T</strong> 電漿溫度</button>
+            <button type="button" class="symbol-pill" data-sym-type="quantity" data-sym-id="velocity"><strong>v</strong> 粒子速度</button>
+            <button type="button" class="symbol-pill" data-sym-type="quantity" data-sym-id="pressure"><strong>P</strong> 電漿壓力</button>
+          </div>
+          <div class="symbol-pills-row" data-sym-cat="op" style="display: none;">
+            <button type="button" class="symbol-pill" data-sym-type="operator" data-sym-id="+"><strong>＋</strong> 加法</button>
+            <button type="button" class="symbol-pill" data-sym-type="operator" data-sym-id="-"><strong>－</strong> 減法</button>
+            <button type="button" class="symbol-pill" data-sym-type="operator" data-sym-id="*"><strong>·</strong> 乘法</button>
+            <button type="button" class="symbol-pill" data-sym-type="operator" data-sym-id="/"><strong>/</strong> 除法</button>
+          </div>
+        </div>
 
         <!-- 獨立工具列：運算符號與插入控制 -->
         <div class="builder-toolbar-card">
@@ -111,8 +220,8 @@
               <button type="button" class="btn btn-secondary btn-accent-blue" id="btn-add-fraction" data-i18n="btnAddFrac" title="插入分式結構 (分子與分母空格)">＋ ⬚/⬚ 分式</button>
               <button type="button" class="btn btn-secondary" id="btn-add-qty" data-i18n="btnAddQty">＋ 物理量</button>
               <button type="button" class="btn btn-secondary" id="btn-add-const" data-i18n="btnAddConst">＋ 物理常數</button>
-              <button type="button" class="btn btn-secondary" id="btn-add-open-paren" data-i18n="btnAddOpenParen" title="插入開括號 (依層級自動變換為小中大括號)">＋ ( 開括號</button>
-              <button type="button" class="btn btn-secondary" id="btn-add-close-paren" data-i18n="btnAddCloseParen" title="插入閉括號 (依層級自動變換為小中大括號)">＋ ) 閉括號</button>
+              <button type="button" class="btn btn-secondary" id="btn-add-open-paren" data-i18n="btnAddOpenParen" title="插入開括號">＋ ( 開括號</button>
+              <button type="button" class="btn btn-secondary" id="btn-add-close-paren" data-i18n="btnAddCloseParen" title="插入閉括號">＋ ) 閉括號</button>
               <button type="button" class="btn btn-secondary btn-danger-text" id="btn-clear-terms" data-i18n="btnClear">清空全部</button>
               <button type="button" class="btn btn-large" id="btn-equal" data-i18n="btnEqual">＝ 計算結果</button>
             </div>
@@ -156,10 +265,10 @@
       </div>
     </section>
 
-    <!-- 分頁二：查找單位與換算 -->
+    <!-- 分頁三：查找單位與換算 -->
     <section class="tab-content" id="tab-lookup">
       <div class="card">
-        <h2 class="card-title" data-i18n="lookupTitle">物理量與單位對照手冊</h2>
+        <h2 class="card-title" data-i18n="lookupTitle">單位與常數手冊</h2>
 
         <!-- 關鍵字搜尋框 -->
         <div class="search-box lookup-search-wrapper">
@@ -185,9 +294,9 @@
           <div id="lookup-desc-box" class="formula-desc"></div>
         </div>
 
-        <!-- 多制度規格對照表 -->
+        <!-- 多制度規格對照表 (具備固定表頭 Sticky Header) -->
         <h3 class="card-title" style="margin-top: 1.5rem;" data-i18n="unitTableTitle">單位制度規格對照</h3>
-        <div class="table-responsive">
+        <div class="sticky-table-wrapper">
           <table class="unit-table">
             <thead>
               <tr>
@@ -221,67 +330,20 @@
 
           <div class="conv-result-card">
             <div class="form-label" data-i18n="calcConvert">換算結果：</div>
-            <div class="conv-val-big" id="conv-result-display">--</div>
-            <div class="conv-factor-text" id="conv-factor-display">--</div>
+            <div class="conv-val-big font-mono" id="conv-result-display">--</div>
+            <div class="conv-factor-text font-mono" id="conv-factor-display">--</div>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 分頁三：太空物理方程式計算 -->
-    <section class="tab-content" id="tab-equations">
-      <div class="card">
-        <h2 class="card-title" data-i18n="eqTitle">太空物理方程式計算庫</h2>
-
-        <!-- 關鍵字搜尋框 -->
-        <div class="search-box eq-search-wrapper">
-          <input type="text" id="eq-search-input" class="form-input" placeholder="搜尋方程式 (例如: Alfven, 迴旋, Kappa, Rankine, 德拜)..." data-i18n="eqSearchPlaceholder">
-          <button type="button" id="btn-clear-eq-search" class="btn-clear-search" style="display: none;" title="清除搜尋">✕</button>
-        </div>
-        <!-- 即時搜尋候選結果回饋列 -->
-        <div id="eq-search-feedback" class="search-feedback-bar"></div>
-
-        <!-- 兩層分類下拉選單 -->
-        <div class="form-row">
-          <div class="form-group flex-1">
-            <label class="form-label" data-i18n="eqCatLabel">方程式類別：</label>
-            <select id="eq-cat-select" class="form-select"></select>
-          </div>
-          <div class="form-group flex-2">
-            <label class="form-label" data-i18n="selectEq">選擇方程式：</label>
-            <select id="eq-select" class="form-select"></select>
-          </div>
-        </div>
-
-        <!-- 方程式數學公式卡片 -->
-        <div class="formula-display-card" style="margin-top: 1.25rem;">
-          <div class="formula-math" id="eq-formula-display">--</div>
-          <div class="formula-desc" id="eq-desc-display">--</div>
-        </div>
-
-        <!-- 變數輸入表單 -->
-        <h3 class="card-title" style="margin-top: 1.5rem;" data-i18n="paramInputs">參數數值與單位輸入：</h3>
-        <div id="eq-inputs-container"></div>
-
-        <div style="margin-top: 1.25rem;">
-          <button type="button" class="btn btn-large" id="btn-compute-eq" data-i18n="btnComputeEq">計算此方程式</button>
-        </div>
-
-        <!-- 計算結果輸出 -->
-        <div style="margin-top: 1.5rem;">
-          <h3 class="card-title" data-i18n="eqResultTitle">方程式解算結果</h3>
-          <div id="eq-result-box"></div>
         </div>
       </div>
     </section>
 
   </main>
 
-  <!-- PWA Service Worker 註冊與自動更新機制 (Network-First & Controller-Change Auto-Reload) -->
+  <!-- PWA Service Worker 註冊與自動更新機制 -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=3.3').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=4.0').then(reg => {
           reg.update();
         }).catch(() => {});
 
@@ -297,30 +359,34 @@
   </script>
 
   <!-- 基礎常量與多語系字典 -->
-  <script src="constants.js?v=3.7"></script>
-  <script src="js/i18n.js?v=3.7"></script>
+  <script src="constants.js?v=4.0"></script>
+  <script src="js/i18n.js?v=4.0"></script>
+  <script src="js/plasma-core.js?v=4.0"></script>
 
   <!-- 方程式庫模組與入口 -->
-  <script src="js/equations-particle.js?v=3.7"></script>
-  <script src="js/equations-mhd-waves.js?v=3.7"></script>
-  <script src="js/equations-kinetic-shocks.js?v=3.7"></script>
-  <script src="equations.js?v=3.7"></script>
+  <script src="js/equations-particle.js?v=4.0"></script>
+  <script src="js/equations-mhd-waves.js?v=4.0"></script>
+  <script src="js/equations-kinetic-shocks.js?v=4.0"></script>
+  <script src="equations.js?v=4.0"></script>
 
   <!-- 計算機核心引擎 (模組化拆分) -->
-  <script src="js/calculator-core.js?v=3.7"></script>
-  <script src="js/calculator-evaluator.js?v=3.7"></script>
-  <script src="js/calculator-formatter.js?v=3.7"></script>
-  <script src="calculator.js?v=3.7"></script>
+  <script src="js/calculator-core.js?v=4.0"></script>
+  <script src="js/calculator-evaluator.js?v=4.0"></script>
+  <script src="js/calculator-formatter.js?v=4.0"></script>
+  <script src="calculator.js?v=4.0"></script>
 
   <!-- 分頁控制器模組 -->
-  <script src="js/builder-cards-items.js?v=3.7"></script>
-  <script src="js/builder-cards-list.js?v=3.7"></script>
-  <script src="js/builder-preview.js?v=3.7"></script>
-  <script src="js/tab-builder.js?v=3.7"></script>
-  <script src="js/tab-lookup.js?v=3.7"></script>
-  <script src="js/tab-equations.js?v=3.7"></script>
+  <script src="js/builder-cards-items.js?v=4.0"></script>
+  <script src="js/builder-cards-list.js?v=4.0"></script>
+  <script src="js/builder-preview.js?v=4.0"></script>
+  <script src="js/tab-builder.js?v=4.0"></script>
+  <script src="js/tab-lookup.js?v=4.0"></script>
+  <script src="js/tab-equations.js?v=4.0"></script>
+
+  <!-- 現代 UI 互動控制器 -->
+  <script src="js/app-ui.js?v=4.0"></script>
 
   <!-- 總調度入口 -->
-  <script src="app.js?v=3.7"></script>
+  <script src="app.js?v=4.0"></script>
 </body>
 </html>

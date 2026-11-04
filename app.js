@@ -28,7 +28,8 @@ class SpacePlasmaApp {
   }
 
   initControllers() {
-    // 實例化三大分頁獨立控制器
+    // 實例化現代 UI 輔助控制器與三大分頁控制器
+    this.modernUI = new ModernUIController(this);
     this.builderTab = new BuilderTabController(this);
     this.lookupTab = new LookupTabController(this);
     this.equationsTab = new EquationsTabController(this);
@@ -60,6 +61,68 @@ class SpacePlasmaApp {
         this.applyLanguage(this.currentLang);
       });
     }
+
+    // 太空環境典型預設場景代入
+    document.querySelectorAll(".env-pill-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".env-pill-btn").forEach(b => b.classList.toggle("active", b === btn));
+        const presetId = btn.getAttribute("data-env-preset");
+        if (this.modernUI) {
+          this.modernUI.applyEnvironmentPreset(presetId);
+        }
+      });
+    });
+
+    // 方程式篩選標籤快速過濾
+    document.querySelectorAll(".eq-filter-pill").forEach(pill => {
+      pill.addEventListener("click", () => {
+        document.querySelectorAll(".eq-filter-pill").forEach(p => p.classList.toggle("active", p === pill));
+        const cat = pill.getAttribute("data-cat");
+        if (this.equationsTab) {
+          this.equationsTab.filterEquationsByCategory(cat);
+        }
+      });
+    });
+
+    // 雙模公式建構：LaTeX 快速語法解析
+    const latexInput = document.getElementById("latex-quick-input");
+    const btnParseLatex = document.getElementById("btn-parse-latex");
+    if (latexInput && btnParseLatex) {
+      const doParse = () => {
+        if (this.modernUI) {
+          this.modernUI.parseAndApplyLaTeX(latexInput.value);
+          latexInput.value = "";
+        }
+      };
+      btnParseLatex.addEventListener("click", doParse);
+      latexInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          doParse();
+        }
+      });
+    }
+
+    // 符號庫分類標籤切換與點擊插入
+    if (this.modernUI) {
+      this.modernUI.initSymbolPillTabs();
+    }
+    document.querySelectorAll(".symbol-pill").forEach(pill => {
+      pill.addEventListener("click", () => {
+        const symType = pill.getAttribute("data-sym-type");
+        const symId = pill.getAttribute("data-sym-id");
+        if (symType === "constant") {
+          this.calculator.addConstant(symId);
+        } else if (symType === "quantity") {
+          this.calculator.addQuantity(symId);
+        } else if (symType === "operator") {
+          this.calculator.insertOperator(symId);
+        }
+        if (this.builderTab) {
+          this.builderTab.renderTermsList();
+        }
+      });
+    });
   }
 
   // 切換分頁

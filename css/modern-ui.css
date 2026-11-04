@@ -1,0 +1,462 @@
+/* css/modern-ui.css - Modern Scientific Minimalist UI (Raycast / Linear Style) */
+
+:root {
+  --font-mono-code: "JetBrains Mono", "Fira Code", "SF Mono", Menlo, Monaco, Consolas, monospace;
+  --color-green-glow: rgba(16, 185, 129, 0.2);
+  --color-emerald: #10b981;
+  --color-amber: #f59e0b;
+  --color-rose: #f43f5e;
+  --color-indigo: #6366f1;
+  --color-cyan: #06b6d4;
+  --surface-raised: #151d30;
+  --surface-overlay: #1a243d;
+}
+
+html:not(.dark) {
+  --surface-raised: #f8fafc;
+  --surface-overlay: #edf2f7;
+}
+
+/* 1. 全域 Monospace 數值與公式強化 */
+.font-mono, .val, .eq-out-value .val, .builder-token-val, .code-badge, .param-num-val {
+  font-family: var(--font-mono-code) !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* 2. 頂部環境場景預設快捷列 (Environment Presets Bar) */
+.env-presets-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.env-presets-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-right: 0.25rem;
+}
+
+.env-pill-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.env-pill-btn:hover {
+  background: var(--surface-overlay);
+  color: var(--text-primary);
+  border-color: var(--brand-primary);
+  transform: translateY(-1px);
+}
+
+.env-pill-btn.active {
+  background: var(--brand-primary);
+  color: #ffffff;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 10px var(--brand-glow);
+}
+
+/* 3. 方程式篩選快捷標籤列 (Category Filter Pills) */
+.eq-filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  margin-bottom: 1rem;
+  scrollbar-width: none;
+}
+.eq-filter-pills::-webkit-scrollbar { display: none; }
+
+.eq-filter-pill {
+  padding: 0.35rem 0.8rem;
+  font-size: 0.825rem;
+  font-weight: 500;
+  border-radius: var(--radius-full);
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.eq-filter-pill:hover {
+  color: var(--text-primary);
+  background: var(--surface-overlay);
+}
+
+.eq-filter-pill.active {
+  background: var(--brand-glow);
+  color: var(--brand-primary);
+  border-color: var(--brand-primary);
+  font-weight: 600;
+}
+
+/* 4. 智慧參數輸入群組 (Smart Inputs) */
+.smart-input-group {
+  display: flex;
+  align-items: stretch;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
+}
+
+.smart-input-group:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+
+.smart-input-field {
+  flex: 1;
+  min-width: 0;
+  border: none !important;
+  background: transparent !important;
+  padding: 0.55rem 0.75rem;
+  font-family: var(--font-mono-code);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.smart-unit-select {
+  border: none !important;
+  border-left: 1px solid var(--border-color) !important;
+  background: var(--bg-subtle) !important;
+  color: var(--text-secondary);
+  font-size: 0.825rem;
+  font-weight: 600;
+  padding: 0.4rem 0.65rem;
+  cursor: pointer;
+  outline: none;
+  border-radius: 0 !important;
+}
+
+.smart-unit-select:hover {
+  background: var(--surface-overlay) !important;
+  color: var(--text-primary);
+}
+
+/* 5. 大字號主要結果展示卡 (High-Contrast Result Box) */
+.modern-result-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  margin-top: 1.25rem;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.modern-result-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand-primary), var(--accent-cyan));
+}
+
+.result-main-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.result-val-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.result-val-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.result-val-display {
+  font-family: var(--font-mono-code);
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  word-break: break-all;
+}
+
+.result-val-display .unit-str {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--brand-primary);
+  margin-left: 0.35rem;
+}
+
+.result-val-sub {
+  font-family: var(--font-mono-code);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.result-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.btn-copy-chip {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.btn-copy-chip:hover {
+  background: var(--surface-overlay);
+  color: var(--text-primary);
+  border-color: var(--brand-primary);
+}
+
+.btn-copy-chip.copied {
+  background: var(--color-emerald) !important;
+  color: #ffffff !important;
+  border-color: var(--color-emerald) !important;
+}
+
+/* 6. 物理情境對照標籤 (Physical Context Meter) */
+.context-meter-box {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed var(--border-color);
+}
+
+.context-meter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.45rem;
+}
+
+.context-meter-track {
+  height: 8px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-full);
+  position: relative;
+  overflow: visible;
+  margin: 0.75rem 0 0.5rem 0;
+}
+
+.context-meter-segment {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 4px;
+  opacity: 0.65;
+}
+.context-meter-segment.sw { left: 5%; width: 30%; background: var(--color-indigo); }
+.context-meter-segment.mp { left: 40%; width: 25%; background: var(--color-cyan); }
+.context-meter-segment.iono { left: 70%; width: 25%; background: var(--color-amber); }
+
+.context-meter-pin {
+  position: absolute;
+  top: -4px;
+  width: 16px;
+  height: 16px;
+  background: #ffffff;
+  border: 3px solid var(--brand-primary);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+}
+
+.context-meter-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* 7. 自訂運算建構區雙模輸入框 (WYSIWYG + Quick LaTeX) */
+.dual-mode-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.latex-quick-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.65rem;
+}
+
+.latex-quick-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-mono-code);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.btn-parse-latex {
+  padding: 0.3rem 0.75rem;
+  font-size: 0.775rem;
+  font-weight: 600;
+  background: var(--brand-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  white-space: nowrap;
+}
+.btn-parse-latex:hover { opacity: 0.9; }
+
+/* 8. 收合式標籤分類符號庫 (Categorized Pill Tabs) */
+.symbol-pill-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.symbol-tab-nav {
+  display: flex;
+  gap: 0.4rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.symbol-tab-btn {
+  background: transparent;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.symbol-tab-btn:hover { color: var(--text-primary); }
+.symbol-tab-btn.active {
+  background: var(--bg-card);
+  color: var(--brand-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.symbol-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.symbol-pill {
+  padding: 0.35rem 0.65rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.symbol-pill:hover {
+  border-color: var(--brand-primary);
+  background: var(--surface-overlay);
+  transform: translateY(-1px);
+}
+
+/* 9. 因次平衡動態狀態徽章 (Dimension Status Badge) */
+.dim-badge-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.775rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.dim-badge-modern.valid {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--color-emerald);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.dim-badge-modern.invalid {
+  background: rgba(244, 63, 94, 0.12);
+  color: var(--color-rose);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+/* 10. 單位手冊固定表頭 (Sticky Table Header) */
+.sticky-table-wrapper {
+  max-height: 480px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  scrollbar-width: thin;
+}
+
+.sticky-table-wrapper thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-raised);
+  z-index: 5;
+  box-shadow: 0 1px 0 var(--border-color);
+}

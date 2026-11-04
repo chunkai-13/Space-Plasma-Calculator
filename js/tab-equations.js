@@ -319,30 +319,35 @@ class EquationsTabController {
         let unitSelectHtml = "";
         if (qDef) {
           unitSelectHtml = `
-            <div class="form-group flex-1">
-              <label class="form-label">${isZh ? '單位' : 'Unit'}</label>
-              <select class="form-select eq-param-unit" data-param="${input.id}">
-                ${qDef.units.map(u => `
-                  <option value="${u.id}" ${u.id === input.defaultUnit ? "selected" : ""}>
-                    ${isZh ? (u.labelZh || u.label) : (u.labelEn || u.label)}
-                  </option>
-                `).join("")}
-              </select>
-            </div>
+            <select class="smart-unit-select eq-param-unit" data-param="${input.id}" title="${isZh ? '切換單位 (自動無損換算)' : 'Switch unit (Auto-convert)'}">
+              ${qDef.units.map(u => `
+                <option value="${u.id}" ${u.id === input.defaultUnit ? "selected" : ""}>
+                  ${isZh ? (u.labelZh || u.label) : (u.labelEn || u.label)}
+                </option>
+              `).join("")}
+            </select>
           `;
         }
 
         row.innerHTML = `
-          <div class="form-group flex-2">
+          <div class="form-group flex-1">
             <label class="form-label">${isZh ? input.nameZh : input.nameEn}</label>
-            <input type="number" step="any" class="form-input eq-param-input" data-param="${input.id}" value="${input.default}">
+            <div class="smart-input-group">
+              <input type="number" step="any" class="smart-input-field eq-param-input" data-param="${input.id}" value="${input.default}">
+              ${unitSelectHtml}
+            </div>
           </div>
-          ${unitSelectHtml}
         `;
       }
 
       this.eqInputsContainer.appendChild(row);
     });
+
+    if (this.app && this.app.modernUI) {
+      this.app.modernUI.bindSmartInputEvents(this.eqInputsContainer, () => {
+        this.computeCurrentEquation();
+      });
+    }
 
     this.computeCurrentEquation();
   }
@@ -395,6 +400,11 @@ class EquationsTabController {
             ? out.value.toExponential(4)
             : out.value.toLocaleString(undefined, { maximumFractionDigits: 4 });
 
+          const outUnitDisplay = isZh ? (out.unitZh || out.unit) : (out.unitEn || out.unit);
+          const copyVal = out.value.toString();
+          const copyWithUnit = `${formatted} ${outUnitDisplay}`;
+          const copyLatex = `${Math.abs(out.value) < 1e-3 || Math.abs(out.value) >= 1e6 ? out.value.toExponential(4).replace("e", "\\times 10^{") + "}" : formatted}\\text{ ${outUnitDisplay}}`;
+
           let altHtml = "";
           if (out.altUnits && out.altUnits.length > 0) {
             altHtml = `
@@ -410,16 +420,34 @@ class EquationsTabController {
             `;
           }
 
-          const outUnitDisplay = isZh ? (out.unitZh || out.unit) : (out.unitEn || out.unit);
+          let meterType = "velocity";
+          const uStr = out.unit || "";
+          if (uStr.includes("Hz") || uStr.includes("rad/s")) meterType = "frequency";
+          else if (uStr.includes("m") || uStr.includes("km")) meterType = "length";
+          else if (uStr === "" || uStr === "1") meterType = "dimensionless";
+
+          const meterHtml = typeof ModernUIController !== "undefined"
+            ? ModernUIController.renderContextMeter(out.value, meterType)
+            : "";
 
           return `
-            <div class="eq-output-card">
-              <div class="eq-out-label">${isZh ? out.labelZh : out.labelEn}</div>
-              <div class="eq-out-value">
-                <span class="val">${formatted}</span>
-                <span class="unit">${outUnitDisplay}</span>
+            <div class="modern-result-card">
+              <div class="result-main-grid">
+                <div class="result-val-block">
+                  <div class="result-val-title">${isZh ? out.labelZh : out.labelEn}</div>
+                  <div class="result-val-display">
+                    <span class="val">${formatted}</span>
+                    <span class="unit-str">${outUnitDisplay}</span>
+                  </div>
+                  ${altHtml}
+                </div>
+                <div class="result-actions-bar">
+                  <button type="button" class="btn-copy-chip" data-copy-text="${copyVal}" title="複製純數值">📋 數值</button>
+                  <button type="button" class="btn-copy-chip" data-copy-text="${copyWithUnit}" title="複製數值與單位">📋 帶單位</button>
+                  <button type="button" class="btn-copy-chip" data-copy-text="${copyLatex}" title="複製 LaTeX 語法">📋 LaTeX</button>
+                </div>
               </div>
-              ${altHtml}
+              ${meterHtml}
             </div>
           `;
         }).join("")}
