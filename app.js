@@ -53,19 +53,21 @@ class SpacePlasmaApp {
 
     if (this.tabBtns) {
       this.tabBtns.forEach(b => {
-        b.classList.toggle("active", b.getAttribute("data-tab") === activeTab);
+        const isMatch = b.getAttribute("data-tab") === activeTab;
+        b.classList.toggle("active", isMatch);
+        b.setAttribute("aria-selected", isMatch ? "true" : "false");
       });
     }
 
     if (this.tabContents) {
       this.tabContents.forEach(c => {
-        const isTarget = c.id === `section-${activeTab}`;
+        const isTarget = c.id === `section-${activeTab}` || c.getAttribute("data-tab-pane") === activeTab;
         c.classList.toggle("active", isTarget);
       });
     }
 
-    if (updateHash) {
-      window.location.hash = `section-${activeTab}`;
+    if (updateHash && window.location.hash !== `#${activeTab}`) {
+      window.location.hash = activeTab;
     }
   }
 

@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="Plasma Calc">
 
   <!-- 樣式表與 KaTeX 數學排版庫 -->
-  <link rel="stylesheet" href="katex/katex.min.css?v=4.9">
-  <link rel="stylesheet" href="styles.css?v=4.9">
-  <script src="katex/katex.min.js?v=4.9"></script>
+  <link rel="stylesheet" href="katex/katex.min.css?v=5.0">
+  <link rel="stylesheet" href="styles.css?v=5.0">
+  <script src="katex/katex.min.js?v=5.0"></script>
 </head>
 <body>
 
@@ -42,20 +42,20 @@
   <main class="app-container">
 
     <!-- 三大分頁切換列 (預設啟用方程式速算庫) -->
-    <nav class="tabs-header">
-      <button type="button" class="tab-btn active" data-tab="presets">
+    <nav class="tabs-header" id="main-tabs-nav" role="tablist" aria-label="工作區導覽">
+      <button type="button" class="tab-btn nav-item active" data-tab="presets" id="tab-btn-presets" role="tab" aria-controls="section-presets" aria-selected="true">
         <span>📐</span> <span data-i18n="tabEq">方程式速算庫</span>
       </button>
-      <button type="button" class="tab-btn" data-tab="builder">
+      <button type="button" class="tab-btn nav-item" data-tab="builder" id="tab-btn-builder" role="tab" aria-controls="section-builder" aria-selected="false">
         <span>⚡</span> <span data-i18n="tabCalc">自訂運算工作台</span>
       </button>
-      <button type="button" class="tab-btn" data-tab="units">
+      <button type="button" class="tab-btn nav-item" data-tab="units" id="tab-btn-units" role="tab" aria-controls="section-units" aria-selected="false">
         <span>📖</span> <span data-i18n="tabLookup">單位與常數手冊</span>
       </button>
     </nav>
 
     <!-- 分頁一 (首頁)：太空物理方程式速算庫 -->
-    <section class="tab-content active" id="section-presets">
+    <section class="tab-content tab-pane active" id="section-presets" data-tab-pane="presets" role="tabpanel" aria-labelledby="tab-btn-presets">
       <div class="card">
         <h2 class="card-title" data-i18n="eqTitle">太空物理方程式速算庫</h2>
 
@@ -122,7 +122,7 @@
     </section>
 
     <!-- 分頁二：自訂運算工作台 (Custom Builder) -->
-    <section class="tab-content" id="section-builder">
+    <section class="tab-content tab-pane" id="section-builder" data-tab-pane="builder" role="tabpanel" aria-labelledby="tab-btn-builder">
       <div class="card">
         <h2 class="card-title" data-i18n="builderTitle">自訂運算工作台</h2>
         <p class="card-desc" data-i18n="builderDesc">自由組合物理量與常數，支援所見即所得點擊游標定位與 LaTeX 快捷語法雙軌輸入，即時因次檢驗。</p>
@@ -249,7 +249,7 @@
     </section>
 
     <!-- 分頁三：查找單位與換算 (Units Manual) -->
-    <section class="tab-content" id="section-units">
+    <section class="tab-content tab-pane" id="section-units" data-tab-pane="units" role="tabpanel" aria-labelledby="tab-btn-units">
       <div class="card">
         <h2 class="card-title" data-i18n="lookupTitle">單位與常數手冊</h2>
 
