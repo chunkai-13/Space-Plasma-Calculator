@@ -227,9 +227,18 @@ class ModernUIController {
     let labelMid = "磁層 (Magnetosphere)";
     let labelRight = "電離層 (Ionosphere)";
 
+    let valLog = Math.log10(Math.abs(numVal));
+
     if (unitType === "frequency") {
       minLog = -1;
       maxLog = 6;
+    } else if (unitType === "time") {
+      valLog = Math.log10(1 / Math.abs(numVal));
+      minLog = -1;
+      maxLog = 6;
+      labelLeft = "太陽風 (長週期)";
+      labelMid = "磁層 (毫秒級)";
+      labelRight = "電離層 (微秒級)";
     } else if (unitType === "length") {
       minLog = 0;
       maxLog = 7;
@@ -241,7 +250,6 @@ class ModernUIController {
       labelRight = "高 Beta/熱能主導";
     }
 
-    const valLog = Math.log10(Math.abs(numVal));
     const clampedLog = Math.max(minLog, Math.min(maxLog, valLog));
     const percent = ((clampedLog - minLog) / (maxLog - minLog)) * 100;
 

@@ -388,6 +388,7 @@ class EquationsTabController {
           let meterType = "velocity";
           const uStr = out.unit || "";
           if (uStr.includes("Hz") || uStr.includes("rad/s")) meterType = "frequency";
+          else if (uStr === "s" || (uStr.includes("s") && !uStr.includes("/s"))) meterType = "time";
           else if (uStr.includes("m") || uStr.includes("km")) meterType = "length";
           else if (uStr === "" || uStr === "1") meterType = "dimensionless";
 
