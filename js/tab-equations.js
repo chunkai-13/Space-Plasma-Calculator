@@ -58,7 +58,6 @@ class EquationsTabController {
     if (this.btnClearSearch) {
       this.btnClearSearch.addEventListener("click", () => this.clearSearch());
     }
-
     if (this.btnComputeEq) {
       this.btnComputeEq.addEventListener("click", () => this.computeCurrentEquation());
     }
@@ -83,13 +82,7 @@ class EquationsTabController {
   render() {
     if (!this.eqCatSelect) return;
     const isZh = this.app.currentLang === "zh";
-
-    this.eqCatSelect.innerHTML = `
-      <option value="all">${I18N[this.app.currentLang].allEqCats}</option>
-      ${EQUATION_CATEGORIES.map(c => `
-        <option value="${c.id}">${isZh ? c.nameZh : c.nameEn}</option>
-      `).join("")}
-    `;
+    this.eqCatSelect.innerHTML = `<option value="all">${I18N[this.app.currentLang].allEqCats}</option>${EQUATION_CATEGORIES.map(c => `<option value="${c.id}">${isZh ? c.nameZh : c.nameEn}</option>`).join("")}`;
 
     if (this.eqSearch && this.eqSearch.value.trim()) {
       this.searchEquations(this.eqSearch.value);
@@ -345,6 +338,12 @@ class EquationsTabController {
     return null;
   }
 
+  cleanUnit(str) {
+    if (!str) return "";
+    const cleaned = str.replace(/\s*\(.*?\)/g, "").trim();
+    return cleaned || str;
+  }
+
   detectUnitSystem(uStr, isZh) {
     if (!uStr) return "";
     const s = uStr.trim();
@@ -369,11 +368,12 @@ class EquationsTabController {
     this.eqResultBox.innerHTML = `
       <div class="eq-outputs-grid">
         ${outputs.map((out, outIdx) => {
-          const baseUnitStr = isZh ? (out.unitZh || out.unit) : (out.unitEn || out.unit);
+          const rawBaseUnit = isZh ? (out.unitZh || out.unit) : (out.unitEn || out.unit);
+          const baseUnitStr = this.cleanUnit(rawBaseUnit);
           const allUnits = [{ label: baseUnitStr, value: out.value, isBase: true }];
           if (out.altUnits) {
             out.altUnits.forEach(a => allUnits.push({
-              label: isZh ? (a.labelZh || a.label) : (a.labelEn || a.label),
+              label: this.cleanUnit(isZh ? (a.labelZh || a.label) : (a.labelEn || a.label)),
               value: a.value
             }));
           }
@@ -442,11 +442,12 @@ class EquationsTabController {
         const out = outputs[outIdx];
         if (!out) return;
 
-        const baseUnitStr = isZh ? (out.unitZh || out.unit) : (out.unitEn || out.unit);
+        const rawBase = isZh ? (out.unitZh || out.unit) : (out.unitEn || out.unit);
+        const baseUnitStr = this.cleanUnit(rawBase);
         const allUnits = [{ label: baseUnitStr, value: out.value, isBase: true }];
         if (out.altUnits) {
           out.altUnits.forEach(a => allUnits.push({
-            label: isZh ? (a.labelZh || a.label) : (a.labelEn || a.label),
+            label: this.cleanUnit(isZh ? (a.labelZh || a.label) : (a.labelEn || a.label)),
             value: a.value
           }));
         }

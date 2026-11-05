@@ -108,7 +108,7 @@ const PARTICLE_EQUATIONS = [
         { labelZh: "垂直運動速度 (v_⊥)", labelEn: "Perpendicular Speed (v_⊥)", value: v_perp, unit: "m/s", altUnits: [
           { label: "km/s", value: v_perp * 1e-3 }
         ]},
-        { labelZh: "磁剛度 (Magnetic Rigidity = B · r_g)", labelEn: "Magnetic Rigidity (B · r_g)", value: B_T * r_L, unit: "T·m" }
+        { labelZh: "磁剛度 (Magnetic Rigidity)", labelEn: "Magnetic Rigidity", value: B_T * r_L, unit: "T·m" }
       ];
     }
   },
@@ -174,7 +174,7 @@ const PARTICLE_EQUATIONS = [
           { label: "ms", value: T_c * 1e3 },
           { label: "μs", value: T_c * 1e6 }
         ]},
-        { labelZh: "磁剛度 (Magnetic Rigidity = B · r_g)", labelEn: "Magnetic Rigidity (B · r_g)", value: B_T * r_L, unit: "T·m" }
+        { labelZh: "磁剛度 (Magnetic Rigidity)", labelEn: "Magnetic Rigidity", value: B_T * r_L, unit: "T·m" }
       ];
     }
   },
@@ -214,7 +214,7 @@ const PARTICLE_EQUATIONS = [
 
       return [
         { labelZh: "太空常用磁矩 (μ)", labelEn: "Space Magnetic Moment (μ)", value: mu_space, unit: "eV/nT" },
-        { labelZh: "SI 磁矩 (μ)", labelEn: "SI Magnetic Moment (μ)", value: mu_SI, unit: "J/T (A·m²)" },
+        { labelZh: "SI 磁矩 (μ)", labelEn: "SI Magnetic Moment (μ)", value: mu_SI, unit: "J/T" },
         { labelZh: "CGS 磁矩 (μ)", labelEn: "CGS Magnetic Moment (μ)", value: mu_SI * 1e3, unit: "erg/G" }
       ];
     }

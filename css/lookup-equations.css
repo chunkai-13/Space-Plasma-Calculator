@@ -190,7 +190,7 @@ html.dark .katex {
 
 .eq-outputs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
   gap: 1rem;
   margin-top: 1rem;
 }
@@ -235,13 +235,19 @@ html.dark .katex {
 .eq-alt-units {
   font-size: 0.78rem;
   color: var(--text-muted);
-  margin-top: 0.2rem;
+  margin-top: 0.25rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
 }
 
 .eq-alt-units span {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
   white-space: nowrap !important;
 }
 
