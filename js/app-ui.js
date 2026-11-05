@@ -218,36 +218,50 @@ class ModernUIController {
   // =========================================================================
   // 3. 太空物理情境數量級標尺 (Physical Context Meter)
   // =========================================================================
-  static renderContextMeter(numVal, unitType = "velocity") {
-    if (!numVal || isNaN(numVal) || numVal <= 0) return "";
+  static renderContextMeter(numVal, meterType = "velocity", origUnit = "") {
+    if (!numVal || isNaN(numVal) || numVal <= 0 || !meterType) return "";
 
-    let minLog = 0;
-    let maxLog = 8;
-    let labelLeft = "太陽風 (Solar Wind)";
-    let labelMid = "磁層 (Magnetosphere)";
-    let labelRight = "電離層 (Ionosphere)";
+    let minLog = 0, maxLog = 6, valLog = Math.log10(Math.abs(numVal));
+    let labelLeft = "太陽風 (Solar Wind)", labelMid = "磁層 (Magnetosphere)", labelRight = "電離層 (Ionosphere)";
 
-    let valLog = Math.log10(Math.abs(numVal));
-
-    if (unitType === "frequency") {
-      minLog = -1;
-      maxLog = 6;
-    } else if (unitType === "time") {
-      valLog = Math.log10(1 / Math.abs(numVal));
-      minLog = -1;
-      maxLog = 6;
-      labelLeft = "太陽風 (長週期)";
-      labelMid = "磁層 (毫秒級)";
-      labelRight = "電離層 (微秒級)";
-    } else if (unitType === "length") {
-      minLog = 0;
-      maxLog = 7;
-    } else if (unitType === "dimensionless") {
-      minLog = -3;
-      maxLog = 2;
-      labelLeft = "強磁/低 Beta";
-      labelMid = "邊界平衡 ~1";
-      labelRight = "高 Beta/熱能主導";
+    if (meterType === "frequency") {
+      let hz = Math.abs(numVal);
+      if (origUnit.includes("rad/s")) hz = hz / (2 * Math.PI);
+      else if (origUnit.includes("kHz")) hz = hz * 1e3;
+      else if (origUnit.includes("MHz")) hz = hz * 1e6;
+      else if (origUnit.includes("GHz")) hz = hz * 1e9;
+      else if (origUnit.includes("mHz")) hz = hz * 1e-3;
+      valLog = Math.log10(hz);
+      minLog = -1; maxLog = 6;
+    } else if (meterType === "time") {
+      let sec = Math.abs(numVal);
+      if (origUnit === "ms") sec = sec * 1e-3;
+      else if (origUnit === "μs" || origUnit === "us") sec = sec * 1e-6;
+      else if (origUnit === "ns") sec = sec * 1e-9;
+      valLog = Math.log10(1 / sec);
+      minLog = -1; maxLog = 6;
+    } else if (meterType === "velocity") {
+      let kms = Math.abs(numVal);
+      if (origUnit === "m/s") kms = kms / 1000;
+      else if (origUnit === "cm/s") kms = kms / 100000;
+      valLog = Math.log10(kms);
+      minLog = 0; maxLog = 3.5;
+      labelLeft = "電離層 (Ionosphere)"; labelMid = "磁層 (Magnetosphere)"; labelRight = "太陽風 (Solar Wind)";
+    } else if (meterType === "length") {
+      let m = Math.abs(numVal);
+      if (origUnit === "km") m = m * 1000;
+      else if (origUnit === "cm") m = m * 0.01;
+      valLog = Math.log10(m);
+      minLog = 0; maxLog = 7;
+      labelLeft = "微觀尺度 (Debye)"; labelMid = "動力學尺度 (Kinetic)"; labelRight = "巨觀尺度 (MHD)";
+    } else if (meterType === "beta") {
+      minLog = -3; maxLog = 2;
+      labelLeft = "強磁主導 (β ≪ 1)"; labelMid = "邊界平衡 (β ~ 1)"; labelRight = "熱能主導 (β ≫ 1)";
+    } else if (meterType === "ratio") {
+      minLog = 0; maxLog = 2;
+      labelLeft = "弱激波 (M ~ 1)"; labelMid = "中等激波"; labelRight = "強激波 (M ≫ 1)";
+    } else {
+      return "";
     }
 
     const clampedLog = Math.max(minLog, Math.min(maxLog, valLog));

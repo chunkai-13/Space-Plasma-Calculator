@@ -334,6 +334,21 @@ class EquationsTabController {
     }
   }
 
+  resolveMeterType(out) {
+    const u = (out.unit || "").trim();
+    const lbl = ((out.labelZh || "") + " " + (out.labelEn || "")).toLowerCase();
+    if (u === "" || u === "1" || u.includes("Dimensionless") || u.includes("Ratio") || u.includes("比值") || u === "≤ 1") {
+      if (lbl.includes("beta") || lbl.includes("貝他") || lbl.includes("mach") || lbl.includes("馬赫")) return "beta";
+      if (lbl.includes("比") || lbl.includes("ratio")) return "ratio";
+      return null;
+    }
+    if (u.includes("Hz") || u.includes("rad/s")) return "frequency";
+    if (u === "s" || u === "ms" || u === "μs" || u === "us" || u === "ns") return "time";
+    if (u === "km/s" || u === "m/s" || u === "cm/s") return "velocity";
+    if (u === "m" || u === "km" || u === "cm") return "length";
+    return null;
+  }
+
   detectUnitSystem(uStr, isZh) {
     if (!uStr) return "";
     const s = uStr.trim();
@@ -385,15 +400,9 @@ class EquationsTabController {
             `;
           }
 
-          let meterType = "velocity";
-          const uStr = out.unit || "";
-          if (uStr.includes("Hz") || uStr.includes("rad/s")) meterType = "frequency";
-          else if (uStr === "s" || (uStr.includes("s") && !uStr.includes("/s"))) meterType = "time";
-          else if (uStr.includes("m") || uStr.includes("km")) meterType = "length";
-          else if (uStr === "" || uStr === "1") meterType = "dimensionless";
-
-          const meterHtml = typeof ModernUIController !== "undefined"
-            ? ModernUIController.renderContextMeter(out.value, meterType) : "";
+          const mType = this.resolveMeterType(out);
+          const meterHtml = (typeof ModernUIController !== "undefined" && mType)
+            ? ModernUIController.renderContextMeter(out.value, mType, out.unit || "") : "";
 
           const baseSys = this.detectUnitSystem(baseUnitStr, isZh);
           const baseSysTag = baseSys ? ` <span class="unit-sys-badge">[${baseSys}]</span>` : '';
