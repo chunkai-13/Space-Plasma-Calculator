@@ -69,7 +69,6 @@ class EquationsTabController {
     if (this.btnClearSearch) this.btnClearSearch.style.display = "none";
     if (this.searchFeedback) this.searchFeedback.innerHTML = "";
     this.filterEquationsByCategory(this.eqCatSelect ? this.eqCatSelect.value : "all");
-    this.renderEquationDetail();
   }
 
   highlightFormula() {
@@ -96,20 +95,16 @@ class EquationsTabController {
       this.searchEquations(this.eqSearch.value);
     } else {
       this.filterEquationsByCategory("all");
-      this.renderEquationDetail();
     }
   }
 
   filterEquationsByCategory(catId) {
     if (!this.eqSelect) return;
     const isZh = this.app.currentLang === "zh";
-    const filtered = catId === "all"
-      ? EQUATIONS_DATABASE
-      : EQUATIONS_DATABASE.filter(e => e.category === catId);
-
-    this.eqSelect.innerHTML = filtered.map(e => `
-      <option value="${e.id}">${isZh ? e.nameZh : e.nameEn}</option>
-    `).join("");
+    const filtered = catId === "all" ? EQUATIONS_DATABASE : EQUATIONS_DATABASE.filter(e => e.category === catId);
+    if (this.eqCatSelect && this.eqCatSelect.value !== catId) this.eqCatSelect.value = catId;
+    document.querySelectorAll(".eq-filter-pill").forEach(p => p.classList.toggle("active", p.getAttribute("data-cat") === catId));
+    this.eqSelect.innerHTML = filtered.map(e => `<option value="${e.id}">${isZh ? e.nameZh : e.nameEn}</option>`).join("");
 
     if (filtered.length > 0) {
       this.selectedEquation = filtered[0];
@@ -152,6 +147,7 @@ class EquationsTabController {
       this.eqSelect.innerHTML = matches.map(e => `<option value="${e.id}">${isZh ? e.nameZh : e.nameEn}</option>`).join("");
       this.eqSelect.value = matches[0].id;
       if (this.eqCatSelect) this.eqCatSelect.value = matches[0].category;
+      document.querySelectorAll(".eq-filter-pill").forEach(p => p.classList.toggle("active", p.getAttribute("data-cat") === matches[0].category));
       this.renderEquationDetail();
       this.renderSearchFeedback(matches, rawKw);
     } else {

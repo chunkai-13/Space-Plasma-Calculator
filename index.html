@@ -15,9 +15,9 @@
   <meta name="apple-mobile-web-app-title" content="Plasma Calc">
 
   <!-- 樣式表與 KaTeX 數學排版庫 -->
-  <link rel="stylesheet" href="katex/katex.min.css?v=4.7">
-  <link rel="stylesheet" href="styles.css?v=4.7">
-  <script src="katex/katex.min.js?v=4.7"></script>
+  <link rel="stylesheet" href="katex/katex.min.css?v=4.8">
+  <link rel="stylesheet" href="styles.css?v=4.8">
+  <script src="katex/katex.min.js?v=4.8"></script>
 </head>
 <body>
 
@@ -69,12 +69,14 @@
         </div>
 
         <!-- 方程式分類快捷篩選標籤 (Category Filter Pills) -->
-        <div class="eq-filter-pills">
+        <div class="eq-filter-pills" id="eq-filter-pills">
           <button type="button" class="eq-filter-pill active" data-cat="all" data-i18n="filterAll">全部</button>
-          <button type="button" class="eq-filter-pill" data-cat="characteristic_scales" data-i18n="filterFreq">特徵頻率</button>
-          <button type="button" class="eq-filter-pill" data-cat="particle_motion" data-i18n="filterLength">長度尺度</button>
+          <button type="button" class="eq-filter-pill" data-cat="particle_motion" data-i18n="filterParticle">單粒子運動</button>
           <button type="button" class="eq-filter-pill" data-cat="waves_mhd" data-i18n="filterMhd">MHD 波動</button>
-          <button type="button" class="eq-filter-pill" data-cat="jump_conditions" data-i18n="filterDimensionless">無因次參數</button>
+          <button type="button" class="eq-filter-pill" data-cat="characteristic_scales" data-i18n="filterScales">特徵頻率與尺度</button>
+          <button type="button" class="eq-filter-pill" data-cat="jump_conditions" data-i18n="filterShocks">震波跳躍條件</button>
+          <button type="button" class="eq-filter-pill" data-cat="velocity_distributions" data-i18n="filterDist">速度分布</button>
+          <button type="button" class="eq-filter-pill" data-cat="electrodynamics" data-i18n="filterElectro">電磁場能量</button>
         </div>
 
         <!-- 關鍵字搜尋框 -->

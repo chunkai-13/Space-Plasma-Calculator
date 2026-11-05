@@ -22,10 +22,12 @@ const I18N = {
 
     // 方程式篩選標籤
     filterAll: "全部",
-    filterFreq: "特徵頻率",
-    filterLength: "長度尺度",
+    filterParticle: "單粒子運動",
     filterMhd: "MHD 波動",
-    filterDimensionless: "無因次參數",
+    filterScales: "特徵頻率與尺度",
+    filterShocks: "震波跳躍條件",
+    filterDist: "速度分布",
+    filterElectro: "電磁場能量",
 
     // 工具列與按鈕
     btnUndo: "↶ 上一步",
@@ -177,10 +179,12 @@ const I18N = {
 
     // Filter Pills
     filterAll: "All",
-    filterFreq: "Frequencies",
-    filterLength: "Length Scales",
+    filterParticle: "Particle Motion",
     filterMhd: "MHD & Waves",
-    filterDimensionless: "Dimensionless",
+    filterScales: "Scales & Frequencies",
+    filterShocks: "Shock Jump",
+    filterDist: "Velocity Distributions",
+    filterElectro: "Electrodynamics",
 
     // Toolbar & Buttons
     btnUndo: "↶ Undo",
