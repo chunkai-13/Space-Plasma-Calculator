@@ -33,6 +33,7 @@ class SpacePlasmaApp {
   }
 
   initControllers() {
+    this.presetState = new PresetStateManager(this);
     this.modernUI = new ModernUIController(this);
     this.builderTab = new BuilderTabController(this);
     this.lookupTab = new LookupTabController(this);
@@ -98,15 +99,26 @@ class SpacePlasmaApp {
       });
     }
 
-    // 4. 太空環境典型預設場景代入
+    // 4. 太空環境典型預設場景代入與還原
     document.querySelectorAll(".env-pill-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         const presetId = btn.getAttribute("data-env-preset");
-        if (this.modernUI) {
+        if (this.presetState) {
+          this.presetState.applyPreset(presetId);
+        } else if (this.modernUI) {
           this.modernUI.applyEnvironmentPreset(presetId);
         }
       });
     });
+
+    const btnResetEnv = document.getElementById("btn-reset-env-preset");
+    if (btnResetEnv) {
+      btnResetEnv.addEventListener("click", () => {
+        if (this.presetState) {
+          this.presetState.resetToPreset();
+        }
+      });
+    }
 
     // 5. 方程式篩選標籤快速過濾
     document.querySelectorAll(".eq-filter-pill").forEach(pill => {
@@ -259,6 +271,9 @@ class SpacePlasmaApp {
     }
     if (this.modernUI) {
       this.modernUI.updateDimensionBadge();
+    }
+    if (this.presetState) {
+      this.presetState.updateUIState();
     }
   }
 }

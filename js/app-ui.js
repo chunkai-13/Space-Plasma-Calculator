@@ -17,140 +17,17 @@ class ModernUIController {
   }
 
   // =========================================================================
-  // 1. 太空環境典型預設場景資料庫 (Environment Presets)
+  // 1. 太空環境典型預設場景代理 (委由 PresetStateManager 處理)
   // =========================================================================
-  static ENV_PRESETS = Object.freeze({
-    solar_wind_1au: {
-      id: "solar_wind_1au",
-      nameZh: "1 AU 太陽風",
-      nameEn: "1 AU Solar Wind",
-      icon: "⚡",
-      values: {
-        B: { val: 5, unit: "nT" },
-        n: { val: 5, unit: "cm^-3" },
-        ne: { val: 5, unit: "cm^-3" },
-        ni: { val: 5, unit: "cm^-3" },
-        np: { val: 5, unit: "cm^-3" },
-        T: { val: 10, unit: "eV" },
-        Te: { val: 10, unit: "eV" },
-        Ti: { val: 10, unit: "eV" },
-        Tp: { val: 10, unit: "eV" },
-        v: { val: 400, unit: "km/s" },
-        v_flow: { val: 400, unit: "km/s" }
-      }
-    },
-    magnetopause: {
-      id: "magnetopause",
-      nameZh: "地球磁層頂",
-      nameEn: "Magnetopause",
-      icon: "🛡️",
-      values: {
-        B: { val: 50, unit: "nT" },
-        n: { val: 10, unit: "cm^-3" },
-        ne: { val: 10, unit: "cm^-3" },
-        ni: { val: 10, unit: "cm^-3" },
-        np: { val: 10, unit: "cm^-3" },
-        T: { val: 50, unit: "eV" },
-        Te: { val: 50, unit: "eV" },
-        Ti: { val: 100, unit: "eV" },
-        Tp: { val: 100, unit: "eV" },
-        v: { val: 150, unit: "km/s" }
-      }
-    },
-    magnetotail: {
-      id: "magnetotail",
-      nameZh: "地球磁尾",
-      nameEn: "Magnetotail",
-      icon: "🌌",
-      values: {
-        B: { val: 20, unit: "nT" },
-        n: { val: 0.2, unit: "cm^-3" },
-        ne: { val: 0.2, unit: "cm^-3" },
-        ni: { val: 0.2, unit: "cm^-3" },
-        np: { val: 0.2, unit: "cm^-3" },
-        T: { val: 1000, unit: "eV" },
-        Te: { val: 500, unit: "eV" },
-        Ti: { val: 2000, unit: "eV" },
-        Tp: { val: 2000, unit: "eV" },
-        v: { val: 50, unit: "km/s" }
-      }
-    },
-    ionosphere_f: {
-      id: "ionosphere_f",
-      nameZh: "電離層 F層",
-      nameEn: "Ionosphere F-layer",
-      icon: "🌍",
-      values: {
-        B: { val: 30000, unit: "nT" },
-        n: { val: 1000000, unit: "cm^-3" },
-        ne: { val: 1000000, unit: "cm^-3" },
-        ni: { val: 1000000, unit: "cm^-3" },
-        np: { val: 1000000, unit: "cm^-3" },
-        T: { val: 0.1, unit: "eV" },
-        Te: { val: 0.15, unit: "eV" },
-        Ti: { val: 0.1, unit: "eV" },
-        Tp: { val: 0.1, unit: "eV" },
-        v: { val: 1, unit: "km/s" }
-      }
-    }
-  });
-
-  // 套用典型太空環境場景數值與過渡動效
   applyEnvironmentPreset(presetId) {
-    const preset = ModernUIController.ENV_PRESETS[presetId];
-    if (!preset) return;
-
-    this.currentEnvPreset = presetId;
-    const inputsContainer = document.getElementById("eq-inputs-container");
-    if (!inputsContainer) return;
-
-    // 更新場景按鈕外觀狀態
-    document.querySelectorAll(".env-pill-btn").forEach(btn => {
-      const match = btn.getAttribute("data-env-preset") === presetId;
-      btn.classList.toggle("active", match);
-      btn.classList.remove("is-customized");
-      const baseLabel = (typeof I18N !== "undefined" && I18N[this.app.currentLang])
-        ? I18N[this.app.currentLang][btn.getAttribute("data-i18n")] || btn.textContent
-        : btn.textContent;
-      btn.textContent = baseLabel.replace(" (自訂)", "").replace(" (Customized)", "");
-    });
-
-    Object.entries(preset.values).forEach(([key, conf]) => {
-      const inputEl = inputsContainer.querySelector(`.eq-param-input[data-param="${key}"]`);
-      const unitEl = inputsContainer.querySelector(`.eq-param-unit[data-param="${key}"]`);
-
-      if (inputEl) {
-        inputEl.value = conf.val;
-        // 加入醒目過渡動畫
-        inputEl.classList.remove("input-highlight-pulse");
-        void inputEl.offsetWidth;
-        inputEl.classList.add("input-highlight-pulse");
-      }
-      if (unitEl && conf.unit) {
-        for (let i = 0; i < unitEl.options.length; i++) {
-          if (unitEl.options[i].value === conf.unit) {
-            unitEl.selectedIndex = i;
-            break;
-          }
-        }
-      }
-    });
-
-    if (this.app.equationsTab) {
-      this.app.equationsTab.computeCurrentEquation();
+    if (this.app.presetState) {
+      this.app.presetState.applyPreset(presetId);
     }
   }
 
-  // 當使用者手動修改參數時，標記場景為「已自訂修改」
   markPresetCustomized() {
-    const activeBtn = document.querySelector(".env-pill-btn.active");
-    if (activeBtn && !activeBtn.classList.contains("is-customized")) {
-      activeBtn.classList.add("is-customized");
-      const isZh = this.app.currentLang === "zh";
-      const suffix = isZh ? " (已自訂)" : " (Customized)";
-      if (!activeBtn.textContent.includes(suffix)) {
-        activeBtn.textContent += suffix;
-      }
+    if (this.app.presetState) {
+      this.app.presetState.checkDirtyState();
     }
   }
 

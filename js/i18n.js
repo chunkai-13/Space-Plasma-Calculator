@@ -19,6 +19,7 @@ const I18N = {
     envMagnetopause: "🛡️ 地球磁層頂",
     envMagnetotail: "🌌 地球磁尾",
     envIonosphere: "🌍 電離層 F層",
+    btnResetPreset: "↺ 還原預設值",
 
     // 方程式篩選標籤
     filterAll: "全部",
@@ -176,6 +177,7 @@ const I18N = {
     envMagnetopause: "🛡️ Magnetopause",
     envMagnetotail: "🌌 Magnetotail",
     envIonosphere: "🌍 Ionosphere F-layer",
+    btnResetPreset: "↺ Reset Preset",
 
     // Filter Pills
     filterAll: "All",

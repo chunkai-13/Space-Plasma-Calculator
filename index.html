@@ -16,7 +16,7 @@
 
   <!-- 樣式表與 KaTeX 數學排版庫 -->
   <link rel="stylesheet" href="katex/katex.min.css?v=5.0">
-  <link rel="stylesheet" href="styles.css?v=5.0">
+  <link rel="stylesheet" href="styles.css?v=5.1">
   <script src="katex/katex.min.js?v=5.0"></script>
 </head>
 <body>
@@ -66,6 +66,7 @@
           <button type="button" class="env-pill-btn" data-env-preset="magnetopause" data-i18n="envMagnetopause">🛡️ 地球磁層頂</button>
           <button type="button" class="env-pill-btn" data-env-preset="magnetotail" data-i18n="envMagnetotail">🌌 地球磁尾</button>
           <button type="button" class="env-pill-btn" data-env-preset="ionosphere_f" data-i18n="envIonosphere">🌍 電離層 F層</button>
+          <button type="button" class="btn-reset-preset" id="btn-reset-env-preset" title="一鍵還原至當前場景之標準預設值" data-i18n="btnResetPreset" style="display: none;">↺ 還原預設值</button>
         </div>
 
         <!-- 方程式分類快捷篩選標籤 (Category Filter Pills) -->
@@ -344,7 +345,7 @@
 
   <!-- 基礎常量與多語系字典 -->
   <script src="constants.js?v=4.4"></script>
-  <script src="js/i18n.js?v=4.4"></script>
+  <script src="js/i18n.js?v=5.1"></script>
   <script src="js/plasma-core.js?v=4.4"></script>
 
   <!-- 方程式庫模組與入口 -->
@@ -365,12 +366,15 @@
   <script src="js/builder-preview.js?v=4.4"></script>
   <script src="js/tab-builder.js?v=4.4"></script>
   <script src="js/tab-lookup.js?v=4.4"></script>
-  <script src="js/tab-equations.js?v=4.4"></script>
+  <script src="js/tab-equations.js?v=5.1"></script>
+
+  <!-- 典型太空環境狀態管理 (Dirty State Manager) -->
+  <script src="js/preset-state-manager.js?v=5.1"></script>
 
   <!-- 現代 UI 互動控制器 -->
-  <script src="js/app-ui.js?v=4.4"></script>
+  <script src="js/app-ui.js?v=5.1"></script>
 
   <!-- 總調度入口 -->
-  <script src="app.js?v=4.4"></script>
+  <script src="app.js?v=5.1"></script>
 </body>
 </html>

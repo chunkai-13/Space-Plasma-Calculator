@@ -486,8 +486,3 @@ html:not(.dark) {
   font-weight: 600;
   margin-bottom: 1rem;
 }
-.env-pill-btn.is-customized {
-  border-style: dashed;
-  border-color: var(--color-amber);
-  color: var(--color-amber);
-}

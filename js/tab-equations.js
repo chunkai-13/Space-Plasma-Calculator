@@ -248,6 +248,9 @@ class EquationsTabController {
     if (this.app && this.app.modernUI) {
       this.app.modernUI.bindSmartInputEvents(this.eqInputsContainer, () => this.computeCurrentEquation());
     }
+    if (this.app && this.app.presetState) {
+      this.app.presetState.takeBaselineSnapshot();
+    }
     this.computeCurrentEquation();
   }
 
@@ -372,11 +375,12 @@ class EquationsTabController {
           const baseUnitStr = this.cleanUnit(rawBaseUnit);
           const allUnits = [{ label: baseUnitStr, value: out.value, isBase: true }];
           if (out.altUnits) {
-            out.altUnits.forEach(a => allUnits.push({
+            allUnits.push(...out.altUnits.map(a => ({
               label: this.cleanUnit(isZh ? (a.labelZh || a.label) : (a.labelEn || a.label)),
               value: a.value
-            }));
+            })));
           }
+          out._allUnits = allUnits;
 
           const formatted = this.formatNum(out.value);
           const copyVal = out.value.toString();
@@ -441,16 +445,7 @@ class EquationsTabController {
         const uIdx = parseInt(e.target.value, 10);
         const out = outputs[outIdx];
         if (!out) return;
-
-        const rawBase = isZh ? (out.unitZh || out.unit) : (out.unitEn || out.unit);
-        const baseUnitStr = this.cleanUnit(rawBase);
-        const allUnits = [{ label: baseUnitStr, value: out.value, isBase: true }];
-        if (out.altUnits) {
-          out.altUnits.forEach(a => allUnits.push({
-            label: this.cleanUnit(isZh ? (a.labelZh || a.label) : (a.labelEn || a.label)),
-            value: a.value
-          }));
-        }
+        const allUnits = out._allUnits || [];
         const selected = allUnits[uIdx] || allUnits[0];
         const card = document.getElementById(`modern-result-card-${outIdx}`);
         if (!card) return;
