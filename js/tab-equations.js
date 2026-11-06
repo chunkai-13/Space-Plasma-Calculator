@@ -25,19 +25,12 @@ class EquationsTabController {
 
   bindEvents() {
     if (this.eqCatSelect) {
-      this.eqCatSelect.addEventListener("change", () => {
-        this.filterEquationsByCategory(this.eqCatSelect.value);
-      });
+      this.eqCatSelect.addEventListener("change", () => this.filterEquationsByCategory(this.eqCatSelect.value));
     }
-
     if (this.eqSelect) {
       this.eqSelect.addEventListener("change", () => {
         const eq = EQUATIONS_DATABASE.find(e => e.id === this.eqSelect.value);
-        if (eq) {
-          this.selectedEquation = eq;
-          this.renderEquationDetail();
-          this.highlightFormula();
-        }
+        if (eq) { this.selectedEquation = eq; this.renderEquationDetail(); this.highlightFormula(); }
       });
     }
 
@@ -181,7 +174,7 @@ class EquationsTabController {
     const isZh = this.app.currentLang === "zh";
     this.searchFeedback.innerHTML = `
       <div class="search-empty-hint">
-        ${isZh ? `⚠️ 查無與「<strong>${kw}</strong>」相符的方程式。請嘗試輸入名稱（如 Alfven、迴旋）、代號（v_A）或分類。` : `⚠️ No equation matched "<strong>${kw}</strong>". Try searching by name, symbol, or category.`}
+        ${isZh ? `查無與「<strong>${kw}</strong>」相符的方程式。請嘗試輸入名稱（如 Alfven、迴旋）、代號（v_A）或分類。` : `No equation matched "<strong>${kw}</strong>". Try searching by name, symbol, or category.`}
       </div>
     `;
     if (this.formulaEl) this.formulaEl.textContent = isZh ? "（查無符合方程式）" : "(No matching equation)";
@@ -254,17 +247,36 @@ class EquationsTabController {
     this.computeCurrentEquation();
   }
 
+  assertPhysicalBoundary(param, rawVal, uDef, isZh) {
+    if (isNaN(rawVal)) return isZh ? "錯誤：請輸入有效數值" : "Error: Please enter a valid number";
+    const c = param.unitCategory, id = param.id;
+    if ((c === "magnetic_field" || id === "B" || id === "B1") && rawVal <= 0) {
+      return isZh ? "錯誤：磁場強度必須大於 0 (B > 0)" : "Error: Magnetic field B must be greater than 0";
+    }
+    if ((c === "density" || c === "number_density" || ["n", "n1", "ne", "ni", "np"].includes(id)) && rawVal <= 0) {
+      return isZh ? "錯誤：粒子數密度必須大於 0 (n > 0)" : "Error: Number density n must be greater than 0";
+    }
+    if (c === "temperature" || ["T", "Te", "Ti", "Tp"].includes(id)) {
+      const valK = uDef && uDef.id === "eV" ? rawVal * 11604.518 : rawVal;
+      if (valK < 0) return isZh ? "錯誤：熱力學溫度不可低於絕對零度 (T ≥ 0 K)" : "Error: Temperature cannot be below 0 K";
+    }
+    if (id === "Rc" && rawVal <= 0) return isZh ? "錯誤：曲率半徑必須大於 0 (Rc > 0)" : "Error: Curvature radius must be > 0";
+    if (id === "gamma" && rawVal <= 1) return isZh ? "錯誤：絕熱指數必須大於 1 (γ > 1)" : "Error: Adiabatic index γ must be > 1";
+    if (id === "M1" && rawVal <= 0) return isZh ? "錯誤：上游馬赫數必須大於 0 (M1 > 0)" : "Error: Upstream Mach number M1 must be > 0";
+    if (id === "kappa" && rawVal <= 1.5) return isZh ? "錯誤：Kappa 指數必須大於 1.5 (κ > 1.5)" : "Error: Kappa index must be > 1.5";
+    return null;
+  }
+
   computeCurrentEquation() {
     const eq = this.selectedEquation;
     if (!eq || !this.eqInputsContainer) return;
     const isZh = this.app.currentLang === "zh";
+    const inputs = {}, units = {};
+    let firstError = null;
 
-    const inputs = {};
-    const units = {};
-
-    // 清除既有錯誤標記
-    this.eqInputsContainer.querySelectorAll(".smart-input-group, .form-input").forEach(el => {
-      el.classList.remove("smart-input-error");
+    // 清除既有錯誤標記與抖動動畫
+    this.eqInputsContainer.querySelectorAll(".smart-input-group, .form-input, .eq-param-input").forEach(el => {
+      el.classList.remove("smart-input-error", "input-shake");
     });
 
     try {
@@ -272,53 +284,53 @@ class EquationsTabController {
         if (param.type === "select") {
           const selectEl = this.eqInputsContainer.querySelector(`.eq-param-input[data-param="${param.id}"]`);
           const chosen = param.options.find(o => o.value === (selectEl ? selectEl.value : param.default));
+          if (chosen && chosen.m !== undefined && chosen.m <= 0) {
+            throw new RangeError(isZh ? "錯誤：粒子質量必須大於 0 (m > 0)" : "Error: Particle mass must be > 0");
+          }
+          if (chosen && chosen.q !== undefined && chosen.q === 0 && eq.id.includes("gyro")) {
+            throw new RangeError(isZh ? "錯誤：中性粒子不產生迴旋運動 (q ≠ 0)" : "Error: Neutral particle has no gyration (q ≠ 0)");
+          }
           inputs[param.id] = chosen;
         } else {
           const inputEl = this.eqInputsContainer.querySelector(`.eq-param-input[data-param="${param.id}"]`);
           const rawVal = inputEl ? parseFloat(inputEl.value) : (param.default || 0);
           const parentGroup = inputEl ? inputEl.closest(".smart-input-group") || inputEl : null;
 
+          let uDef = null;
           if (param.unitCategory) {
             const unitEl = this.eqInputsContainer.querySelector(`.eq-param-unit[data-param="${param.id}"]`);
             const qDef = PHYSICAL_QUANTITIES.find(q => q.id === param.unitCategory);
-            const uDef = qDef ? qDef.units.find(u => u.id === (unitEl ? unitEl.value : param.defaultUnit)) : null;
+            uDef = qDef ? qDef.units.find(u => u.id === (unitEl ? unitEl.value : param.defaultUnit)) : null;
             units[param.id] = uDef;
+          }
 
-            // 物理邊界防禦斷言
-            if (param.unitCategory === "magnetic_field" && rawVal <= 0) {
-              if (parentGroup) parentGroup.classList.add("smart-input-error");
-              throw new RangeError(isZh ? "磁場強度必須大於 0 (B > 0)" : "Magnetic field B must be greater than 0");
+          const errMsg = this.assertPhysicalBoundary(param, rawVal, uDef, isZh);
+          if (errMsg) {
+            if (parentGroup) {
+              parentGroup.classList.remove("input-shake");
+              void parentGroup.offsetWidth;
+              parentGroup.classList.add("smart-input-error", "input-shake");
             }
-            if (param.unitCategory === "density" && rawVal <= 0) {
-              if (parentGroup) parentGroup.classList.add("smart-input-error");
-              throw new RangeError(isZh ? "數密度必須大於 0 (n > 0)" : "Number density n must be greater than 0");
-            }
-            if (param.unitCategory === "temperature") {
-              const valK = uDef && uDef.id === "eV" ? rawVal * 11604.518 : rawVal;
-              if (valK < 0) {
-                if (parentGroup) parentGroup.classList.add("smart-input-error");
-                throw new RangeError(isZh ? "熱力學溫度不可低於絕對零度 (T ≥ 0 K)" : "Temperature cannot be below 0 K");
-              }
-            }
+            if (!firstError) firstError = errMsg;
           }
 
           inputs[param.id] = isNaN(rawVal) ? 0 : rawVal;
         }
       });
 
-      const outputs = eq.calculate(inputs, units);
+      if (firstError) throw new RangeError(firstError);
 
-      // 檢查輸出結果防禦
+      const outputs = eq.calculate(inputs, units);
       if (!outputs || outputs.some(o => isNaN(o.value) || !isFinite(o.value))) {
-        throw new RangeError(isZh ? "數值超出物理計算範圍 (產生除以零或無效值)" : "Calculation resulted in an invalid or infinite value");
+        throw new RangeError(isZh ? "錯誤：數值超出物理計算範圍 (產生除以零或無效值)" : "Error: Value out of physical range");
       }
 
       this.renderEquationOutputs(outputs);
     } catch (err) {
       if (this.eqResultBox) {
         this.eqResultBox.innerHTML = `
-          <div class="calc-error-banner">
-            <span class="error-icon">⚠️</span>
+          <div class="calc-error-banner input-shake" role="alert">
+            <span class="error-badge">!</span>
             <div><strong>${isZh ? "【物理邊界防禦警告】" : "[Physical Boundary Warning]"}</strong> ${err.message}</div>
           </div>
         `;
@@ -327,17 +339,14 @@ class EquationsTabController {
   }
 
   resolveMeterType(out) {
-    const u = (out.unit || "").trim();
-    const lbl = ((out.labelZh || "") + " " + (out.labelEn || "")).toLowerCase();
-    if (u === "" || u === "1" || u.includes("Dimensionless") || u.includes("Ratio") || u.includes("比值") || u === "≤ 1") {
-      if (lbl.includes("beta") || lbl.includes("貝他") || lbl.includes("mach") || lbl.includes("馬赫")) return "beta";
-      if (lbl.includes("比") || lbl.includes("ratio")) return "ratio";
-      return null;
+    const u = (out.unit || "").trim(), lbl = ((out.labelZh || "") + " " + (out.labelEn || "")).toLowerCase();
+    if (!u || u === "1" || u.includes("Dimensionless") || u.includes("Ratio") || u.includes("比值") || u === "≤ 1") {
+      return (lbl.includes("beta") || lbl.includes("貝他") || lbl.includes("mach") || lbl.includes("馬赫")) ? "beta" : (lbl.includes("比") || lbl.includes("ratio") ? "ratio" : null);
     }
     if (u.includes("Hz") || u.includes("rad/s")) return "frequency";
-    if (u === "s" || u === "ms" || u === "μs" || u === "us" || u === "ns") return "time";
-    if (u === "km/s" || u === "m/s" || u === "cm/s") return "velocity";
-    if (u === "m" || u === "km" || u === "cm") return "length";
+    if (["s", "ms", "μs", "us", "ns"].includes(u)) return "time";
+    if (["km/s", "m/s", "cm/s"].includes(u)) return "velocity";
+    if (["m", "km", "cm"].includes(u)) return "length";
     return null;
   }
 
@@ -421,9 +430,9 @@ class EquationsTabController {
               <div class="result-card-header">
                 <div class="result-val-title">${isZh ? out.labelZh : out.labelEn}</div>
                 <div class="result-actions-bar">
-                  <button type="button" class="btn-copy-chip btn-copy-val" data-copy-text="${copyVal}" title="${isZh ? '複製數值' : 'Copy value'}">${isZh ? '📋 數值' : '📋 Value'}</button>
-                  <button type="button" class="btn-copy-chip btn-copy-with-unit" data-copy-text="${copyWithUnit}" title="${isZh ? '複製帶單位' : 'Copy with unit'}">${isZh ? '📋 帶單位' : '📋 With Unit'}</button>
-                  <button type="button" class="btn-copy-chip btn-copy-latex" data-copy-text="${copyLatex}" title="LaTeX">📋 LaTeX</button>
+                  <button type="button" class="btn-copy-chip btn-copy-val" data-copy-text="${copyVal}" title="${isZh ? '複製數值' : 'Copy value'}">${isZh ? '數值' : 'Value'}</button>
+                  <button type="button" class="btn-copy-chip btn-copy-with-unit" data-copy-text="${copyWithUnit}" title="${isZh ? '複製帶單位' : 'Copy with unit'}">${isZh ? '帶單位' : 'With Unit'}</button>
+                  <button type="button" class="btn-copy-chip btn-copy-latex" data-copy-text="${copyLatex}" title="LaTeX">LaTeX</button>
                 </div>
               </div>
               <div class="result-val-display">
@@ -458,9 +467,9 @@ class EquationsTabController {
         const btnVal = card.querySelector(".btn-copy-val");
         const btnWithUnit = card.querySelector(".btn-copy-with-unit");
         const btnLatex = card.querySelector(".btn-copy-latex");
-        if (btnVal) btnVal.setAttribute("data-copy-text", selected.value.toString());
-        if (btnWithUnit) btnWithUnit.setAttribute("data-copy-text", `${formatted} ${selected.label}`);
-        if (btnLatex) btnLatex.setAttribute("data-copy-text", `${this.formatLatexNum(selected.value)}\\text{ ${selected.label}}`);
+        btnVal?.setAttribute("data-copy-text", selected.value.toString());
+        btnWithUnit?.setAttribute("data-copy-text", `${formatted} ${selected.label}`);
+        btnLatex?.setAttribute("data-copy-text", `${this.formatLatexNum(selected.value)}\\text{ ${selected.label}}`);
 
         // 同步更新下方 altUnits 顯示未選中的其他單位
         const altBox = card.querySelector(`#eq-alt-units-${outIdx}`);
@@ -477,13 +486,11 @@ class EquationsTabController {
 
   formatNum(val) {
     return Math.abs(val) < 1e-3 || Math.abs(val) >= 1e6
-      ? val.toExponential(4)
-      : val.toLocaleString(undefined, { maximumFractionDigits: 4 });
+      ? val.toExponential(4) : val.toLocaleString(undefined, { maximumFractionDigits: 4 });
   }
 
   formatLatexNum(val) {
     return Math.abs(val) < 1e-3 || Math.abs(val) >= 1e6
-      ? val.toExponential(4).replace("e", "\\times 10^{") + "}"
-      : this.formatNum(val);
+      ? val.toExponential(4).replace("e", "\\times 10^{") + "}" : this.formatNum(val);
   }
 }
