@@ -1,6 +1,6 @@
 # 太空電漿物理計算與單位查詢工具 交接文檔（Handoff Documentation）
 
-文件版本：v5.6  
+文件版本：v5.7  
 更新日期：2026-11-06  
 專案儲存庫：chunkai-13/Space-Plasma-Calculator (main branch)
 
@@ -151,7 +151,7 @@ Space Plasma Calculator/
 | `js/equations-kinetic-shocks.js` | 351 | 500 | 合格 OK |
 | `js/tab-equations.js` | 496 | 500 | 合格 OK |
 | `js/preset-state-manager.js` | 302 | 500 | 合格 OK |
-| `js/app-ui.js` | 415 | 500 | 合格 OK |
+| `js/app-ui.js` | 443 | 500 | 合格 OK |
 | `js/calculator-core.js` | 366 | 500 | 合格 OK |
 | `js/calculator-evaluator.js` | 313 | 500 | 合格 OK |
 | `js/calculator-formatter.js` | 261 | 500 | 合格 OK |
@@ -174,7 +174,8 @@ Space Plasma Calculator/
 * **v5.3**：建立嚴格的數值邊界防禦與非阻塞錯誤回饋（前置斷言阻斷 $B \le 0$、$n \le 0$ 等無效輸入，觸發紅框輕微抖動動畫與解算結果警示卡片）。
 * **v5.4**：解決自訂工作台 LaTeX 輸入框雙向綁定時的游標強制跳至尾端問題，實作無損選取範圍維持與原生撤銷歷史保護。
 * **v5.5**：補齊導覽列 W3C WAI-ARIA 鍵盤導覽標準（Roving Tabindex、方向鍵循環切換、Home/End 支援）；修正數量級標尺時間週期對數映射。
-* **v5.6（當前版本）**：優化單位手冊「帶入換算」微互動（平滑滾動至換算器、容器與輸入框 0.8 秒淡藍色脈衝光效、自動焦點轉移與文字全選）。
+* **v5.6**：優化單位手冊「帶入換算」微互動（平滑滾動至換算器、容器與輸入框 0.8 秒淡藍色脈衝光效、自動焦點轉移與文字全選）。
+* **v5.7（當前版本）**：全面修復英文版介面下方程式速算庫（Formula Presets）結果卡片中「典型太空電漿環境數量級對照（Order of Magnitude Context）」區塊的中文字元殘留問題，標題、物理情境標籤（太陽風、磁層、電離層、微觀/動力學/巨觀尺度、磁能/熱能主導、激波強度）與軌道提示 tooltips 全數支援雙語自動切換。
 
 ---
 

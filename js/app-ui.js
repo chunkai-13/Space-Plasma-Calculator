@@ -96,11 +96,20 @@ class ModernUIController {
   // =========================================================================
   // 3. 太空物理情境數量級標尺 (Physical Context Meter)
   // =========================================================================
-  static renderContextMeter(numVal, meterType = "velocity", origUnit = "") {
+  static renderContextMeter(numVal, meterType = "velocity", origUnit = "", isZh) {
     if (!numVal || isNaN(numVal) || numVal <= 0 || !meterType) return "";
 
+    if (typeof isZh === "undefined") {
+      const currentLang = (typeof window !== "undefined" && window.app && window.app.currentLang)
+        || (typeof localStorage !== "undefined" && localStorage.getItem("sp_lang"))
+        || "zh";
+      isZh = currentLang === "zh";
+    }
+
     let minLog = 0, maxLog = 6, valLog = Math.log10(Math.abs(numVal));
-    let labelLeft = "太陽風 (Solar Wind)", labelMid = "磁層 (Magnetosphere)", labelRight = "電離層 (Ionosphere)";
+    let labelLeft = isZh ? "太陽風 (Solar Wind)" : "Solar Wind";
+    let labelMid = isZh ? "磁層 (Magnetosphere)" : "Magnetosphere";
+    let labelRight = isZh ? "電離層 (Ionosphere)" : "Ionosphere";
 
     if (meterType === "frequency") {
       let hz = Math.abs(numVal);
@@ -111,6 +120,9 @@ class ModernUIController {
       else if (origUnit.includes("mHz")) hz = hz * 1e-3;
       valLog = Math.log10(hz);
       minLog = -1; maxLog = 6;
+      labelLeft = isZh ? "太陽風 (Solar Wind)" : "Solar Wind";
+      labelMid = isZh ? "磁層 (Magnetosphere)" : "Magnetosphere";
+      labelRight = isZh ? "電離層 (Ionosphere)" : "Ionosphere";
     } else if (meterType === "time") {
       let sec = Math.abs(numVal);
       if (origUnit === "ms") sec = sec * 1e-3;
@@ -118,27 +130,37 @@ class ModernUIController {
       else if (origUnit === "ns") sec = sec * 1e-9;
       valLog = Math.log10(1 / sec);
       minLog = -1; maxLog = 6;
-      labelLeft = "太陽風 (長週期)"; labelMid = "磁層 (毫秒級)"; labelRight = "電離層 (微秒級)";
+      labelLeft = isZh ? "太陽風 (長週期)" : "Solar Wind (Long Period)";
+      labelMid = isZh ? "磁層 (毫秒級)" : "Magnetosphere (ms)";
+      labelRight = isZh ? "電離層 (微秒級)" : "Ionosphere (μs)";
     } else if (meterType === "velocity") {
       let kms = Math.abs(numVal);
       if (origUnit === "m/s") kms = kms / 1000;
       else if (origUnit === "cm/s") kms = kms / 100000;
       valLog = Math.log10(kms);
       minLog = 0; maxLog = 3.5;
-      labelLeft = "電離層 (Ionosphere)"; labelMid = "磁層 (Magnetosphere)"; labelRight = "太陽風 (Solar Wind)";
+      labelLeft = isZh ? "電離層 (Ionosphere)" : "Ionosphere";
+      labelMid = isZh ? "磁層 (Magnetosphere)" : "Magnetosphere";
+      labelRight = isZh ? "太陽風 (Solar Wind)" : "Solar Wind";
     } else if (meterType === "length") {
       let m = Math.abs(numVal);
       if (origUnit === "km") m = m * 1000;
       else if (origUnit === "cm") m = m * 0.01;
       valLog = Math.log10(m);
       minLog = 0; maxLog = 7;
-      labelLeft = "微觀尺度 (Debye)"; labelMid = "動力學尺度 (Kinetic)"; labelRight = "巨觀尺度 (MHD)";
+      labelLeft = isZh ? "微觀尺度 (Debye)" : "Microscopic (Debye)";
+      labelMid = isZh ? "動力學尺度 (Kinetic)" : "Kinetic Scale";
+      labelRight = isZh ? "巨觀尺度 (MHD)" : "Macroscopic (MHD)";
     } else if (meterType === "beta") {
       minLog = -3; maxLog = 2;
-      labelLeft = "強磁主導 (β ≪ 1)"; labelMid = "邊界平衡 (β ~ 1)"; labelRight = "熱能主導 (β ≫ 1)";
+      labelLeft = isZh ? "強磁主導 (β ≪ 1)" : "Magnetic Dominated (β ≪ 1)";
+      labelMid = isZh ? "邊界平衡 (β ~ 1)" : "Marginal Balance (β ~ 1)";
+      labelRight = isZh ? "熱能主導 (β ≫ 1)" : "Thermal Dominated (β ≫ 1)";
     } else if (meterType === "ratio") {
       minLog = 0; maxLog = 2;
-      labelLeft = "弱激波 (M ~ 1)"; labelMid = "中等激波"; labelRight = "強激波 (M ≫ 1)";
+      labelLeft = isZh ? "弱激波 (M ~ 1)" : "Weak Shock (M ~ 1)";
+      labelMid = isZh ? "中等激波" : "Intermediate Shock";
+      labelRight = isZh ? "強激波 (M ≫ 1)" : "Strong Shock (M ≫ 1)";
     } else {
       return "";
     }
@@ -146,17 +168,23 @@ class ModernUIController {
     const clampedLog = Math.max(minLog, Math.min(maxLog, valLog));
     const percent = ((clampedLog - minLog) / (maxLog - minLog)) * 100;
 
+    const meterTitle = isZh ? "典型太空電漿環境數量級對照 (Order of Magnitude Context)" : "Order of Magnitude Context";
+    const tipSw = isZh ? "太陽風常態區間" : "Solar Wind typical range";
+    const tipMp = isZh ? "地球磁層頂/磁尾區間" : "Magnetopause / Magnetotail range";
+    const tipIono = isZh ? "電離層/近地高密區間" : "Ionosphere / Near-Earth dense plasma";
+    const tipPin = isZh ? `目前計算值定位 (${percent.toFixed(0)}%)` : `Current value position (${percent.toFixed(0)}%)`;
+
     return `
       <div class="context-meter-box">
         <div class="context-meter-header">
-          <span>典型太空電漿環境數量級對照 (Order of Magnitude Context)</span>
+          <span>${meterTitle}</span>
           <span class="code-badge font-mono">${numVal > 1e4 || numVal < 1e-2 ? numVal.toExponential(2) : numVal.toFixed(2)}</span>
         </div>
         <div class="context-meter-track">
-          <div class="context-meter-segment sw" title="太陽風常態區間"></div>
-          <div class="context-meter-segment mp" title="地球磁層頂/磁尾區間"></div>
-          <div class="context-meter-segment iono" title="電離層/近地高密區間"></div>
-          <div class="context-meter-pin" style="left: ${percent.toFixed(1)}%;" title="目前計算值定位 (${percent.toFixed(0)}%)"></div>
+          <div class="context-meter-segment sw" title="${tipSw}"></div>
+          <div class="context-meter-segment mp" title="${tipMp}"></div>
+          <div class="context-meter-segment iono" title="${tipIono}"></div>
+          <div class="context-meter-pin" style="left: ${percent.toFixed(1)}%;" title="${tipPin}"></div>
         </div>
         <div class="context-meter-labels">
           <span>${labelLeft}</span>

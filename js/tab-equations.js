@@ -411,7 +411,7 @@ class EquationsTabController {
 
           const mType = this.resolveMeterType(out);
           const meterHtml = (typeof ModernUIController !== "undefined" && mType)
-            ? ModernUIController.renderContextMeter(out.value, mType, out.unit || "") : "";
+            ? ModernUIController.renderContextMeter(out.value, mType, out.unit || "", isZh) : "";
 
           const baseSys = this.detectUnitSystem(baseUnitStr, isZh);
           const baseSysTag = baseSys ? ` <span class="unit-sys-badge">[${baseSys}]</span>` : '';
