@@ -135,10 +135,19 @@ class SpacePlasmaApp {
     const latexInput = document.getElementById("latex-quick-input");
     const btnParseLatex = document.getElementById("btn-parse-latex");
     if (latexInput) {
-      // 鍵盤輸入即時解析更新畫布與因次檢查
+      // 鍵盤輸入即時解析更新畫布與因次檢查 (保持游標不跳動)
       latexInput.addEventListener("input", (e) => {
         if (this.modernUI) {
           this.modernUI.syncFromLatexInput(e.target.value);
+        }
+      });
+      latexInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (this.modernUI) {
+            this.modernUI.syncFromLatexInput(latexInput.value);
+            this.modernUI.syncToLatexInput({ force: true });
+          }
         }
       });
     }
@@ -146,6 +155,7 @@ class SpacePlasmaApp {
       btnParseLatex.addEventListener("click", () => {
         if (this.modernUI) {
           this.modernUI.syncFromLatexInput(latexInput.value);
+          this.modernUI.syncToLatexInput({ force: true });
         }
       });
     }

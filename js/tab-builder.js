@@ -112,6 +112,12 @@ class BuilderTabController {
 
     // 鍵盤快捷鍵 (Command/Ctrl + Z / Shift+Z / Y)
     window.addEventListener("keydown", (e) => {
+      // 若當前焦點在文字輸入框或文字區域中，允許原生文字撤銷/重做，不攔截預設事件
+      const targetTag = e.target ? e.target.tagName : "";
+      if (targetTag === "INPUT" || targetTag === "TEXTAREA" || (e.target && e.target.isContentEditable)) {
+        return;
+      }
+
       if ((e.metaKey || e.ctrlKey) && !e.altKey) {
         if (e.key.toLowerCase() === "z") {
           e.preventDefault();

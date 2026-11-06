@@ -13,6 +13,7 @@ class ModernUIController {
   constructor(app) {
     this.app = app;
     this.currentEnvPreset = "solar_wind_1au";
+    this.isParsingFromInput = false;
     this.initClipboardHelpers();
   }
 
@@ -211,39 +212,44 @@ class ModernUIController {
     const calc = this.app.calculator;
     if (!calc) return;
 
-    const str = (latexStr || "").trim();
-    if (!str) {
-      calc.tokens = [];
-      if (this.app.builderTab) this.app.builderTab.renderTermsList();
-      this.refreshBuilderPreview();
-      this.updateDimensionBadge(null);
-      return;
-    }
-
-    // 1. 快速匹配常見經典結構
-    if ((str.includes("B^2") || str.includes("B^{2}")) && (str.includes("mu") || str.includes("μ"))) {
-      this.app.builderTab.loadPresetFormula("presetPB");
-    } else if (str.includes("P_th") && str.includes("P_B")) {
-      this.app.builderTab.loadPresetFormula("presetTotalP");
-    } else if (str.includes("beta") || (str.includes("nkT") && str.includes("P_B"))) {
-      this.app.builderTab.loadPresetFormula("presetBeta");
-    } else if (str.includes("v_A") || (str.includes("B") && (str.includes("rho") || str.includes("mu")))) {
-      this.app.builderTab.loadPresetFormula("presetVA");
-    } else {
-      calc.tokens = [];
-      const fracMatch = str.match(/\\frac\{([^}]+)\}\{([^}]+)\}/);
-      if (fracMatch) {
-        const fracToken = calc.insertFraction();
-        this.parseTokensIntoList(fracMatch[1], fracToken.numerator);
-        this.parseTokensIntoList(fracMatch[2], fracToken.denominator);
-      } else {
-        this.parseTokensIntoList(str, calc.tokens);
+    this.isParsingFromInput = true;
+    try {
+      const str = (latexStr || "").trim();
+      if (!str) {
+        calc.tokens = [];
+        if (this.app.builderTab) this.app.builderTab.renderTermsList();
+        this.refreshBuilderPreview();
+        this.updateDimensionBadge(null);
+        return;
       }
-      if (this.app.builderTab) this.app.builderTab.renderTermsList();
-    }
 
-    this.refreshBuilderPreview();
-    this.updateDimensionBadge();
+      // 1. 快速匹配常見經典結構
+      if ((str.includes("B^2") || str.includes("B^{2}")) && (str.includes("mu") || str.includes("μ"))) {
+        this.app.builderTab.loadPresetFormula("presetPB");
+      } else if (str.includes("P_th") && str.includes("P_B")) {
+        this.app.builderTab.loadPresetFormula("presetTotalP");
+      } else if (str.includes("beta") || (str.includes("nkT") && str.includes("P_B"))) {
+        this.app.builderTab.loadPresetFormula("presetBeta");
+      } else if (str.includes("v_A") || (str.includes("B") && (str.includes("rho") || str.includes("mu")))) {
+        this.app.builderTab.loadPresetFormula("presetVA");
+      } else {
+        calc.tokens = [];
+        const fracMatch = str.match(/\\frac\{([^}]+)\}\{([^}]+)\}/);
+        if (fracMatch) {
+          const fracToken = calc.insertFraction();
+          this.parseTokensIntoList(fracMatch[1], fracToken.numerator);
+          this.parseTokensIntoList(fracMatch[2], fracToken.denominator);
+        } else {
+          this.parseTokensIntoList(str, calc.tokens);
+        }
+        if (this.app.builderTab) this.app.builderTab.renderTermsList();
+      }
+
+      this.refreshBuilderPreview();
+      this.updateDimensionBadge();
+    } finally {
+      this.isParsingFromInput = false;
+    }
   }
 
   parseTokensIntoList(exprStr, container) {
@@ -287,17 +293,52 @@ class ModernUIController {
     });
   }
 
-  // 當使用者點擊按鈕插入符號時，更新核心狀態並反向生成最新 LaTeX 回填至輸入框
-  syncToLatexInput() {
+  // 當公式 AST 變更時，反向生成最新 LaTeX 回填至輸入框 (具備無損游標維持與語義防抖)
+  syncToLatexInput(options = {}) {
     const calc = this.app.calculator;
     if (!calc) return;
 
     this.refreshBuilderPreview();
     const rep = calc.generateEquationRepresentation();
+    const newLatex = rep.latexFormula || "";
     const inputEl = document.getElementById("latex-quick-input");
-    if (inputEl) {
-      inputEl.value = rep.latexFormula || "";
+    if (!inputEl) return;
+
+    const currentVal = inputEl.value;
+    const isFocused = document.activeElement === inputEl;
+
+    // 語義正規化比對：消除多餘空白、乘號變體與花括號格式差異
+    const normalize = s => (s || "").replace(/\s+/g, "").replace(/\\cdot|\\times/g, "*").replace(/\{(\w)\}/g, "$1");
+    const isSemanticallyEqual = currentVal === newLatex || normalize(currentVal) === normalize(newLatex);
+
+    // 1. 若當前處於 input 事件驅動階段 (使用者正在打字) 且語義未變，絕不覆寫 value 以保全游標與原生撤銷棧
+    if (this.isParsingFromInput && isSemanticallyEqual) {
+      this.updateDimensionBadge();
+      return;
     }
+
+    // 2. 若非強制更新且字面內容已完全一致，直接跳過重寫
+    if (!options.force && currentVal === newLatex) {
+      this.updateDimensionBadge();
+      return;
+    }
+
+    // 3. 需回填更新時：無損紀錄當前選取範圍起訖點
+    const { selectionStart, selectionEnd } = inputEl;
+
+    inputEl.value = newLatex;
+
+    // 4. 若當前輸入框擁有焦點，立即精確還原文字游標位置
+    if (isFocused && selectionStart !== null && selectionEnd !== null) {
+      const targetStart = Math.min(selectionStart, newLatex.length);
+      const targetEnd = Math.min(selectionEnd, newLatex.length);
+      try {
+        inputEl.setSelectionRange(targetStart, targetEnd);
+      } catch (e) {
+        // 瀏覽器邊界防護
+      }
+    }
+
     this.updateDimensionBadge();
   }
 
