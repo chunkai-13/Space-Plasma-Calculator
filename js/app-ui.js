@@ -118,6 +118,7 @@ class ModernUIController {
       else if (origUnit === "ns") sec = sec * 1e-9;
       valLog = Math.log10(1 / sec);
       minLog = -1; maxLog = 6;
+      labelLeft = "太陽風 (長週期)"; labelMid = "磁層 (毫秒級)"; labelRight = "電離層 (微秒級)";
     } else if (meterType === "velocity") {
       let kms = Math.abs(numVal);
       if (origUnit === "m/s") kms = kms / 1000;

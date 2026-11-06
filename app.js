@@ -57,6 +57,7 @@ class SpacePlasmaApp {
         const isMatch = b.getAttribute("data-tab") === activeTab;
         b.classList.toggle("active", isMatch);
         b.setAttribute("aria-selected", isMatch ? "true" : "false");
+        b.setAttribute("tabindex", isMatch ? "0" : "-1");
       });
     }
 
@@ -73,13 +74,55 @@ class SpacePlasmaApp {
   }
 
   bindEvents() {
-    // 1. 分頁按鈕點擊
+    // 1. 分頁導覽：點擊與 WAI-ARIA 鍵盤導覽 (Roving Tabindex)
     if (this.tabBtns) {
       this.tabBtns.forEach(btn => {
         btn.addEventListener("click", () => {
           const targetTab = btn.getAttribute("data-tab");
           this.switchTab(targetTab, true);
         });
+      });
+    }
+
+    const tablistNav = document.getElementById("main-tabs-nav") || document.querySelector('[role="tablist"]');
+    if (tablistNav) {
+      tablistNav.addEventListener("keydown", (e) => {
+        const tabs = Array.from(tablistNav.querySelectorAll('[role="tab"]'));
+        if (!tabs.length) return;
+
+        const currentIndex = tabs.indexOf(document.activeElement);
+        if (currentIndex === -1) return;
+
+        let nextIndex = null;
+        switch (e.key) {
+          case "ArrowRight":
+          case "ArrowDown":
+            e.preventDefault();
+            nextIndex = (currentIndex + 1) % tabs.length;
+            break;
+          case "ArrowLeft":
+          case "ArrowUp":
+            e.preventDefault();
+            nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+            break;
+          case "Home":
+            e.preventDefault();
+            nextIndex = 0;
+            break;
+          case "End":
+            e.preventDefault();
+            nextIndex = tabs.length - 1;
+            break;
+          default:
+            return;
+        }
+
+        if (nextIndex !== null) {
+          const targetTab = tabs[nextIndex];
+          targetTab.focus();
+          const targetKey = targetTab.getAttribute("data-tab");
+          this.switchTab(targetKey, true);
+        }
       });
     }
 

@@ -1,10 +1,10 @@
-const CACHE_NAME = 'plasma-calc-v5.4';
+const CACHE_NAME = 'plasma-calc-v5.5';
 const ASSETS = [
   './',
   './index.html',
-  './styles.css?v=5.3',
+  './styles.css?v=5.5',
   './css/base.css?v=4.4',
-  './css/layout.css?v=4.4',
+  './css/layout.css?v=5.5',
   './css/components.css?v=4.4',
   './css/builder.css?v=4.4',
   './css/builder-cards.css?v=4.4',
@@ -29,8 +29,8 @@ const ASSETS = [
   './js/tab-lookup.js?v=5.2',
   './js/tab-equations.js?v=5.3',
   './js/preset-state-manager.js?v=5.1',
-  './js/app-ui.js?v=5.4',
-  './app.js?v=5.4',
+  './js/app-ui.js?v=5.5',
+  './app.js?v=5.5',
   './katex/katex.min.js?v=4.4',
   './katex/katex.min.css?v=4.4',
   './icon.png',
