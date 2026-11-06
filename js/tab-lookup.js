@@ -355,12 +355,35 @@ class LookupTabController {
           if (this.convFromUnit && uid) {
             this.convFromUnit.value = uid;
             this.updateConversion();
-            const convBox = document.querySelector(".converter-box");
-            if (convBox) {
-              convBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
-              convBox.classList.remove("highlight-flash");
-              void convBox.offsetWidth;
-              convBox.classList.add("highlight-flash");
+
+            // 按鈕微互動：即時標記已帶入
+            const origHtml = btn.innerHTML;
+            btn.classList.add("applied");
+            btn.innerHTML = `<span>✓ ${isZh ? '已帶入' : 'Applied'}</span>`;
+            setTimeout(() => {
+              btn.classList.remove("applied");
+              btn.innerHTML = origHtml;
+            }, 800);
+
+            // 視圖導引：平滑滾動至換算器區塊
+            const converterElement = document.querySelector(".converter-box");
+            if (converterElement) {
+              converterElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+              // 聚焦視覺強調：容器與來源欄位觸發 0.8s 脈衝光效
+              const pulseTargets = [converterElement, this.convFromUnit, this.convInputVal];
+              pulseTargets.forEach(el => {
+                if (!el) return;
+                el.classList.remove("pulse-highlight", "highlight-flash");
+                void el.offsetWidth;
+                el.classList.add("pulse-highlight");
+              });
+            }
+
+            // 焦點控制：自動移至數值輸入框並全選，便於鍵盤快速修改
+            if (this.convInputVal) {
+              this.convInputVal.focus({ preventScroll: true });
+              this.convInputVal.select();
             }
           }
         });

@@ -172,13 +172,39 @@
   font-size: 0.82rem;
 }
 
-.highlight-flash {
-  animation: flashHighlight 0.8s ease-out;
+/* 高亮脈衝光效動畫 (Focus Highlight Pulse) */
+.highlight-flash,
+.pulse-highlight {
+  animation: pulseGlow 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
-@keyframes flashHighlight {
-  0% { box-shadow: 0 0 0 2px var(--brand-primary); }
-  100% { box-shadow: none; }
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7);
+    border-color: rgba(56, 189, 248, 0.9);
+  }
+  30% {
+    box-shadow: 0 0 0 5px rgba(56, 189, 248, 0.35), 0 0 16px rgba(56, 189, 248, 0.25);
+    border-color: var(--brand-primary, #38bdf8);
+  }
+  60% {
+    box-shadow: 0 0 0 7px rgba(56, 189, 248, 0.12), 0 0 8px rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.5);
+  }
+  100% {
+    box-shadow: none;
+    border-color: var(--border-color);
+  }
+}
+
+.btn-apply-conv:active {
+  transform: scale(0.95);
+}
+
+.btn-apply-conv.applied {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: #10b981 !important;
+  color: #34d399 !important;
 }
 
 .converter-box {
