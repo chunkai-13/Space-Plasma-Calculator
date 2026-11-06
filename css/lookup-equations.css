@@ -1,27 +1,91 @@
 /* css/lookup-equations.css - 單位對照表、即時換算器與太空物理方程式樣式 */
 
-/* 查找單位表格 */
-.table-responsive {
-  overflow-x: auto;
-  margin: 1rem 0;
+/* 查找單位表格與凍結表頭 (Unit Specification Table & Sticky Header) */
+.sticky-table-wrapper {
+  position: relative; width: 100%; max-width: 100%; max-height: 480px;
+  overflow-x: auto; overflow-y: auto; -webkit-overflow-scrolling: touch; scroll-behavior: smooth;
+  border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-card);
+  scrollbar-width: thin; margin: 1rem 0;
 }
 
 .unit-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.88rem;
-  text-align: left;
+  width: 100%; min-width: 680px; border-collapse: separate; border-spacing: 0;
+  font-size: 0.88rem; text-align: left;
 }
 
-.unit-table th, .unit-table td {
-  padding: 0.75rem 0.85rem;
-  border-bottom: 1px solid var(--border-color);
+.unit-table thead th {
+  position: sticky; top: 0; background: var(--surface-raised); color: var(--text-secondary);
+  font-weight: 700; padding: 0.75rem 0.85rem; border-bottom: 2px solid var(--border-color);
+  z-index: 10; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15); white-space: nowrap;
 }
 
-.unit-table th {
-  background: var(--bg-subtle);
-  font-weight: 700;
-  color: var(--text-secondary);
+.unit-table tbody td {
+  padding: 0.75rem 0.85rem; border-bottom: 1px solid var(--border-color);
+  background: var(--bg-card); vertical-align: middle;
+}
+
+.unit-table tbody tr:hover td { background: var(--surface-overlay); }
+.unit-table td.col-sys, .unit-table th.col-sys { white-space: nowrap; }
+.unit-table td.col-unit { font-weight: 600; color: var(--text-primary); }
+
+.unit-table td.col-factor code {
+  font-family: var(--font-mono); font-size: 0.82rem; background: var(--bg-subtle);
+  padding: 0.15rem 0.4rem; border-radius: var(--radius-sm); color: var(--brand-primary);
+}
+
+.unit-table .btn-apply-conv {
+  min-height: 44px; min-width: 44px; padding: 0.45rem 0.85rem; font-size: 0.82rem; font-weight: 600;
+  display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;
+  cursor: pointer; touch-action: manipulation; border-radius: var(--radius-sm); transition: all var(--transition-fast);
+}
+
+.unit-table .btn-apply-conv:hover {
+  background: var(--brand-primary); color: #ffffff; border-color: var(--brand-primary); box-shadow: 0 0 10px var(--brand-glow);
+}
+
+/* 常用情境說明：預設桌面版 */
+.th-short-text { display: none; }
+.unit-desc-full { display: block; line-height: 1.45; color: var(--text-secondary); font-size: 0.84rem; }
+.unit-desc-popover-wrapper { display: none; position: relative; }
+
+.btn-unit-desc-pop {
+  width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+  display: inline-flex; align-items: center; justify-content: center; border-radius: 50%;
+  border: 1px solid var(--border-color); background: var(--bg-subtle); color: var(--brand-primary);
+  font-size: 0.88rem; font-weight: 700; cursor: pointer; touch-action: manipulation;
+  transition: all var(--transition-fast); user-select: none;
+}
+
+.btn-unit-desc-pop:hover,
+.unit-desc-popover-wrapper.active .btn-unit-desc-pop {
+  background: var(--brand-primary); color: #ffffff; border-color: var(--brand-primary); box-shadow: 0 0 8px var(--brand-glow);
+}
+
+.unit-desc-tooltip-bubble {
+  position: absolute; bottom: calc(100% + 8px); right: -8px; width: 250px; max-width: min(280px, 80vw);
+  background: var(--surface-overlay); border: 1px solid var(--border-color);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45); border-radius: var(--radius-md); padding: 0.75rem;
+  z-index: 50; visibility: hidden; opacity: 0; transform: translateY(4px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s; pointer-events: none;
+  white-space: normal; text-align: left;
+}
+
+.unit-desc-tooltip-bubble::after {
+  content: ""; position: absolute; top: 100%; right: 22px; border-width: 6px;
+  border-style: solid; border-color: var(--border-color) transparent transparent transparent;
+}
+
+.tooltip-bubble-header {
+  font-size: 0.78rem; font-weight: 700; color: var(--brand-primary);
+  margin-bottom: 0.35rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.25rem;
+}
+
+.tooltip-bubble-body { font-size: 0.76rem; color: var(--text-primary); line-height: 1.45; }
+
+.unit-desc-popover-wrapper.active .unit-desc-tooltip-bubble,
+.unit-desc-popover-wrapper:hover .unit-desc-tooltip-bubble,
+.unit-desc-popover-wrapper:focus-within .unit-desc-tooltip-bubble {
+  visibility: visible; opacity: 1; transform: translateY(0); pointer-events: auto;
 }
 
 .search-box {

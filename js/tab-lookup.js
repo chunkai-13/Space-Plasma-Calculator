@@ -75,6 +75,11 @@ class LookupTabController {
     if (this.convToUnit) {
       this.convToUnit.addEventListener("change", () => this.updateConversion());
     }
+
+    // 點擊空白處關閉所有開啟中的行動端說明彈跳提示框
+    document.addEventListener("click", () => {
+      document.querySelectorAll(".unit-desc-popover-wrapper.active").forEach(w => w.classList.remove("active"));
+    });
   }
 
   clearSearch() {
@@ -300,19 +305,48 @@ class LookupTabController {
     }
 
     if (this.unitSpecTable) {
-      this.unitSpecTable.innerHTML = q.units.map(u => `
+      this.unitSpecTable.innerHTML = q.units.map(u => {
+        const uLabel = isZh ? (u.labelZh || u.label) : (u.labelEn || u.label);
+        const descText = isZh ? (u.descZh || u.desc) : (u.descEn || u.desc);
+        const factorStr = u.toBaseSI >= 1e-3 && u.toBaseSI <= 1e4 ? u.toBaseSI : u.toBaseSI.toExponential();
+        return `
         <tr>
-          <td><span class="badge-system badge-${u.system.toLowerCase()}">${u.system}</span></td>
-          <td><strong>${isZh ? (u.labelZh || u.label) : (u.labelEn || u.label)}</strong></td>
-          <td><code>${u.toBaseSI >= 1e-3 && u.toBaseSI <= 1e4 ? u.toBaseSI : u.toBaseSI.toExponential()} ${q.baseUnitSI}</code></td>
-          <td>${isZh ? (u.descZh || u.desc) : (u.descEn || u.desc)}</td>
-          <td style="text-align: center;">
+          <td class="col-sys"><span class="badge-system badge-${u.system.toLowerCase()}">${u.system}</span></td>
+          <td class="col-unit"><strong>${uLabel}</strong></td>
+          <td class="col-factor"><code>${factorStr} ${q.baseUnitSI}</code></td>
+          <td class="col-desc">
+            <span class="unit-desc-full">${descText}</span>
+            <div class="unit-desc-popover-wrapper">
+              <button type="button" class="btn-unit-desc-pop" aria-label="${isZh ? '檢視說明' : 'View description'}" title="${descText}">
+                <span class="desc-info-icon" aria-hidden="true">?</span>
+              </button>
+              <div class="unit-desc-tooltip-bubble" role="tooltip">
+                <div class="tooltip-bubble-header">${uLabel}</div>
+                <div class="tooltip-bubble-body">${descText}</div>
+              </div>
+            </div>
+          </td>
+          <td class="col-action" style="text-align: center;">
             <button type="button" class="btn-copy-chip btn-apply-conv" data-unit-id="${u.id}" title="${isZh ? '將此單位帶入下方換算器來源端' : 'Set as converter source'}">
-              🔄 ${isZh ? '帶入換算' : 'Convert'}
+              ${isZh ? '帶入換算' : 'Convert'}
             </button>
           </td>
         </tr>
-      `).join("");
+      `;
+      }).join("");
+
+      // 綁定行動版說明彈跳提示框事件
+      this.unitSpecTable.querySelectorAll(".btn-unit-desc-pop").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const wrapper = btn.closest(".unit-desc-popover-wrapper");
+          const isOpened = wrapper && wrapper.classList.contains("active");
+          this.unitSpecTable.querySelectorAll(".unit-desc-popover-wrapper.active").forEach(w => w.classList.remove("active"));
+          if (wrapper && !isOpened) {
+            wrapper.classList.add("active");
+          }
+        });
+      });
 
       // 綁定「帶入換算」按鈕事件
       this.unitSpecTable.querySelectorAll(".btn-apply-conv").forEach(btn => {

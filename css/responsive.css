@@ -1,5 +1,16 @@
 /* css/responsive.css - 手機版與響應式優化 (Mobile Optimization & iOS Safe Area) */
 
+/* 單位對照表在窄螢幕 (螢幕寬度 < 1024px) 下的寬度隔離與滾動體驗 */
+@media (max-width: 1024px) {
+  .sticky-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .unit-table {
+    min-width: 640px;
+  }
+}
+
 @media (max-width: 768px) {
   .navbar {
     padding-top: max(1rem, calc(env(safe-area-inset-top) + 0.65rem));
@@ -238,6 +249,57 @@
   .selected-qty-chip {
     width: 100%;
     box-sizing: border-box;
+  }
+
+  /* 單位規格對照表手機版 (< 768px) 欄位優化與無障礙觸控 */
+  .sticky-table-wrapper {
+    max-height: 420px;
+    border-radius: var(--radius-sm);
+  }
+
+  .unit-table {
+    min-width: 440px !important;
+  }
+
+  .th-full-text {
+    display: none !important;
+  }
+
+  .th-short-text {
+    display: inline !important;
+  }
+
+  .unit-table th.col-desc,
+  .unit-table td.col-desc {
+    width: 58px !important;
+    min-width: 58px !important;
+    max-width: 58px !important;
+    text-align: center !important;
+    padding: 0.35rem 0.2rem !important;
+  }
+
+  .unit-desc-full {
+    display: none !important;
+  }
+
+  .unit-desc-popover-wrapper {
+    display: inline-flex !important;
+  }
+
+  .unit-table th.col-action,
+  .unit-table td.col-action {
+    width: 96px !important;
+    min-width: 96px !important;
+    padding: 0.4rem 0.35rem !important;
+    text-align: center !important;
+  }
+
+  .unit-table .btn-apply-conv {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    width: 100%;
+    padding: 0.45rem 0.5rem !important;
+    font-size: 0.8rem !important;
   }
 }
 

@@ -447,23 +447,6 @@ html:not(.dark) {
   border: 1px solid rgba(244, 63, 94, 0.3);
 }
 
-/* 10. 單位手冊固定表頭 (Sticky Table Header) */
-.sticky-table-wrapper {
-  max-height: 480px;
-  overflow-y: auto;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  scrollbar-width: thin;
-}
-
-.sticky-table-wrapper thead th {
-  position: sticky;
-  top: 0;
-  background: var(--surface-raised);
-  z-index: 5;
-  box-shadow: 0 1px 0 var(--border-color);
-}
-
 /* 11. 物理邊界防禦警告與場景過渡動效 */
 .input-highlight-pulse { animation: inputPulse 0.8s ease-out; }
 @keyframes inputPulse {
