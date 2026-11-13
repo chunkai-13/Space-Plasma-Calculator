@@ -17,6 +17,13 @@ class BuilderTabController {
 
     this.initDOM();
     this.bindEvents();
+
+    if (typeof AppStateStore !== "undefined") {
+      AppStateStore.subscribeKey("lang", () => {
+        this.render();
+        if (this.previewUI) this.previewUI.updateEquationPreview();
+      });
+    }
   }
 
   initDOM() {

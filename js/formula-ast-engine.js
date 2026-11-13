@@ -47,7 +47,7 @@ class FormulaASTEngine extends CalculatorCore {
   }
 
   /**
-   * 取得不透明文件狀態快照
+   * 取得不透明文件狀態快照 (不可變凍結物件)
    */
   getSnapshot() {
     let latex = "";
@@ -64,17 +64,19 @@ class FormulaASTEngine extends CalculatorCore {
       dimValidation = null;
     }
 
-    return {
-      terms: JSON.parse(JSON.stringify(this.tokens)),
+    return Object.freeze({
+      terms: Object.freeze(JSON.parse(JSON.stringify(this.tokens))),
       termCount: this.tokens.length,
       latex,
-      cursorTarget: { ...this.cursorTarget },
+      cursorTarget: Object.freeze({ ...this.cursorTarget }),
       canUndo: this.canUndo(),
       canRedo: this.canRedo(),
-      dimension: dimValidation,
+      result: this.lastResult,
       lastResult: this.lastResult,
+      dimensionState: dimValidation,
+      dimension: dimValidation,
       displaySystem: this.displaySystem
-    };
+    });
   }
 
   // =========================================================================
@@ -117,9 +119,13 @@ class FormulaASTEngine extends CalculatorCore {
 
   insertFrac(target = this.cursorTarget) {
     this.pushHistory();
-    const token = this.insertFraction(target);
+    const token = super.insertFraction(target);
     this.notify();
     return token;
+  }
+
+  insertFraction(target = this.cursorTarget) {
+    return this.insertFrac(target);
   }
 
   insertOp(opValue, target = this.cursorTarget) {
@@ -143,6 +149,14 @@ class FormulaASTEngine extends CalculatorCore {
     return token;
   }
 
+  insertParentheses(power = 1, target = this.cursorTarget) {
+    this.pushHistory();
+    const openToken = this.insertOpenParen(target);
+    const closeToken = this.insertCloseParen(power, target);
+    this.notify();
+    return { open: openToken, close: closeToken };
+  }
+
   removeTerm(tokenIdOrIndex, target = this.cursorTarget) {
     this.pushHistory();
     if (typeof tokenIdOrIndex === "number") {
@@ -161,9 +175,13 @@ class FormulaASTEngine extends CalculatorCore {
 
   clearDocument() {
     this.pushHistory();
-    this.clear();
+    super.clear();
     this.lastResult = null;
     this.notify();
+  }
+
+  clear() {
+    this.clearDocument();
   }
 
   undoAction() {

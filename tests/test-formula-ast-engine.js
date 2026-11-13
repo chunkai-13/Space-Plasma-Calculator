@@ -20,20 +20,31 @@ print("==================================================");
 print(" FormulaASTEngine Automated Test Suite");
 print("==================================================");
 
-// Test 1: 初始化狀態
+// Test 1: 初始化狀態與不可變快照
 var engine = new FormulaASTEngine();
 var snap0 = engine.getSnapshot();
 assert(snap0.termCount === 0, "初始項目數應為 0");
 assert(snap0.canUndo === false, "初始不能 Undo");
 assert(snap0.canRedo === false, "初始不能 Redo");
-print("[✓] Test 1: 初始狀態檢驗通過");
+assert(Object.isFrozen(snap0), "快照物件應被凍結 (Immutable)");
+assert(Object.isFrozen(snap0.terms), "快照內部 terms 陣列應被凍結");
+print("[✓] Test 1: 初始狀態檢驗與不可變快照通過");
 
 // Test 2: 語意插入與快照更新
 engine.insertQty({ quantityId: "magnetic_field", unitId: "nT", numberValue: 20 });
 var snap1 = engine.getSnapshot();
 assert(snap1.termCount === 1, "插入物理量後項目數應為 1");
 assert(snap1.canUndo === true, "插入項目後應可 Undo");
-print("[✓] Test 2: 語意插入物理量通過");
+
+// 驗證語意方法 insertFraction, insertParentheses, clear
+var fracToken = engine.insertFraction();
+assert(fracToken && fracToken.type === "fraction", "insertFraction 應成功插入分式節點");
+var parens = engine.insertParentheses();
+assert(parens && parens.open && parens.close, "insertParentheses 應成功插入括號對");
+engine.clear();
+assert(engine.getSnapshot().termCount === 0, "clear 語意方法應清空文件");
+engine.insertQty({ quantityId: "magnetic_field", unitId: "nT", numberValue: 20 });
+print("[✓] Test 2: 語意變異介面 (insertFraction, insertParentheses, clear) 通過");
 
 // Test 3: 觀察者模式 (subscribe) 廣播
 var notified = false;

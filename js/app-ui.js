@@ -15,6 +15,9 @@ class ModernUIController {
     this.currentEnvPreset = "solar_wind_1au";
     this.isParsingFromInput = false;
     this.initClipboardHelpers();
+    if (typeof AppStateStore !== "undefined") {
+      AppStateStore.subscribeKey("lang", () => this.updateDimensionBadge());
+    }
   }
 
   // =========================================================================

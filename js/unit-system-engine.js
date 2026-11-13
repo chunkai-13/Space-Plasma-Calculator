@@ -311,6 +311,22 @@ class UnitSystemEngine {
   }
 
   /**
+   * 常數識別碼別名字典
+   * @private
+   */
+  static _constantAliases = {
+    "epsilon0": "eps0",
+    "\\varepsilon_0": "eps0",
+    "varepsilon_0": "eps0",
+    "\\epsilon_0": "eps0",
+    "\\mu_0": "mu0",
+    "k_B": "kB",
+    "m_p": "mp",
+    "m_e": "me",
+    "R_E": "RE"
+  };
+
+  /**
    * 取得物理常數 (支援多制度值轉換：SI, CGS, Space)
    * @param {string} constantId - 常數 ID (例如 'c', 'kB', 'mu0')
    * @param {string} [targetSystem='SI'] - 目標單位制度 ('SI', 'CGS', 'Space')
@@ -318,11 +334,12 @@ class UnitSystemEngine {
    */
   static getConstant(constantId, targetSystem = "SI") {
     if (typeof PHYSICAL_CONSTANTS === "undefined") return null;
-    const baseConst = PHYSICAL_CONSTANTS[constantId];
+    const resolvedId = this._constantAliases[constantId] || constantId;
+    const baseConst = PHYSICAL_CONSTANTS[resolvedId];
     if (!baseConst) return null;
 
     const sysKey = (targetSystem === "CGS" || targetSystem === "Space") ? targetSystem : "SI";
-    const multiSys = this._multiSystemConstants[constantId];
+    const multiSys = this._multiSystemConstants[resolvedId];
 
     let resolvedValue = baseConst.value;
     let resolvedUnit = baseConst.unit;

@@ -66,7 +66,12 @@ assert(constC_Space.value === 299792.458, "Space 光速應為 299,792.458 km/s")
 
 var constKB_Space = UnitSystemEngine.getConstant("kB", "Space");
 assert(constKB_Space.unit === "eV/K", "Space 制度波茲曼常數單位應為 eV/K");
-print("[✓] Test 6: 多制度常數查詢 (c, kB 於 SI/CGS/Space) 通過");
+
+var constEpsAlias = UnitSystemEngine.getConstant("\\varepsilon_0", "SI");
+assert(constEpsAlias && constEpsAlias.id === "eps0", "常數別名 \\varepsilon_0 應成功解析至 eps0");
+var constEps0 = UnitSystemEngine.getConstant("epsilon0", "SI");
+assert(constEps0 && constEps0.id === "eps0", "常數別名 epsilon0 應成功解析至 eps0");
+print("[✓] Test 6: 多制度常數查詢 (c, kB, \\varepsilon_0 於 SI/CGS/Space) 通過");
 
 // Test 7: 跨制度對照矩陣結構檢驗
 var comparison = UnitSystemEngine.getSystemComparison();

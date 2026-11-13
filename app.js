@@ -82,8 +82,11 @@ class SpacePlasmaApp {
     const validTabs = ["presets", "builder", "units"];
     const activeTab = validTabs.includes(tabKey) ? tabKey : "presets";
 
-    AppStateStore.setActiveTab(activeTab);
-    this.syncTabDOM(activeTab, updateHash);
+    if (AppStateStore.get("activeTab") === activeTab) {
+      this.syncTabDOM(activeTab, updateHash);
+    } else {
+      AppStateStore.setActiveTab(activeTab);
+    }
   }
 
   syncTabDOM(activeTab, updateHash = true) {
@@ -340,22 +343,6 @@ class SpacePlasmaApp {
       this.langToggleBtn.textContent = dict.langName;
     }
     this.applyTheme(AppStateStore.get("theme"));
-
-    if (this.builderTab && this.builderTab.previewUI) {
-      this.builderTab.previewUI.updateEquationPreview();
-    }
-    if (this.lookupTab) {
-      this.lookupTab.render();
-    }
-    if (this.equationsTab) {
-      this.equationsTab.render();
-    }
-    if (this.modernUI) {
-      this.modernUI.updateDimensionBadge();
-    }
-    if (this.presetState) {
-      this.presetState.updateUIState();
-    }
   }
 }
 

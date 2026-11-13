@@ -11,6 +11,9 @@ class LookupTabController {
       : (typeof PHYSICAL_QUANTITIES !== "undefined" ? PHYSICAL_QUANTITIES[0] : null);
     this.initDOM();
     this.bindEvents();
+    if (typeof AppStateStore !== "undefined") {
+      AppStateStore.subscribeKey("lang", () => this.render());
+    }
   }
 
   initDOM() {

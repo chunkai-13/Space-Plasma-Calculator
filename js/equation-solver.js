@@ -47,6 +47,13 @@ class EquationSolver {
    */
   static detectUnitSystem(uStr, isZh = true) {
     if (!uStr) return "";
+    if (typeof UnitSystemEngine !== "undefined" && typeof UnitSystemEngine.detectUnitSystem === "function") {
+      const sys = UnitSystemEngine.detectUnitSystem(uStr);
+      if (sys === "Dimensionless") return isZh ? "無因次" : "Dimensionless";
+      if (sys === "Space") return isZh ? "太空常用制" : "Space";
+      if (sys === "CGS") return isZh ? "高斯制" : "CGS";
+      return isZh ? "SI 制" : "SI";
+    }
     const s = uStr.trim();
     if (s === "1" || s === "" || s.includes("無因次") || s.includes("比值") || s.toLowerCase().includes("ratio") || s.toLowerCase().includes("dimensionless")) {
       return isZh ? "無因次" : "Dimensionless";
@@ -54,11 +61,8 @@ class EquationSolver {
     const token = s.replace(/[\(\)\[\]]/g, "").trim();
     const SP = ["nT", "gamma", "γ", "km", "km/s", "c", "eV", "keV", "MeV", "GeV", "nPa", "pPa", "kHz", "MHz", "GHz", "mHz", "ms", "μs", "us", "ns", "cm⁻³", "cm^-3", "cc", "/cm³", "RE", "AU", "eV/nT"];
     const CGS = ["G", "Gauss", "dyn/cm²", "dyn/cm^2", "dyn", "erg", "erg/G", "cm", "cm/s", "g/cm³", "barye"];
-    const SI = ["T", "Tesla", "m", "m/s", "s", "Hz", "rad/s", "Pa", "J", "K", "kg/m³", "m⁻³", "m^-3", "A", "V/m", "A/m²", "N", "W"];
-    const hasU = arr => arr.some(u => token === u || token.startsWith(u + " ") || token.endsWith(" " + u) || token.startsWith(u + "/") || token.endsWith("/" + u));
-    if (hasU(SP)) return isZh ? "太空常用制" : "Space";
-    if (hasU(CGS)) return isZh ? "高斯制" : "CGS";
-    if (hasU(SI)) return isZh ? "SI 制" : "SI";
+    if (SP.some(u => token === u || token.startsWith(u + " ") || token.endsWith(" " + u) || token.startsWith(u + "/") || token.endsWith("/" + u))) return isZh ? "太空常用制" : "Space";
+    if (CGS.some(u => token === u || token.startsWith(u + " ") || token.endsWith(" " + u) || token.startsWith(u + "/") || token.endsWith("/" + u))) return isZh ? "高斯制" : "CGS";
     return isZh ? "SI 制" : "SI";
   }
 

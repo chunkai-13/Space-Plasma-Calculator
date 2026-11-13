@@ -102,6 +102,9 @@ class PresetStateManager {
     this.isDirty = false;
     this.tolerance = 1e-6; // 浮點數比對容差
     this.initDOM();
+    if (typeof AppStateStore !== "undefined") {
+      AppStateStore.subscribeKey("lang", () => this.updateUIState());
+    }
   }
 
   initDOM() {

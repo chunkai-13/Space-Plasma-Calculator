@@ -1,59 +1,44 @@
 /**
- * js/tab-equations.js - 分頁三：常用太空物理方程式庫控制器
+ * js/tab-equations.js - 分頁三：常用太空物理方程式庫視圖適配器 (View Adapter)
+ * 委派 EquationSolver 進行物理邊界斷言、數值解算與標尺映射 (< 260 行)
  */
 
 class EquationsTabController {
   constructor(app) {
     this.app = app;
-    this.selectedEquation = EQUATIONS_DATABASE[0];
+    this.selectedEquation = typeof EQUATIONS_DATABASE !== "undefined" ? EQUATIONS_DATABASE[0] : null;
     this.initDOM();
     this.bindEvents();
+    if (typeof AppStateStore !== "undefined") {
+      AppStateStore.subscribeKey("lang", () => this.render());
+    }
   }
 
   initDOM() {
-    this.eqCatSelect = document.getElementById("eq-cat-select");
-    this.eqSelect = document.getElementById("eq-select");
-    this.eqSearch = document.getElementById("eq-search-input");
-    this.btnClearSearch = document.getElementById("btn-clear-eq-search");
-    this.searchFeedback = document.getElementById("eq-search-feedback");
-    this.eqInputsContainer = document.getElementById("eq-inputs-container");
-    this.btnComputeEq = document.getElementById("btn-compute-eq");
-    this.eqResultBox = document.getElementById("eq-result-box");
-    this.formulaEl = document.getElementById("eq-formula-display");
-    this.descEl = document.getElementById("eq-desc-display");
+    [
+      ["eqCatSelect", "eq-cat-select"], ["eqSelect", "eq-select"],
+      ["eqSearch", "eq-search-input"], ["btnClearSearch", "btn-clear-eq-search"],
+      ["searchFeedback", "eq-search-feedback"], ["eqInputsContainer", "eq-inputs-container"],
+      ["btnComputeEq", "btn-compute-eq"], ["eqResultBox", "eq-result-box"],
+      ["formulaEl", "eq-formula-display"], ["descEl", "eq-desc-display"]
+    ].forEach(([prop, id]) => { this[prop] = document.getElementById(id); });
   }
 
   bindEvents() {
-    if (this.eqCatSelect) {
-      this.eqCatSelect.addEventListener("change", () => this.filterEquationsByCategory(this.eqCatSelect.value));
-    }
-    if (this.eqSelect) {
-      this.eqSelect.addEventListener("change", () => {
-        const eq = EQUATIONS_DATABASE.find(e => e.id === this.eqSelect.value);
-        if (eq) { this.selectedEquation = eq; this.renderEquationDetail(); this.highlightFormula(); }
-      });
-    }
+    this.eqCatSelect?.addEventListener("change", () => this.filterEquationsByCategory(this.eqCatSelect.value));
+    this.eqSelect?.addEventListener("change", () => {
+      const eq = EQUATIONS_DATABASE.find(e => e.id === this.eqSelect.value);
+      if (eq) { this.selectedEquation = eq; this.renderEquationDetail(); this.highlightFormula(); }
+    });
 
     if (this.eqSearch) {
-      const handleSearch = () => { this.searchEquations(this.eqSearch.value); };
-      this.eqSearch.addEventListener("input", handleSearch);
-      this.eqSearch.addEventListener("change", handleSearch);
-      this.eqSearch.addEventListener("compositionend", handleSearch);
-      this.eqSearch.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          this.searchEquations(this.eqSearch.value);
-          this.highlightFormula();
-        }
-      });
+      const onSearch = () => this.searchEquations(this.eqSearch.value);
+      ["input", "change", "compositionend"].forEach(ev => this.eqSearch.addEventListener(ev, onSearch));
+      this.eqSearch.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); onSearch(); this.highlightFormula(); } });
     }
 
-    if (this.btnClearSearch) {
-      this.btnClearSearch.addEventListener("click", () => this.clearSearch());
-    }
-    if (this.btnComputeEq) {
-      this.btnComputeEq.addEventListener("click", () => this.computeCurrentEquation());
-    }
+    this.btnClearSearch?.addEventListener("click", () => this.clearSearch());
+    this.btnComputeEq?.addEventListener("click", () => this.computeCurrentEquation());
   }
 
   clearSearch() {
@@ -65,33 +50,25 @@ class EquationsTabController {
 
   highlightFormula() {
     const card = document.querySelector("#tab-equations .formula-display-card") || this.formulaEl;
-    if (card) {
-      card.classList.remove("highlight-flash");
-      void card.offsetWidth;
-      card.classList.add("highlight-flash");
-    }
+    if (card) { card.classList.remove("highlight-flash"); void card.offsetWidth; card.classList.add("highlight-flash"); }
   }
 
   render() {
     if (!this.eqCatSelect) return;
-    const isZh = this.app.currentLang === "zh";
-    this.eqCatSelect.innerHTML = `<option value="all">${I18N[this.app.currentLang].allEqCats}</option>${EQUATION_CATEGORIES.map(c => `<option value="${c.id}">${isZh ? c.nameZh : c.nameEn}</option>`).join("")}`;
-
-    if (this.eqSearch && this.eqSearch.value.trim()) {
-      this.searchEquations(this.eqSearch.value);
-    } else {
-      this.filterEquationsByCategory("all");
-    }
+    const isZh = (typeof AppStateStore !== "undefined" ? AppStateStore.get("lang") : this.app.currentLang) === "zh";
+    const dict = (typeof I18N !== "undefined" && I18N[isZh ? "zh" : "en"]) || { allEqCats: "所有分類" };
+    this.eqCatSelect.innerHTML = `<option value="all">${dict.allEqCats}</option>${EQUATION_CATEGORIES.map(c => `<option value="${c.id}">${isZh ? c.nameZh : c.nameEn}</option>`).join("")}`;
+    if (this.eqSearch && this.eqSearch.value.trim()) this.searchEquations(this.eqSearch.value);
+    else this.filterEquationsByCategory(this.eqCatSelect.value || "all");
   }
 
   filterEquationsByCategory(catId) {
     if (!this.eqSelect) return;
-    const isZh = this.app.currentLang === "zh";
+    const isZh = (typeof AppStateStore !== "undefined" ? AppStateStore.get("lang") : this.app.currentLang) === "zh";
     const filtered = catId === "all" ? EQUATIONS_DATABASE : EQUATIONS_DATABASE.filter(e => e.category === catId);
     if (this.eqCatSelect && this.eqCatSelect.value !== catId) this.eqCatSelect.value = catId;
     document.querySelectorAll(".eq-filter-pill").forEach(p => p.classList.toggle("active", p.getAttribute("data-cat") === catId));
     this.eqSelect.innerHTML = filtered.map(e => `<option value="${e.id}">${isZh ? e.nameZh : e.nameEn}</option>`).join("");
-
     if (filtered.length > 0) {
       this.selectedEquation = filtered[0];
       this.eqSelect.value = filtered[0].id;
@@ -101,31 +78,20 @@ class EquationsTabController {
 
   searchEquations(keyword) {
     if (!this.eqSelect) return;
-    const isZh = this.app.currentLang === "zh";
+    const isZh = (typeof AppStateStore !== "undefined" ? AppStateStore.get("lang") : this.app.currentLang) === "zh";
     const rawKw = keyword.trim().toLowerCase();
-    const cleanKw = rawKw.replace(/[-\s_]/g, "");
     if (!rawKw) { this.clearSearch(); return; }
     if (this.btnClearSearch) this.btnClearSearch.style.display = "block";
 
-    const synKws = [rawKw];
-    if (rawKw.includes("震波")) synKws.push(rawKw.replace(/震波/g, "激波"));
-    if (rawKw.includes("激波")) synKws.push(rawKw.replace(/激波/g, "震波"));
-    if (rawKw.includes("shock")) synKws.push("jump");
-
+    const syns = [rawKw, rawKw.replace(/震波/g, "激波"), rawKw.replace(/激波/g, "震波")];
     const matches = EQUATIONS_DATABASE.filter(e => {
       const nZh = e.nameZh.toLowerCase(), nEn = e.nameEn.toLowerCase();
       const dZh = (e.descZh || "").toLowerCase(), dEn = (e.descEn || "").toLowerCase();
-      const latex = (e.formulaLatex || "").toLowerCase();
-      const catObj = EQUATION_CATEGORIES.find(c => c.id === e.category);
-      const catZh = catObj ? catObj.nameZh.toLowerCase() : "", catEn = catObj ? catObj.nameEn.toLowerCase() : "";
-
-      const basicMatch = synKws.some(k => nZh.includes(k) || nEn.includes(k) || dZh.includes(k) || dEn.includes(k) || latex.includes(k) || catZh.includes(k) || catEn.includes(k));
-      if (basicMatch || nEn.replace(/[-\s_]/g, "").includes(cleanKw) || e.id.toLowerCase().replace(/[-\s_]/g, "").includes(cleanKw)) return true;
-
-      return e.inputs && e.inputs.some(inp => {
-        const id = (inp.id || "").toLowerCase(), zh = (inp.nameZh || "").toLowerCase(), en = (inp.nameEn || "").toLowerCase();
-        return id.includes(rawKw) || zh.includes(rawKw) || en.includes(rawKw);
-      });
+      const cat = EQUATION_CATEGORIES.find(c => c.id === e.category);
+      const catZh = cat ? cat.nameZh.toLowerCase() : "", catEn = cat ? cat.nameEn.toLowerCase() : "";
+      if (syns.some(k => nZh.includes(k) || nEn.includes(k) || dZh.includes(k) || dEn.includes(k) || (e.formulaLatex || "").toLowerCase().includes(k) || catZh.includes(k) || catEn.includes(k))) return true;
+      if (nEn.replace(/[-\s_]/g, "").includes(rawKw.replace(/[-\s_]/g, "")) || e.id.toLowerCase().replace(/[-\s_]/g, "").includes(rawKw.replace(/[-\s_]/g, ""))) return true;
+      return e.inputs?.some(i => (i.id || "").toLowerCase().includes(rawKw) || (i.nameZh || "").toLowerCase().includes(rawKw) || (i.nameEn || "").toLowerCase().includes(rawKw));
     });
 
     if (matches.length > 0) {
@@ -144,39 +110,29 @@ class EquationsTabController {
 
   renderSearchFeedback(matches, kw) {
     if (!this.searchFeedback) return;
-    const isZh = this.app.currentLang === "zh";
-    const countText = isZh ? `找到 ${matches.length} 個與「${kw}」相符的方程式：` : `Found ${matches.length} matching equation(s) for "${kw}":`;
-
+    const isZh = (typeof AppStateStore !== "undefined" ? AppStateStore.get("lang") : this.app.currentLang) === "zh";
     this.searchFeedback.innerHTML = `
-      <div class="search-count-text">${countText}</div>
-      <div class="search-chips-list">
-        ${matches.map(e => `<button type="button" class="search-chip ${e.id === this.selectedEquation.id ? 'active' : ''}" data-eid="${e.id}">${isZh ? e.nameZh : e.nameEn}</button>`).join("")}
-      </div>
+      <div class="search-count-text">${isZh ? `找到 ${matches.length} 個與「${kw}」相符的方程式：` : `Found ${matches.length} matching equation(s) for "${kw}":`}</div>
+      <div class="search-chips-list">${matches.map(e => `<button type="button" class="search-chip ${e.id === this.selectedEquation.id ? 'active' : ''}" data-eid="${e.id}">${isZh ? e.nameZh : e.nameEn}</button>`).join("")}</div>
     `;
-
     this.searchFeedback.querySelectorAll(".search-chip").forEach(btn => {
       btn.addEventListener("click", () => {
-        const eid = btn.getAttribute("data-eid");
-        const targetEq = EQUATIONS_DATABASE.find(x => x.id === eid);
+        const targetEq = EQUATIONS_DATABASE.find(x => x.id === btn.getAttribute("data-eid"));
         if (!targetEq) return;
         this.selectedEquation = targetEq;
         if (this.eqSelect) this.eqSelect.value = targetEq.id;
         if (this.eqCatSelect) this.eqCatSelect.value = targetEq.category;
         this.renderEquationDetail();
         this.highlightFormula();
-        this.searchFeedback.querySelectorAll(".search-chip").forEach(c => c.classList.toggle("active", c.getAttribute("data-eid") === eid));
+        this.searchFeedback.querySelectorAll(".search-chip").forEach(c => c.classList.toggle("active", c.getAttribute("data-eid") === targetEq.id));
       });
     });
   }
 
   renderSearchEmpty(kw) {
     if (!this.searchFeedback) return;
-    const isZh = this.app.currentLang === "zh";
-    this.searchFeedback.innerHTML = `
-      <div class="search-empty-hint">
-        ${isZh ? `查無與「<strong>${kw}</strong>」相符的方程式。請嘗試輸入名稱（如 Alfven、迴旋）、代號（v_A）或分類。` : `No equation matched "<strong>${kw}</strong>". Try searching by name, symbol, or category.`}
-      </div>
-    `;
+    const isZh = (typeof AppStateStore !== "undefined" ? AppStateStore.get("lang") : this.app.currentLang) === "zh";
+    this.searchFeedback.innerHTML = `<div class="search-empty-hint">${isZh ? `查無與「<strong>${kw}</strong>」相符的方程式。請嘗試名稱、代號或分類。` : `No equation matched "<strong>${kw}</strong>".`}</div>`;
     if (this.formulaEl) this.formulaEl.textContent = isZh ? "（查無符合方程式）" : "(No matching equation)";
     if (this.descEl) this.descEl.textContent = isZh ? "請修改或清空搜尋字詞以重新瀏覽方程式庫。" : "Please clear or revise your search keywords.";
     if (this.eqInputsContainer) this.eqInputsContainer.innerHTML = "";
@@ -185,14 +141,11 @@ class EquationsTabController {
   renderEquationDetail() {
     const eq = this.selectedEquation;
     if (!eq) return;
-    const isZh = this.app.currentLang === "zh";
+    const isZh = (typeof AppStateStore !== "undefined" ? AppStateStore.get("lang") : this.app.currentLang) === "zh";
 
     if (window.katex && eq.formulaLatex && this.formulaEl) {
-      try {
-        window.katex.render(eq.formulaLatex, this.formulaEl, { displayMode: true, throwOnError: false });
-      } catch (e) {
-        this.formulaEl.textContent = eq.formulaLatex;
-      }
+      try { window.katex.render(eq.formulaLatex, this.formulaEl, { displayMode: true, throwOnError: false }); }
+      catch (_) { this.formulaEl.textContent = eq.formulaLatex; }
     } else if (this.formulaEl) {
       this.formulaEl.textContent = eq.formulaLatex;
     }
@@ -204,229 +157,103 @@ class EquationsTabController {
     eq.inputs.forEach(input => {
       const row = document.createElement("div");
       row.className = "form-row eq-param-row";
-
       if (input.type === "select") {
-        row.innerHTML = `
-          <div class="form-group flex-2">
-            <label class="form-label">${isZh ? input.nameZh : input.nameEn}</label>
-            <select class="form-select eq-param-input" data-param="${input.id}">
-              ${input.options.map(opt => `<option value="${opt.value}" ${opt.value === input.default ? "selected" : ""}>${isZh ? opt.labelZh : opt.labelEn}</option>`).join("")}
-            </select>
-          </div>
-        `;
+        row.innerHTML = `<div class="form-group flex-2"><label class="form-label">${isZh ? input.nameZh : input.nameEn}</label><select class="form-select eq-param-input" data-param="${input.id}">${input.options.map(opt => `<option value="${opt.value}" ${opt.value === input.default ? "selected" : ""}>${isZh ? opt.labelZh : opt.labelEn}</option>`).join("")}</select></div>`;
       } else {
-        const qDef = input.unitCategory ? PHYSICAL_QUANTITIES.find(q => q.id === input.unitCategory) : null;
-        let unitSelectHtml = "";
-        if (qDef) {
-          unitSelectHtml = `
-            <select class="smart-unit-select eq-param-unit" data-param="${input.id}" title="${isZh ? '切換單位 (自動無損換算)' : 'Switch unit (Auto-convert)'}">
-              ${qDef.units.map(u => `<option value="${u.id}" ${u.id === input.defaultUnit ? "selected" : ""}>${isZh ? (u.labelZh || u.label) : (u.labelEn || u.label)}</option>`).join("")}
-            </select>
-          `;
-        }
-
-        row.innerHTML = `
-          <div class="form-group flex-1">
-            <label class="form-label">${isZh ? input.nameZh : input.nameEn}</label>
-            <div class="smart-input-group">
-              <input type="number" step="any" class="smart-input-field eq-param-input" data-param="${input.id}" value="${input.default}">
-              ${unitSelectHtml}
-            </div>
-          </div>
-        `;
+        const qDef = (typeof UnitSystemEngine !== "undefined" && input.unitCategory) ? UnitSystemEngine.getQuantity(input.unitCategory) : (input.unitCategory && typeof PHYSICAL_QUANTITIES !== "undefined" ? PHYSICAL_QUANTITIES.find(q => q.id === input.unitCategory) : null);
+        const unitHtml = qDef ? `<select class="smart-unit-select eq-param-unit" data-param="${input.id}" title="${isZh ? '切換單位' : 'Switch unit'}">${qDef.units.map(u => `<option value="${u.id}" ${u.id === input.defaultUnit ? "selected" : ""}>${isZh ? (u.labelZh || u.label) : (u.labelEn || u.label)}</option>`).join("")}</select>` : "";
+        row.innerHTML = `<div class="form-group flex-1"><label class="form-label">${isZh ? input.nameZh : input.nameEn}</label><div class="smart-input-group"><input type="number" step="any" class="smart-input-field eq-param-input" data-param="${input.id}" value="${input.default}">${unitHtml}</div></div>`;
       }
       this.eqInputsContainer.appendChild(row);
     });
 
-    if (this.app && this.app.modernUI) {
-      this.app.modernUI.bindSmartInputEvents(this.eqInputsContainer, () => this.computeCurrentEquation());
-    }
-    if (this.app && this.app.presetState) {
-      this.app.presetState.takeBaselineSnapshot();
-    }
+    this.app?.modernUI?.bindSmartInputEvents(this.eqInputsContainer, () => this.computeCurrentEquation());
+    this.app?.presetState?.takeBaselineSnapshot();
     this.computeCurrentEquation();
-  }
-
-  assertPhysicalBoundary(param, rawVal, uDef, isZh) {
-    return EquationSolver.assertPhysicalBoundary(param, rawVal, uDef, isZh);
   }
 
   computeCurrentEquation() {
     const eq = this.selectedEquation;
     if (!eq || !this.eqInputsContainer) return;
-    const isZh = this.app.currentLang === "zh";
+    const isZh = (typeof AppStateStore !== "undefined" ? AppStateStore.get("lang") : this.app.currentLang) === "zh";
 
-    // 清除既有錯誤標記與抖動動畫
-    this.eqInputsContainer.querySelectorAll(".smart-input-group, .form-input, .eq-param-input").forEach(el => {
-      el.classList.remove("smart-input-error", "input-shake");
-    });
+    this.eqInputsContainer.querySelectorAll(".smart-input-group, .form-input, .eq-param-input").forEach(el => el.classList.remove("smart-input-error", "input-shake"));
 
-    // 收集 rawInputs 與 inputUnits
     const rawInputs = {}, inputUnits = {};
     eq.inputs.forEach(param => {
+      const inputEl = this.eqInputsContainer.querySelector(`.eq-param-input[data-param="${param.id}"]`);
       if (param.type === "select") {
-        const selectEl = this.eqInputsContainer.querySelector(`.eq-param-input[data-param="${param.id}"]`);
-        rawInputs[param.id] = selectEl ? selectEl.value : param.default;
+        rawInputs[param.id] = inputEl ? inputEl.value : param.default;
       } else {
-        const inputEl = this.eqInputsContainer.querySelector(`.eq-param-input[data-param="${param.id}"]`);
         rawInputs[param.id] = inputEl ? parseFloat(inputEl.value) : (param.default || 0);
         if (param.unitCategory) {
           const unitEl = this.eqInputsContainer.querySelector(`.eq-param-unit[data-param="${param.id}"]`);
-          const qDef = PHYSICAL_QUANTITIES.find(q => q.id === param.unitCategory);
+          const qDef = (typeof UnitSystemEngine !== "undefined") ? UnitSystemEngine.getQuantity(param.unitCategory) : PHYSICAL_QUANTITIES.find(q => q.id === param.unitCategory);
           inputUnits[param.id] = qDef ? qDef.units.find(u => u.id === (unitEl ? unitEl.value : param.defaultUnit)) : null;
         }
       }
     });
 
-    // 呼叫 EquationSolver 核心評估接縫
     const result = EquationSolver.solve(eq, rawInputs, inputUnits, { isZh });
     if (result.hasError) {
       if (result.violatedParamId) {
-        const inputEl = this.eqInputsContainer.querySelector(`.eq-param-input[data-param="${result.violatedParamId}"]`);
-        const parentGroup = inputEl ? inputEl.closest(".smart-input-group") || inputEl : null;
-        if (parentGroup) {
-          parentGroup.classList.remove("input-shake");
-          void parentGroup.offsetWidth;
-          parentGroup.classList.add("smart-input-error", "input-shake");
-        }
+        const inp = this.eqInputsContainer.querySelector(`.eq-param-input[data-param="${result.violatedParamId}"]`);
+        const grp = inp ? inp.closest(".smart-input-group") || inp : null;
+        if (grp) { grp.classList.remove("input-shake"); void grp.offsetWidth; grp.classList.add("smart-input-error", "input-shake"); }
       }
       if (this.eqResultBox) {
-        this.eqResultBox.innerHTML = `
-          <div class="calc-error-banner input-shake" role="alert">
-            <span class="error-badge">!</span>
-            <div><strong>${isZh ? "【物理邊界防禦警告】" : "[Physical Boundary Warning]"}</strong> ${result.message}</div>
-          </div>
-        `;
+        this.eqResultBox.innerHTML = `<div class="calc-error-banner input-shake" role="alert"><span class="error-badge">!</span><div><strong>${isZh ? "【物理邊界防禦警告】" : "[Physical Boundary Warning]"}</strong> ${result.message}</div></div>`;
       }
       return;
     }
-
     this.renderEquationOutputs(result.outputs);
-  }
-
-  resolveMeterType(out) {
-    return EquationSolver.resolveMeterType(out);
-  }
-
-  cleanUnit(str) {
-    return EquationSolver.cleanUnit(str);
-  }
-
-  detectUnitSystem(uStr, isZh) {
-    return EquationSolver.detectUnitSystem(uStr, isZh);
   }
 
   renderEquationOutputs(outputs) {
     if (!this.eqResultBox) return;
-    const isZh = this.app.currentLang === "zh";
+    const isZh = (typeof AppStateStore !== "undefined" ? AppStateStore.get("lang") : this.app.currentLang) === "zh";
 
-    this.eqResultBox.innerHTML = `
-      <div class="eq-outputs-grid">
-        ${outputs.map((out, outIdx) => {
-          const baseUnitStr = out.baseUnitStr || this.cleanUnit(isZh ? (out.unitZh || out.unit) : (out.unitEn || out.unit));
-          const allUnits = out.allUnits || [{ label: baseUnitStr, value: out.value, isBase: true }];
-          out._allUnits = allUnits;
+    this.eqResultBox.innerHTML = `<div class="eq-outputs-grid">${outputs.map((out, outIdx) => {
+      const baseUnit = out.baseUnitStr || out.unit || "";
+      const allUnits = out.allUnits || [{ label: baseUnit, value: out.value, isBase: true }];
+      out._allUnits = allUnits;
+      const fmtVal = this.formatNum(out.value);
+      const copyLatex = `${this.formatLatexNum(out.value)}\\text{ ${baseUnit}}`;
 
-          const formatted = this.formatNum(out.value);
-          const copyVal = out.value.toString();
-          const copyWithUnit = `${formatted} ${baseUnitStr}`;
-          const copyLatex = `${this.formatLatexNum(out.value)}\\text{ ${baseUnitStr}}`;
+      const altHtml = (out.altUnits && out.altUnits.length > 0) ? `<div class="eq-alt-units" id="eq-alt-units-${outIdx}">${out.altUnits.map(a => `<span>= <strong>${this.formatNum(a.value)}</strong> ${a.label} <span class="unit-sys-tag">[${a.system}]</span></span>`).join(" ")}</div>` : "";
+      const meterHtml = (typeof ModernUIController !== "undefined" && out.meterType) ? ModernUIController.renderContextMeter(out.value, out.meterType, out.unit || "", isZh) : "";
+      const baseSysTag = out.baseSystem ? ` <span class="unit-sys-badge">[${out.baseSystem}]</span>` : "";
 
-          let altHtml = "";
-          if (out.altUnits && out.altUnits.length > 0) {
-            altHtml = `
-              <div class="eq-alt-units" id="eq-alt-units-${outIdx}">
-                ${out.altUnits.map(a => {
-                  const lbl = this.cleanUnit(isZh ? (a.labelZh || a.label) : (a.labelEn || a.label));
-                  const sys = this.detectUnitSystem(lbl, isZh);
-                  return `<span>= <strong>${this.formatNum(a.value)}</strong> ${lbl} <span class="unit-sys-tag">[${sys}]</span></span>`;
-                }).join(" ")}
-              </div>
-            `;
-          }
+      const selHtml = allUnits.length > 1
+        ? `<select class="smart-unit-select eq-out-unit-select" data-out-idx="${outIdx}" title="${isZh ? '切換輸出單位' : 'Switch output unit'}" style="margin-left: 0.5rem; font-size: 0.95rem; vertical-align: middle;">${allUnits.map((u, i) => `<option value="${i}">${u.label}${u.system ? ` [${u.system}]` : ''}</option>`).join("")}</select>`
+        : `<span class="unit-str">${baseUnit}</span>${baseSysTag}`;
 
-          const mType = out.meterType || this.resolveMeterType(out);
-          const meterHtml = (typeof ModernUIController !== "undefined" && mType)
-            ? ModernUIController.renderContextMeter(out.value, mType, out.unit || "", isZh) : "";
+      return `<div class="modern-result-card" id="modern-result-card-${outIdx}">
+        <div class="result-card-header"><div class="result-val-title">${isZh ? out.labelZh : out.labelEn}</div><div class="result-actions-bar">
+          <button type="button" class="btn-copy-chip btn-copy-val" data-copy-text="${out.value}" title="${isZh ? '複製數值' : 'Copy value'}">${isZh ? '數值' : 'Value'}</button>
+          <button type="button" class="btn-copy-chip btn-copy-with-unit" data-copy-text="${fmtVal} ${baseUnit}" title="${isZh ? '複製帶單位' : 'Copy with unit'}">${isZh ? '帶單位' : 'With Unit'}</button>
+          <button type="button" class="btn-copy-chip btn-copy-latex" data-copy-text="${copyLatex}" title="LaTeX">LaTeX</button>
+        </div></div>
+        <div class="result-val-display"><span class="val">${fmtVal}</span>${selHtml}</div>
+        ${altHtml}${meterHtml}
+      </div>`;
+    }).join("")}</div>`;
 
-          const baseSys = out.baseSystem || this.detectUnitSystem(baseUnitStr, isZh);
-          const baseSysTag = baseSys ? ` <span class="unit-sys-badge">[${baseSys}]</span>` : '';
-          const unitSelectorHtml = allUnits.length > 1
-            ? `<select class="smart-unit-select eq-out-unit-select" data-out-idx="${outIdx}" title="${isZh ? '切換輸出單位' : 'Switch output unit'}" style="margin-left: 0.5rem; font-size: 0.95rem; vertical-align: middle;">
-                ${allUnits.map((u, uIdx) => {
-                  const sys = u.system || this.detectUnitSystem(u.label, isZh);
-                  const sysTag = sys ? ` [${sys}]` : '';
-                  return `<option value="${uIdx}">${u.label}${sysTag}</option>`;
-                }).join("")}
-              </select>`
-            : `<span class="unit-str">${baseUnitStr}</span>${baseSysTag}`;
-
-          return `
-            <div class="modern-result-card" id="modern-result-card-${outIdx}">
-              <div class="result-card-header">
-                <div class="result-val-title">${isZh ? out.labelZh : out.labelEn}</div>
-                <div class="result-actions-bar">
-                  <button type="button" class="btn-copy-chip btn-copy-val" data-copy-text="${copyVal}" title="${isZh ? '複製數值' : 'Copy value'}">${isZh ? '數值' : 'Value'}</button>
-                  <button type="button" class="btn-copy-chip btn-copy-with-unit" data-copy-text="${copyWithUnit}" title="${isZh ? '複製帶單位' : 'Copy with unit'}">${isZh ? '帶單位' : 'With Unit'}</button>
-                  <button type="button" class="btn-copy-chip btn-copy-latex" data-copy-text="${copyLatex}" title="LaTeX">LaTeX</button>
-                </div>
-              </div>
-              <div class="result-val-display">
-                <span class="val">${formatted}</span>
-                ${unitSelectorHtml}
-              </div>
-              ${altHtml}
-              ${meterHtml}
-            </div>
-          `;
-        }).join("")}
-      </div>
-    `;
-
-    // 綁定結果卡片上的單位切換事件
     this.eqResultBox.querySelectorAll(".eq-out-unit-select").forEach(sel => {
       sel.addEventListener("change", (e) => {
         const outIdx = parseInt(sel.getAttribute("data-out-idx"), 10);
-        const uIdx = parseInt(e.target.value, 10);
-        const out = outputs[outIdx];
-        if (!out) return;
-        const allUnits = out._allUnits || [];
-        const selected = allUnits[uIdx] || allUnits[0];
+        const selected = (outputs[outIdx]?._allUnits || [])[parseInt(e.target.value, 10)];
         const card = document.getElementById(`modern-result-card-${outIdx}`);
-        if (!card) return;
-
-        const formatted = this.formatNum(selected.value);
-        const valEl = card.querySelector(".val");
-        if (valEl) valEl.textContent = formatted;
-
-        // 同步更新複製按鈕
-        const btnVal = card.querySelector(".btn-copy-val");
-        const btnWithUnit = card.querySelector(".btn-copy-with-unit");
-        const btnLatex = card.querySelector(".btn-copy-latex");
-        btnVal?.setAttribute("data-copy-text", selected.value.toString());
-        btnWithUnit?.setAttribute("data-copy-text", `${formatted} ${selected.label}`);
-        btnLatex?.setAttribute("data-copy-text", `${this.formatLatexNum(selected.value)}\\text{ ${selected.label}}`);
-
-        // 同步更新下方 altUnits 顯示未選中的其他單位
-        const altBox = card.querySelector(`#eq-alt-units-${outIdx}`);
-        if (altBox) {
-          const restUnits = allUnits.filter((_, idx) => idx !== uIdx);
-          altBox.innerHTML = restUnits.map(ru => {
-            const sys = this.detectUnitSystem(ru.label, isZh);
-            return `<span>= <strong>${this.formatNum(ru.value)}</strong> ${ru.label} <span class="unit-sys-tag">[${sys}]</span></span>`;
-          }).join(" ");
-        }
+        if (!selected || !card) return;
+        const fmt = this.formatNum(selected.value);
+        card.querySelector(".val") && (card.querySelector(".val").textContent = fmt);
+        card.querySelector(".btn-copy-val")?.setAttribute("data-copy-text", selected.value.toString());
+        card.querySelector(".btn-copy-with-unit")?.setAttribute("data-copy-text", `${fmt} ${selected.label}`);
+        card.querySelector(".btn-copy-latex")?.setAttribute("data-copy-text", `${this.formatLatexNum(selected.value)}\\text{ ${selected.label}}`);
       });
     });
   }
 
-  formatNum(val) {
-    return Math.abs(val) < 1e-3 || Math.abs(val) >= 1e6
-      ? val.toExponential(4) : val.toLocaleString(undefined, { maximumFractionDigits: 4 });
-  }
-
-  formatLatexNum(val) {
-    return Math.abs(val) < 1e-3 || Math.abs(val) >= 1e6
-      ? val.toExponential(4).replace("e", "\\times 10^{") + "}" : this.formatNum(val);
-  }
+  formatNum(val) { return Math.abs(val) < 1e-3 || Math.abs(val) >= 1e6 ? val.toExponential(4) : val.toLocaleString(undefined, { maximumFractionDigits: 4 }); }
+  formatLatexNum(val) { return Math.abs(val) < 1e-3 || Math.abs(val) >= 1e6 ? val.toExponential(4).replace("e", "\\times 10^{") + "}" : this.formatNum(val); }
 }

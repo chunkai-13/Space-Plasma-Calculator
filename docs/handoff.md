@@ -1,6 +1,6 @@
 # 太空電漿物理計算與單位查詢工具 交接文檔（Handoff Documentation）
 
-文件版本：v6.1  
+文件版本：v6.2  
 更新日期：2026-11-13  
 專案儲存庫：chunkai-13/Space-Plasma-Calculator (main branch)
 
@@ -155,13 +155,13 @@ Space Plasma Calculator/
 
 ---
 
-## 四、 核心模組檔案行數稽核（截至 v6.1）
+## 四、 核心模組檔案行數稽核（截至 v6.2）
 
 依據 `./scripts/check-line-counts.sh` 執行結果，全專案 38 個原始碼與測試檔案均完全合規：
 
 | 檔案名稱 | 當前行數 | 規範上限 | 狀態 |
 | :--- | :--- | :--- | :--- |
-| `app.js` | 365 | 500 | 合格 OK |
+| `app.js` | 352 | 500 | 合格 OK |
 | `calculator.js` | 71 | 500 | 合格 OK |
 | `constants.js` | 357 | 500 | 合格 OK |
 | `equations.js` | 19 | 500 | 合格 OK |
@@ -178,27 +178,27 @@ Space Plasma Calculator/
 | `js/i18n.js` | 328 | 500 | 合格 OK |
 | `js/plasma-core.js` | 484 | 500 | 合格 OK |
 | `js/app-state-store.js` | 324 | 500 | 合格 OK |
-| `js/unit-system-engine.js` | 398 | 500 | 合格 OK |
-| `js/equation-solver.js` | 274 | 500 | 合格 OK |
-| `js/formula-ast-engine.js` | 403 | 500 | 合格 OK |
+| `js/unit-system-engine.js` | 415 | 500 | 合格 OK |
+| `js/equation-solver.js` | 278 | 500 | 合格 OK |
+| `js/formula-ast-engine.js` | 421 | 500 | 合格 OK |
 | `js/equations-particle.js` | 333 | 500 | 合格 OK |
 | `js/equations-mhd-waves.js` | 295 | 500 | 合格 OK |
 | `js/equations-kinetic-shocks.js` | 351 | 500 | 合格 OK |
-| `js/tab-equations.js` | 432 | 500 | 合格 OK |
-| `js/tab-lookup.js` | 389 | 500 | 合格 OK |
-| `js/preset-state-manager.js` | 302 | 500 | 合格 OK |
-| `js/app-ui.js` | 380 | 500 | 合格 OK |
+| `js/tab-equations.js` | 259 | 500 | 合格 OK |
+| `js/tab-lookup.js` | 392 | 500 | 合格 OK |
+| `js/preset-state-manager.js` | 305 | 500 | 合格 OK |
+| `js/app-ui.js` | 383 | 500 | 合格 OK |
 | `js/calculator-core.js` | 366 | 500 | 合格 OK |
 | `js/calculator-evaluator.js` | 313 | 500 | 合格 OK |
 | `js/calculator-formatter.js` | 261 | 500 | 合格 OK |
 | `js/builder-cards-items.js` | 272 | 500 | 合格 OK |
 | `js/builder-cards-list.js` | 369 | 500 | 合格 OK |
 | `js/builder-preview.js` | 374 | 500 | 合格 OK |
-| `js/tab-builder.js` | 195 | 500 | 合格 OK |
-| `tests/test-formula-ast-engine.js` | 93 | 500 | 合格 OK |
+| `js/tab-builder.js` | 202 | 500 | 合格 OK |
+| `tests/test-formula-ast-engine.js` | 104 | 500 | 合格 OK |
 | `tests/test-equation-solver.js` | 86 | 500 | 合格 OK |
-| `tests/test-unit-system-engine.js` | 87 | 500 | 合格 OK |
-| `tests/test-app-state-store.js` | 103 | 500 | 合格 OK |
+| `tests/test-unit-system-engine.js` | 92 | 500 | 合格 OK |
+| `tests/test-app-state-store.js` | 117 | 500 | 合格 OK |
 
 ---
 
@@ -218,7 +218,8 @@ Space Plasma Calculator/
 * **v5.8**：落實 ADR-009 深化公式 AST 運算引擎（`FormulaASTEngine`），封裝內部 Term Nodes 陣列，提供不透明文件直接語意變異介面、內部快照歷史棧（Undo/Redo）與單向響應觀察者接縫（`subscribe`）；重構 `app-ui.js` 與 `tab-builder.js` 消滅接縫洩漏，並建立 Headless 自動化單元測試套件（`tests/test-formula-ast-engine.js`），全數通過 500 行防線。
 * **v5.9**：落實 ADR-010 物理方程式求解深模組（`EquationSolver`），將參數邊界斷言（$B \le 0$、$n \le 0$ 等）、物理公式計算、替代單位與數量級標尺維度解析自視圖層完全解耦；`tab-equations.js` 行數自 496 行降至 432 行徹底解除行數警報，並建立 Headless 自動化單元測試套件（`tests/test-equation-solver.js`），實現純物理邏輯無 DOM 驗證。
 * **v6.0**：落實 ADR-011 單位制度與物理常數深模組（`UnitSystemEngine`），整合跨制度單位換算（SI、CGS、Space）、多制度常數解析（$c$、$e$、$k_B$、$m_p$、$m_e$、$\mu_0$、$\varepsilon_0$、$G$、$R_E$、$AU$）、指數正規化搜尋（$\text{cm}^{-3} \leftrightarrow \text{cm⁻³}$）與制度自動偵測；`tab-lookup.js` 行數自 433 行降至 389 行，並建立 Headless 單元測試套件（`tests/test-unit-system-engine.js`），全數 8 項斷言測試通過。
-* **v6.1（當前版本）**：落實 ADR-012 全域反應式狀態庫與事件總線（`AppStateStore`），建立不可變快照管理、鍵值訂閱（`subscribeKey`）與跨模組事件總線（`emit`/`on`/`off`）；解耦 `app.js` 與分頁控制器間的網狀依賴，並建立 Headless 單元測試套件（`tests/test-app-state-store.js`），全數 8 項斷言測試通過。
+* **v6.1**：落實 ADR-012 全域反應式狀態庫與事件總線（`AppStateStore`），建立不可變快照管理、鍵值訂閱（`subscribeKey`）與跨模組事件總線（`emit`/`on`/`off`）；解耦 `app.js` 與分頁控制器間的網狀依賴，並建立 Headless 單元測試套件（`tests/test-app-state-store.js`），全數 8 項斷言測試通過。
+* **v6.2（當前版本）**：執行 `/code-review` 雙軸審查缺陷全面修復。修復 `sw.js` 離線快取資源版本脫鉤（更新至 `app.js?v=6.1`）；`tab-equations.js` 行數自 432 行縮減至 259 行達成 $< 260$ 行規格指標；消除控制器循環渲染與重複制度偵測；`FormulaASTEngine` 快照執行不可變凍結並補全 `insertFraction`、`insertParentheses`、`clear` 語意方法；`UnitSystemEngine` 支援 `\varepsilon_0` 等常數別名查詢。全專案 38 個模組皆合格，4 組單元測試共 32 項斷言全數通過。
 
 ---
 
