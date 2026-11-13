@@ -14,6 +14,7 @@ class LookupTabController {
     if (typeof AppStateStore !== "undefined") {
       AppStateStore.subscribeKey("lang", () => this.render());
     }
+    this.render();
   }
 
   initDOM() {
@@ -109,13 +110,15 @@ class LookupTabController {
 
   render() {
     if (!this.catSelect) return;
-    const isZh = this.app.currentLang === "zh";
+    const lang = (typeof AppStateStore !== "undefined" ? AppStateStore.get("lang") : (this.app ? this.app.currentLang : "zh")) || "zh";
+    const isZh = lang === "zh";
+    const dict = (typeof I18N !== "undefined" && I18N[lang]) ? I18N[lang] : { allCats: "所有分類" };
     const categories = (typeof UnitSystemEngine !== "undefined")
       ? UnitSystemEngine.getCategories()
       : QUANTITY_CATEGORIES;
 
     this.catSelect.innerHTML = `
-      <option value="all">${I18N[this.app.currentLang].allCats}</option>
+      <option value="all">${dict.allCats}</option>
       ${categories.map(c => `
         <option value="${c.id}">${isZh ? c.nameZh : c.nameEn}</option>
       `).join("")}
@@ -131,7 +134,8 @@ class LookupTabController {
 
   filterQuantitiesByCategory(catId) {
     if (!this.qtySelect) return;
-    const isZh = this.app.currentLang === "zh";
+    const lang = (typeof AppStateStore !== "undefined" ? AppStateStore.get("lang") : (this.app ? this.app.currentLang : "zh")) || "zh";
+    const isZh = lang === "zh";
     const filtered = (typeof UnitSystemEngine !== "undefined")
       ? UnitSystemEngine.getAllQuantities(catId)
       : (catId === "all" ? PHYSICAL_QUANTITIES : PHYSICAL_QUANTITIES.filter(q => q.category === catId));

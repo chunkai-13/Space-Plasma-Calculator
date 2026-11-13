@@ -185,7 +185,7 @@ Space Plasma Calculator/
 | `js/equations-mhd-waves.js` | 295 | 500 | 合格 OK |
 | `js/equations-kinetic-shocks.js` | 351 | 500 | 合格 OK |
 | `js/tab-equations.js` | 259 | 500 | 合格 OK |
-| `js/tab-lookup.js` | 392 | 500 | 合格 OK |
+| `js/tab-lookup.js` | 396 | 500 | 合格 OK |
 | `js/preset-state-manager.js` | 305 | 500 | 合格 OK |
 | `js/app-ui.js` | 383 | 500 | 合格 OK |
 | `js/calculator-core.js` | 366 | 500 | 合格 OK |

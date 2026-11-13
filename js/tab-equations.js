@@ -12,6 +12,7 @@ class EquationsTabController {
     if (typeof AppStateStore !== "undefined") {
       AppStateStore.subscribeKey("lang", () => this.render());
     }
+    this.render();
   }
 
   initDOM() {
@@ -43,9 +44,9 @@ class EquationsTabController {
 
   clearSearch() {
     if (this.eqSearch) this.eqSearch.value = "";
-    if (this.btnClearSearch) this.btnClearSearch.style.display = "none";
-    if (this.searchFeedback) this.searchFeedback.innerHTML = "";
-    this.filterEquationsByCategory(this.eqCatSelect ? this.eqCatSelect.value : "all");
+    this.btnClearSearch && (this.btnClearSearch.style.display = "none");
+    this.searchFeedback && (this.searchFeedback.innerHTML = "");
+    this.filterEquationsByCategory(this.eqCatSelect?.value || "all");
   }
 
   highlightFormula() {
@@ -58,8 +59,7 @@ class EquationsTabController {
     const isZh = (typeof AppStateStore !== "undefined" ? AppStateStore.get("lang") : this.app.currentLang) === "zh";
     const dict = (typeof I18N !== "undefined" && I18N[isZh ? "zh" : "en"]) || { allEqCats: "所有分類" };
     this.eqCatSelect.innerHTML = `<option value="all">${dict.allEqCats}</option>${EQUATION_CATEGORIES.map(c => `<option value="${c.id}">${isZh ? c.nameZh : c.nameEn}</option>`).join("")}`;
-    if (this.eqSearch && this.eqSearch.value.trim()) this.searchEquations(this.eqSearch.value);
-    else this.filterEquationsByCategory(this.eqCatSelect.value || "all");
+    if (this.eqSearch?.value.trim()) this.searchEquations(this.eqSearch.value); else this.filterEquationsByCategory(this.eqCatSelect?.value || "all");
   }
 
   filterEquationsByCategory(catId) {
