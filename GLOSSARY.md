@@ -1,4 +1,4 @@
-# Space Plasma Physics Calculator
+# Space Plasma Calculator
 
 Single-page progressive web application for space plasma calculations, dimensional verification, and unit conversions.
 
@@ -27,3 +27,7 @@ _Avoid_: Equation controller, equation manager, formula evaluator service
 **Unit System Engine**:
 The deep module encapsulating cross-system unit conversions (SI, CGS, Space Physics), numerical formatting, exponent normalization search, and multi-system physical constant lookup.
 _Avoid_: Unit converter helper, constants directory, lookup utility
+
+**App State Store**:
+The deep module encapsulating the single source of truth for reactive global application state (language, theme, active tab, environment preset, dirty state), persistent storage, state subscription, and cross-module decoupled event dispatching.
+_Avoid_: Global state object, event bus utility, app state manager, app config

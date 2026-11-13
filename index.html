@@ -328,7 +328,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=6.0').then(reg => {
+        navigator.serviceWorker.register('sw.js?v=6.1').then(reg => {
           reg.update();
         }).catch(() => {});
 
@@ -343,9 +343,10 @@
     }
   </script>
 
-  <!-- 基礎常量、多語系字典與單位常數深模組 (Unit System Engine) -->
+  <!-- 基礎常量、多語系字典、全域狀態庫與單位常數深模組 (Unit System Engine) -->
   <script src="constants.js?v=4.4"></script>
   <script src="js/i18n.js?v=5.2"></script>
+  <script src="js/app-state-store.js?v=6.1"></script>
   <script src="js/plasma-core.js?v=4.4"></script>
   <script src="js/unit-system-engine.js?v=6.0"></script>
 
@@ -379,6 +380,6 @@
   <script src="js/app-ui.js?v=5.8"></script>
 
   <!-- 總調度入口 -->
-  <script src="app.js?v=5.5"></script>
+  <script src="app.js?v=6.1"></script>
 </body>
 </html>

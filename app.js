@@ -1,28 +1,40 @@
 /**
  * app.js - 應用程式主控入口
- * 負責頂部導覽列、Tab 互斥切換與網址 Hash 同步、深淺色主題、多語系切換與控制器調度：
- *   - ModernUIController (js/app-ui.js)
- *   - BuilderTabController (js/tab-builder.js)
- *   - LookupTabController (js/tab-lookup.js)
- *   - EquationsTabController (js/tab-equations.js)
+ * 負責頂部導覽列、Tab 互斥切換與網址 Hash 同步、深淺色主題、多語系切換與控制器調度
+ * 狀態管理全面委派 AppStateStore 單一真實來源 (SSOT)
  */
 
 class SpacePlasmaApp {
   constructor() {
-    this.currentLang = localStorage.getItem("sp_lang") || "zh";
-    this.currentTheme = localStorage.getItem("sp_theme") || "dark";
     this.calculator = new PlasmaCustomCalculator();
 
     this.initDOM();
     this.initControllers();
+    this.initStoreSubscriptions();
     this.bindEvents();
 
-    this.applyTheme(this.currentTheme);
-    this.applyLanguage(this.currentLang);
+    // 依據 AppStateStore 初始狀態進行首次介面同步
+    this.applyTheme(AppStateStore.get("theme"));
+    this.applyLanguage(AppStateStore.get("lang"));
 
-    // 依據 URL Hash 初始化 Tab 狀態 (預設首頁為 presets)
+    // 依據 URL Hash 初始化 Tab 狀態 (預設為 presets)
     this.initTabFromHash();
     window.addEventListener("hashchange", () => this.initTabFromHash());
+  }
+
+  // 向後相容屬性存取器：委派 AppStateStore
+  get currentLang() {
+    return AppStateStore.get("lang");
+  }
+  set currentLang(val) {
+    AppStateStore.setLanguage(val);
+  }
+
+  get currentTheme() {
+    return AppStateStore.get("theme");
+  }
+  set currentTheme(val) {
+    AppStateStore.setTheme(val);
   }
 
   initDOM() {
@@ -40,11 +52,29 @@ class SpacePlasmaApp {
     this.equationsTab = new EquationsTabController(this);
   }
 
+  initStoreSubscriptions() {
+    // 訂閱主題變更事件
+    AppStateStore.subscribeKey("theme", (theme) => {
+      this.applyTheme(theme);
+    });
+
+    // 訂閱語言變更事件
+    AppStateStore.subscribeKey("lang", (lang) => {
+      this.applyLanguage(lang);
+    });
+
+    // 訂閱分頁切換事件
+    AppStateStore.subscribeKey("activeTab", (tabKey) => {
+      this.syncTabDOM(tabKey);
+    });
+  }
+
   initTabFromHash() {
     const rawHash = window.location.hash.replace("#section-", "").replace("#", "").trim();
     const validTabs = ["presets", "builder", "units"];
     const targetTab = validTabs.includes(rawHash) ? rawHash : "presets";
-    this.switchTab(targetTab, false);
+    AppStateStore.setActiveTab(targetTab);
+    this.syncTabDOM(targetTab, false);
   }
 
   // 互斥切換工作區 Tab (純 CSS 顯示/隱藏，絕不銷毀 DOM 以保全計算狀態)
@@ -52,6 +82,11 @@ class SpacePlasmaApp {
     const validTabs = ["presets", "builder", "units"];
     const activeTab = validTabs.includes(tabKey) ? tabKey : "presets";
 
+    AppStateStore.setActiveTab(activeTab);
+    this.syncTabDOM(activeTab, updateHash);
+  }
+
+  syncTabDOM(activeTab, updateHash = true) {
     if (this.tabBtns) {
       this.tabBtns.forEach(b => {
         const isMatch = b.getAttribute("data-tab") === activeTab;
@@ -129,16 +164,14 @@ class SpacePlasmaApp {
     // 2. 深淺色主題切換
     if (this.themeToggleBtn) {
       this.themeToggleBtn.addEventListener("click", () => {
-        this.currentTheme = this.currentTheme === "dark" ? "light" : "dark";
-        this.applyTheme(this.currentTheme);
+        AppStateStore.toggleTheme();
       });
     }
 
     // 3. 語言切換
     if (this.langToggleBtn) {
       this.langToggleBtn.addEventListener("click", () => {
-        this.currentLang = this.currentLang === "zh" ? "en" : "zh";
-        this.applyLanguage(this.currentLang);
+        AppStateStore.toggleLanguage();
       });
     }
 
@@ -178,7 +211,6 @@ class SpacePlasmaApp {
     const latexInput = document.getElementById("latex-quick-input");
     const btnParseLatex = document.getElementById("btn-parse-latex");
     if (latexInput) {
-      // 鍵盤輸入即時解析更新畫布與因次檢查 (保持游標不跳動)
       latexInput.addEventListener("input", (e) => {
         if (this.modernUI) {
           this.modernUI.syncFromLatexInput(e.target.value);
@@ -203,7 +235,7 @@ class SpacePlasmaApp {
       });
     }
 
-    // 7. 符號庫分類標籤切換與點擊插入 (更新狀態並反向回填 LaTeX)
+    // 7. 符號庫分類標籤切換與點擊插入
     if (this.modernUI) {
       this.modernUI.initSymbolPillTabs();
     }
@@ -276,25 +308,21 @@ class SpacePlasmaApp {
 
   // 主題樣式設定
   applyTheme(theme) {
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-      if (this.themeToggleBtn) {
-        this.themeToggleBtn.innerHTML = `<span class="icon">☀️</span> <span class="theme-text">${I18N[this.currentLang].lightMode}</span>`;
-      }
-    } else {
-      document.documentElement.classList.remove("dark");
-      if (this.themeToggleBtn) {
-        this.themeToggleBtn.innerHTML = `<span class="icon">🌙</span> <span class="theme-text">${I18N[this.currentLang].darkMode}</span>`;
-      }
+    const isDark = theme === "dark";
+    document.documentElement.classList.toggle("dark", isDark);
+
+    if (this.themeToggleBtn) {
+      const lang = AppStateStore.get("lang");
+      const dict = (typeof I18N !== "undefined" && I18N[lang]) ? I18N[lang] : { lightMode: "淺色模式", darkMode: "深色模式" };
+      const modeText = isDark ? dict.lightMode : dict.darkMode;
+      const icon = isDark ? "☀️" : "🌙";
+      this.themeToggleBtn.innerHTML = `<span class="icon">${icon}</span> <span class="theme-text">${modeText}</span>`;
     }
-    localStorage.setItem("sp_theme", theme);
   }
 
   // 多語系切換與各分頁重新渲染
   applyLanguage(lang) {
-    this.currentLang = lang;
-    localStorage.setItem("sp_lang", lang);
-    const dict = I18N[lang] || I18N.zh;
+    const dict = (typeof I18N !== "undefined" && I18N[lang]) ? I18N[lang] : (typeof I18N !== "undefined" ? I18N.zh : null);
     window.dict = dict;
 
     document.querySelectorAll("[data-i18n]").forEach(el => {
@@ -311,7 +339,7 @@ class SpacePlasmaApp {
     if (this.langToggleBtn && dict) {
       this.langToggleBtn.textContent = dict.langName;
     }
-    this.applyTheme(this.currentTheme);
+    this.applyTheme(AppStateStore.get("theme"));
 
     if (this.builderTab && this.builderTab.previewUI) {
       this.builderTab.previewUI.updateEquationPreview();

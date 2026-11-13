@@ -1,4 +1,4 @@
-const CACHE_NAME = 'plasma-calc-v6.0';
+const CACHE_NAME = 'plasma-calc-v6.1';
 const ASSETS = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ const ASSETS = [
   './css/responsive.css?v=5.2',
   './constants.js?v=4.4',
   './js/i18n.js?v=5.2',
+  './js/app-state-store.js?v=6.1',
   './js/plasma-core.js?v=4.4',
   './js/unit-system-engine.js?v=6.0',
   './js/equations-particle.js?v=4.4',
