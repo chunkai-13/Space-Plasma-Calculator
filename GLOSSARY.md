@@ -23,3 +23,7 @@ _Avoid_: Range gauge, scale slider, magnitude bar
 **Equation Solver**:
 The deep module encapsulating physical boundary assertions, unit normalization, numerical evaluation, alternative unit scaling, and physical context meter metric resolution for predefined space plasma equations.
 _Avoid_: Equation controller, equation manager, formula evaluator service
+
+**Unit System Engine**:
+The deep module encapsulating cross-system unit conversions (SI, CGS, Space Physics), numerical formatting, exponent normalization search, and multi-system physical constant lookup.
+_Avoid_: Unit converter helper, constants directory, lookup utility

@@ -1,6 +1,6 @@
 # 太空電漿物理計算與單位查詢工具 交接文檔（Handoff Documentation）
 
-文件版本：v5.9  
+文件版本：v6.0  
 更新日期：2026-11-13  
 專案儲存庫：chunkai-13/Space-Plasma-Calculator (main branch)
 
@@ -87,6 +87,14 @@
   3. `tab-equations.js` 職責降級為純視圖適配器（View Adapter），行數自 496 行驟降至 432 行，徹底消除單檔 500 行警報。
   4. 建立涵蓋所有核心領域公式之 Headless 單元測試（`tests/test-equation-solver.js`），實現物理計算零 DOM 依賴驗證。
 
+### ADR-011：單位制度與物理常數深模組深化（v6.0）
+* **架構決策**：
+  1. 將跨制度單位轉換（SI、CGS、Space Physics）、指數字元正規化搜尋、多制度常數解析（$c$、$e$、$k_B$、$m_p$、$m_e$、$\mu_0$、$\varepsilon_0$、$G$、$R_E$、$AU$）收斂至純深度模組 `UnitSystemEngine`（`js/unit-system-engine.js`）。
+  2. 提供統一轉換介面 `convert(value, fromUnitId, toUnitId, quantityIdOrCategory)`，回傳包含轉換值、格式化字串、比率與精準次冪標記之結構體。
+  3. 封裝指數正規化比對（$\text{cm}^{-3} \leftrightarrow \text{cm⁻³}$）與多欄位檢索至 `searchQuantities(keyword)`。
+  4. `tab-lookup.js` 降級為純視圖適配器，行數自 433 行降至 389 行，解耦 DOM 事件與物理換算。
+  5. 建立完整 Headless 自動化測試套件（`tests/test-unit-system-engine.js`），全數通過 8 項斷言測試。
+
 ---
 
 ## 三、 專案檔案清單與模組職責說明
@@ -139,9 +147,9 @@ Space Plasma Calculator/
 
 ---
 
-## 四、 核心模組檔案行數稽核（截至 v5.6）
+## 四、 核心模組檔案行數稽核（截至 v6.0）
 
-依據 `./scripts/check-line-counts.sh` 執行結果，全專案 30 個原始碼檔案均完全合規：
+依據 `./scripts/check-line-counts.sh` 執行結果，全專案 36 個原始碼與測試檔案均完全合規：
 
 | 檔案名稱 | 當前行數 | 規範上限 | 狀態 |
 | :--- | :--- | :--- | :--- |
@@ -150,7 +158,7 @@ Space Plasma Calculator/
 | `constants.js` | 357 | 500 | 合格 OK |
 | `equations.js` | 19 | 500 | 合格 OK |
 | `styles.css` | 10 | 500 | 合格 OK |
-| `sw.js` | 83 | 500 | 合格 OK |
+| `sw.js` | 84 | 500 | 合格 OK |
 | `css/base.css` | 80 | 500 | 合格 OK |
 | `css/layout.css` | 129 | 500 | 合格 OK |
 | `css/components.css` | 473 | 500 | 合格 OK |
@@ -165,7 +173,9 @@ Space Plasma Calculator/
 | `js/equations-mhd-waves.js` | 295 | 500 | 合格 OK |
 | `js/equations-kinetic-shocks.js` | 351 | 500 | 合格 OK |
 | `js/equation-solver.js` | 274 | 500 | 合格 OK |
+| `js/unit-system-engine.js` | 398 | 500 | 合格 OK |
 | `js/tab-equations.js` | 432 | 500 | 合格 OK |
+| `js/tab-lookup.js` | 389 | 500 | 合格 OK |
 | `js/preset-state-manager.js` | 302 | 500 | 合格 OK |
 | `js/app-ui.js` | 380 | 500 | 合格 OK |
 | `js/formula-ast-engine.js` | 403 | 500 | 合格 OK |
@@ -176,9 +186,9 @@ Space Plasma Calculator/
 | `js/builder-cards-list.js` | 369 | 500 | 合格 OK |
 | `js/builder-preview.js` | 374 | 500 | 合格 OK |
 | `js/tab-builder.js` | 195 | 500 | 合格 OK |
-| `js/tab-lookup.js` | 433 | 500 | 合格 OK |
 | `tests/test-formula-ast-engine.js` | 93 | 500 | 合格 OK |
 | `tests/test-equation-solver.js` | 86 | 500 | 合格 OK |
+| `tests/test-unit-system-engine.js` | 87 | 500 | 合格 OK |
 
 ---
 
@@ -196,7 +206,8 @@ Space Plasma Calculator/
 * **v5.6**：優化單位手冊「帶入換算」微互動（平滑滾動至換算器、容器與輸入框 0.8 秒淡藍色脈衝光效、自動焦點轉移與文字全選）。
 * **v5.7**：全面修復英文版介面下方程式速算庫（Formula Presets）結果卡片中「典型太空電漿環境數量級對照（Order of Magnitude Context）」區塊的中文字元殘留問題，標題、物理情境標籤（太陽風、磁層、電離層、微觀/動力學/巨觀尺度、磁能/熱能主導、激波強度）與軌道提示 tooltips 全數支援雙語自動切換。
 * **v5.8**：落實 ADR-009 深化公式 AST 運算引擎（`FormulaASTEngine`），封裝內部 Term Nodes 陣列，提供不透明文件直接語意變異介面、內部快照歷史棧（Undo/Redo）與單向響應觀察者接縫（`subscribe`）；重構 `app-ui.js` 與 `tab-builder.js` 消滅接縫洩漏，並建立 Headless 自動化單元測試套件（`tests/test-formula-ast-engine.js`），全數通過 500 行防線。
-* **v5.9（當前版本）**：落實 ADR-010 物理方程式求解深模組（`EquationSolver`），將參數邊界斷言（$B \le 0$、$n \le 0$ 等）、物理公式計算、替代單位與數量級標尺維度解析自視圖層完全解耦；`tab-equations.js` 行數自 496 行降至 432 行徹底解除行數警報，並建立 Headless 自動化單元測試套件（`tests/test-equation-solver.js`），實現純物理邏輯無 DOM 驗證。
+* **v5.9**：落實 ADR-010 物理方程式求解深模組（`EquationSolver`），將參數邊界斷言（$B \le 0$、$n \le 0$ 等）、物理公式計算、替代單位與數量級標尺維度解析自視圖層完全解耦；`tab-equations.js` 行數自 496 行降至 432 行徹底解除行數警報，並建立 Headless 自動化單元測試套件（`tests/test-equation-solver.js`），實現純物理邏輯無 DOM 驗證。
+* **v6.0（當前版本）**：落實 ADR-011 單位制度與物理常數深模組（`UnitSystemEngine`），整合跨制度單位換算（SI、CGS、Space）、多制度常數解析（$c$、$e$、$k_B$、$m_p$、$m_e$、$\mu_0$、$\varepsilon_0$、$G$、$R_E$、$AU$）、指數正規化搜尋（$\text{cm}^{-3} \leftrightarrow \text{cm⁻³}$）與制度自動偵測；`tab-lookup.js` 行數自 433 行降至 389 行，並建立 Headless 單元測試套件（`tests/test-unit-system-engine.js`），全數 8 項斷言測試通過。
 
 ---
 

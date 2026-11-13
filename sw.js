@@ -1,4 +1,4 @@
-const CACHE_NAME = 'plasma-calc-v5.9';
+const CACHE_NAME = 'plasma-calc-v6.0';
 const ASSETS = [
   './',
   './index.html',
@@ -14,6 +14,7 @@ const ASSETS = [
   './constants.js?v=4.4',
   './js/i18n.js?v=5.2',
   './js/plasma-core.js?v=4.4',
+  './js/unit-system-engine.js?v=6.0',
   './js/equations-particle.js?v=4.4',
   './js/equations-mhd-waves.js?v=4.4',
   './js/equations-kinetic-shocks.js?v=4.4',
@@ -28,7 +29,7 @@ const ASSETS = [
   './js/builder-cards-list.js?v=4.4',
   './js/builder-preview.js?v=4.4',
   './js/tab-builder.js?v=5.8',
-  './js/tab-lookup.js?v=5.6',
+  './js/tab-lookup.js?v=6.0',
   './js/tab-equations.js?v=5.9',
   './js/preset-state-manager.js?v=5.1',
   './js/app-ui.js?v=5.8',
