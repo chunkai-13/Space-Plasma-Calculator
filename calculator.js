@@ -1,12 +1,13 @@
 /**
- * calculator.js - 自訂電漿運算器總整合入口 (向後相容包裝層)
- * 底層模組拆分為：
+ * calculator.js - 自訂電漿運算器總整合入口 (向後相容包裝層，繼承 FormulaASTEngine)
+ * 依據 ADR-009，底層模組架構為：
  *   - js/calculator-core.js (Token 模型、游標管理、歷史堆疊、括號分析)
  *   - js/calculator-evaluator.js (數值計算、因次維度相加減檢驗、除零檢查)
  *   - js/calculator-formatter.js (KaTeX 看板結構、因次字串、各制度輸出格式化)
+ *   - js/formula-ast-engine.js (FormulaASTEngine 深模組，具備不透明文件接縫與觀察者)
  */
 
-class PlasmaCustomCalculator extends CalculatorCore {
+class PlasmaCustomCalculator extends FormulaASTEngine {
   constructor() {
     super();
   }
@@ -63,59 +64,8 @@ class PlasmaCustomCalculator extends CalculatorCore {
     return CalculatorFormatter.formatBaseUnitString(dim);
   }
 
-  // 計算入口
+  // 計算入口 (委託至 evaluate)
   compute() {
-    if (this.tokens.length === 0) {
-      throw new Error("請先新增至少一個物理量、常數或分式項目。");
-    }
-
-    const bracketAnalysis = this.analyzeBrackets();
-    if (!bracketAnalysis.isBalanced) {
-      this.lastResult = {
-        hasError: true,
-        errorType: "BRACKET_UNBALANCED",
-        warningTitleZh: "括號未正確閉合警告",
-        warningTitleEn: "Unclosed Parentheses Warning",
-        mismatchDetails: bracketAnalysis.errors,
-        adviceZh: "請確認每一個開括號 (、[、{ 都具備對應的閉括號，系統已依巢狀深度自動變換小中大括號。",
-        adviceEn: "Please ensure all opening parentheses have corresponding closing ones.",
-        groups: []
-      };
-      return this.formatResult(this.displaySystem);
-    }
-
-    try {
-      const finalEval = this.evaluateTokensExpression(this.tokens);
-      const matchedQty = this.matchDimensionToQuantity(finalEval.dimension);
-
-      this.lastResult = {
-        hasError: false,
-        valueSI: finalEval.baseValue,
-        dimension: finalEval.dimension,
-        matchedQuantity: matchedQty,
-        groups: finalEval.groups || []
-      };
-
-      return this.formatResult(this.displaySystem);
-    } catch (err) {
-      if (err.message === "DIMENSION_MISMATCH") {
-        this.lastResult = {
-          hasError: true,
-          errorType: "DIMENSION_MISMATCH",
-          warningTitleZh: "多項式單位因次不符警告",
-          warningTitleEn: "Dimensional Inconsistency Warning",
-          mismatchDetails: err.mismatches.map(m => {
-            const q1Name = m.firstTermQty ? m.firstTermQty.nameZh : m.firstTermDimStr;
-            const q2Name = m.currentTermQty ? m.currentTermQty.nameZh : m.currentTermDimStr;
-            return `項 #${m.groupIndex} (${m.currentExpression}) 之因次為【${q2Name}】，與同式中之因次【${q1Name}】不符，無法相加減。`;
-          }),
-          adviceZh: "在物理運算中，只有具有相同因次（相同物理量類別）的項才能進行相加（＋）或相減（－）。請檢查括號內外各項目的次方或運算符號。",
-          adviceEn: "Only terms with identical dimensions can be added or subtracted.",
-          groups: err.groups
-        };
-        return this.formatResult(this.displaySystem);
-      }
-      throw err;
-    }
+    return this.evaluate(this.displaySystem);
   }
 }

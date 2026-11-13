@@ -1,0 +1,21 @@
+# Space Plasma Physics Calculator
+
+Single-page progressive web application for space plasma calculations, dimensional verification, and unit conversions.
+
+## Language
+
+**Formula Document**:
+The complete in-memory abstract syntax tree representing an authored physical formula in the custom builder.
+_Avoid_: Equation state, token list, formula model
+
+**Term Node**:
+An atomic node within a Formula Document, such as a physical quantity, physical constant, operator, parenthesis, or fraction slot.
+_Avoid_: Token, item, element
+
+**Formula AST Engine**:
+The deep module encapsulating the creation, mutation, history stack, LaTeX representation, dimensional consistency, and numerical evaluation of a Formula Document.
+_Avoid_: Calculator core, formula builder, evaluator service
+
+**Physical Context Meter**:
+The logarithmic benchmark scale comparing a computed physical quantity against typical space environments (solar wind, magnetosphere, ionosphere).
+_Avoid_: Range gauge, scale slider, magnitude bar

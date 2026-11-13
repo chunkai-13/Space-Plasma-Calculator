@@ -243,37 +243,8 @@ class ModernUIController {
 
     this.isParsingFromInput = true;
     try {
-      const str = (latexStr || "").trim();
-      if (!str) {
-        calc.tokens = [];
-        if (this.app.builderTab) this.app.builderTab.renderTermsList();
-        this.refreshBuilderPreview();
-        this.updateDimensionBadge(null);
-        return;
-      }
-
-      // 1. 快速匹配常見經典結構
-      if ((str.includes("B^2") || str.includes("B^{2}")) && (str.includes("mu") || str.includes("μ"))) {
-        this.app.builderTab.loadPresetFormula("presetPB");
-      } else if (str.includes("P_th") && str.includes("P_B")) {
-        this.app.builderTab.loadPresetFormula("presetTotalP");
-      } else if (str.includes("beta") || (str.includes("nkT") && str.includes("P_B"))) {
-        this.app.builderTab.loadPresetFormula("presetBeta");
-      } else if (str.includes("v_A") || (str.includes("B") && (str.includes("rho") || str.includes("mu")))) {
-        this.app.builderTab.loadPresetFormula("presetVA");
-      } else {
-        calc.tokens = [];
-        const fracMatch = str.match(/\\frac\{([^}]+)\}\{([^}]+)\}/);
-        if (fracMatch) {
-          const fracToken = calc.insertFraction();
-          this.parseTokensIntoList(fracMatch[1], fracToken.numerator);
-          this.parseTokensIntoList(fracMatch[2], fracToken.denominator);
-        } else {
-          this.parseTokensIntoList(str, calc.tokens);
-        }
-        if (this.app.builderTab) this.app.builderTab.renderTermsList();
-      }
-
+      calc.parseFromLatex(latexStr);
+      if (this.app.builderTab) this.app.builderTab.renderTermsList();
       this.refreshBuilderPreview();
       this.updateDimensionBadge();
     } finally {
@@ -281,45 +252,11 @@ class ModernUIController {
     }
   }
 
+  // 向後相容適配方法 (委派至 FormulaASTEngine 內部解析器)
   parseTokensIntoList(exprStr, container) {
-    const cleaned = exprStr
-      .replace(/\\cdot|\\times/g, " * ")
-      .replace(/\\mu_0|\\mu0|\\mu|mu_0/g, " mu0 ")
-      .replace(/\\varepsilon_0|\\epsilon_0|eps0/g, " eps0 ")
-      .replace(/m_e/g, " me ")
-      .replace(/m_p/g, " mp ")
-      .replace(/k_B|k_b/g, " kB ")
-      .replace(/P_\{th\}|P_th/g, " P ")
-      .replace(/P_B/g, " P ");
-
-    const parts = cleaned.split(/(\s+|\+|-|\*|\/|\(|\))/).map(s => s.trim()).filter(s => s.length > 0);
-    const constMap = { e: "e", me: "me", mp: "mp", eps0: "eps0", mu0: "mu0", kB: "kB", c: "c" };
-    const qtyMap = { B: "magnetic_field", E: "electric_field", n: "density", T: "temperature", v: "velocity", P: "pressure" };
-
-    parts.forEach(tok => {
-      let power = 1;
-      let coreTok = tok;
-      if (tok.includes("^")) {
-        const pParts = tok.split("^");
-        coreTok = pParts[0];
-        power = parseFloat(pParts[1].replace(/[{}]/g, "")) || 1;
-      }
-
-      if (tok === "+" || tok === "-" || tok === "*" || tok === "/") {
-        container.push({ id: `op_${Date.now()}_${Math.random()}`, type: "operator", value: tok });
-      } else if (tok === "(") {
-        container.push({ id: `open_${Date.now()}_${Math.random()}`, type: "open_paren" });
-      } else if (tok === ")") {
-        container.push({ id: `close_${Date.now()}_${Math.random()}`, type: "close_paren", power: 1 });
-      } else if (constMap[coreTok]) {
-        container.push({ id: `c_${Date.now()}_${Math.random()}`, type: "constant", constantId: constMap[coreTok], multiplier: 1, power });
-      } else if (qtyMap[coreTok]) {
-        const qId = qtyMap[coreTok];
-        const qDef = PHYSICAL_QUANTITIES.find(q => q.id === qId);
-        const uId = qDef ? (qDef.units[1] || qDef.units[0]).id : "T";
-        container.push({ id: `q_${Date.now()}_${Math.random()}`, type: "quantity", quantityId: qId, unitId: uId, numberValue: 1, multiplier: 1, power });
-      }
-    });
+    if (this.app.calculator && typeof this.app.calculator._parseTokensIntoList === "function") {
+      this.app.calculator._parseTokensIntoList(exprStr, container);
+    }
   }
 
   // 當公式 AST 變更時，反向生成最新 LaTeX 回填至輸入框 (具備無損游標維持與語義防抖)

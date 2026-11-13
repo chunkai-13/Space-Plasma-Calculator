@@ -1,7 +1,7 @@
 # 太空電漿物理計算與單位查詢工具 交接文檔（Handoff Documentation）
 
-文件版本：v5.7  
-更新日期：2026-11-06  
+文件版本：v5.8  
+更新日期：2026-11-13  
 專案儲存庫：chunkai-13/Space-Plasma-Calculator (main branch)
 
 ---
@@ -72,6 +72,14 @@
 ### ADR-008：單檔 500 行代碼防線原則（Modular Defense Strategy）
 * **架構決策**：為杜絕大型單體程式碼造成的維護困難與注意力稀釋（Attention Dilution），專案建立了 `./scripts/check-line-counts.sh` 檢測機制。全專案 30 個原生 JavaScript 與 CSS 模組之檔案行數皆強制限制在 500 行以內。
 
+### ADR-009：公式 AST 引擎深化與不透明文件接縫（v5.8 規劃）
+* **架構決策**：
+  1. 將自訂公式 AST 運算、求值、格式化、因次檢驗與變異動作收斂至單一深模組 `FormulaASTEngine`。
+  2. 對外徹底隱藏 `tokens` 陣列內部結構，提供語意化直接操作方法（`insertTerm`、`removeTerm`、`insertFraction`、`insertParentheses`、`clear`、`loadPreset`、`parseFromLatex`）。
+  3. 內部自主維護 Undo/Redo 快照歷史棧與當前作用槽位路徑（Insertion Target）。
+  4. 提供單一觀察者接縫（`subscribe`）廣播公式狀態快照，解除 UI 適配器間的級聯依賴。
+  5. 遵循單檔 500 行限制，以單一公開門面（Facade Entry）組合私有適配器，並提供向後相容別名 `PlasmaCustomCalculator` 保證平滑漸進遷移。
+
 ---
 
 ## 三、 專案檔案清單與模組職責說明
@@ -131,11 +139,11 @@ Space Plasma Calculator/
 | 檔案名稱 | 當前行數 | 規範上限 | 狀態 |
 | :--- | :--- | :--- | :--- |
 | `app.js` | 337 | 500 | 合格 OK |
-| `calculator.js` | 121 | 500 | 合格 OK |
+| `calculator.js` | 71 | 500 | 合格 OK |
 | `constants.js` | 357 | 500 | 合格 OK |
 | `equations.js` | 19 | 500 | 合格 OK |
 | `styles.css` | 10 | 500 | 合格 OK |
-| `sw.js` | 82 | 500 | 合格 OK |
+| `sw.js` | 83 | 500 | 合格 OK |
 | `css/base.css` | 80 | 500 | 合格 OK |
 | `css/layout.css` | 129 | 500 | 合格 OK |
 | `css/components.css` | 473 | 500 | 合格 OK |
@@ -151,15 +159,17 @@ Space Plasma Calculator/
 | `js/equations-kinetic-shocks.js` | 351 | 500 | 合格 OK |
 | `js/tab-equations.js` | 496 | 500 | 合格 OK |
 | `js/preset-state-manager.js` | 302 | 500 | 合格 OK |
-| `js/app-ui.js` | 443 | 500 | 合格 OK |
+| `js/app-ui.js` | 380 | 500 | 合格 OK |
+| `js/formula-ast-engine.js` | 403 | 500 | 合格 OK |
 | `js/calculator-core.js` | 366 | 500 | 合格 OK |
 | `js/calculator-evaluator.js` | 313 | 500 | 合格 OK |
 | `js/calculator-formatter.js` | 261 | 500 | 合格 OK |
 | `js/builder-cards-items.js` | 272 | 500 | 合格 OK |
 | `js/builder-cards-list.js` | 369 | 500 | 合格 OK |
 | `js/builder-preview.js` | 374 | 500 | 合格 OK |
-| `js/tab-builder.js` | 246 | 500 | 合格 OK |
+| `js/tab-builder.js` | 195 | 500 | 合格 OK |
 | `js/tab-lookup.js` | 433 | 500 | 合格 OK |
+| `tests/test-formula-ast-engine.js` | 93 | 500 | 合格 OK |
 
 ---
 
@@ -175,7 +185,8 @@ Space Plasma Calculator/
 * **v5.4**：解決自訂工作台 LaTeX 輸入框雙向綁定時的游標強制跳至尾端問題，實作無損選取範圍維持與原生撤銷歷史保護。
 * **v5.5**：補齊導覽列 W3C WAI-ARIA 鍵盤導覽標準（Roving Tabindex、方向鍵循環切換、Home/End 支援）；修正數量級標尺時間週期對數映射。
 * **v5.6**：優化單位手冊「帶入換算」微互動（平滑滾動至換算器、容器與輸入框 0.8 秒淡藍色脈衝光效、自動焦點轉移與文字全選）。
-* **v5.7（當前版本）**：全面修復英文版介面下方程式速算庫（Formula Presets）結果卡片中「典型太空電漿環境數量級對照（Order of Magnitude Context）」區塊的中文字元殘留問題，標題、物理情境標籤（太陽風、磁層、電離層、微觀/動力學/巨觀尺度、磁能/熱能主導、激波強度）與軌道提示 tooltips 全數支援雙語自動切換。
+* **v5.7**：全面修復英文版介面下方程式速算庫（Formula Presets）結果卡片中「典型太空電漿環境數量級對照（Order of Magnitude Context）」區塊的中文字元殘留問題，標題、物理情境標籤（太陽風、磁層、電離層、微觀/動力學/巨觀尺度、磁能/熱能主導、激波強度）與軌道提示 tooltips 全數支援雙語自動切換。
+* **v5.8（當前版本）**：落實 ADR-009 深化公式 AST 運算引擎（`FormulaASTEngine`），封裝內部 Term Nodes 陣列，提供不透明文件直接語意變異介面、內部快照歷史棧（Undo/Redo）與單向響應觀察者接縫（`subscribe`）；重構 `app-ui.js` 與 `tab-builder.js` 消滅接縫洩漏，並建立 Headless 自動化單元測試套件（`tests/test-formula-ast-engine.js`），全數通過 500 行防線。
 
 ---
 

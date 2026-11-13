@@ -1,4 +1,4 @@
-const CACHE_NAME = 'plasma-calc-v5.7';
+const CACHE_NAME = 'plasma-calc-v5.8';
 const ASSETS = [
   './',
   './index.html',
@@ -21,15 +21,16 @@ const ASSETS = [
   './js/calculator-core.js?v=4.4',
   './js/calculator-evaluator.js?v=4.4',
   './js/calculator-formatter.js?v=4.4',
-  './calculator.js?v=4.4',
+  './js/formula-ast-engine.js?v=5.8',
+  './calculator.js?v=5.8',
   './js/builder-cards-items.js?v=4.4',
   './js/builder-cards-list.js?v=4.4',
   './js/builder-preview.js?v=4.4',
-  './js/tab-builder.js?v=5.4',
+  './js/tab-builder.js?v=5.8',
   './js/tab-lookup.js?v=5.6',
   './js/tab-equations.js?v=5.7',
   './js/preset-state-manager.js?v=5.1',
-  './js/app-ui.js?v=5.7',
+  './js/app-ui.js?v=5.8',
   './app.js?v=5.5',
   './katex/katex.min.js?v=4.4',
   './katex/katex.min.css?v=4.4',
