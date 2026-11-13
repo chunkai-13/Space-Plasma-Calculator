@@ -19,3 +19,7 @@ _Avoid_: Calculator core, formula builder, evaluator service
 **Physical Context Meter**:
 The logarithmic benchmark scale comparing a computed physical quantity against typical space environments (solar wind, magnetosphere, ionosphere).
 _Avoid_: Range gauge, scale slider, magnitude bar
+
+**Equation Solver**:
+The deep module encapsulating physical boundary assertions, unit normalization, numerical evaluation, alternative unit scaling, and physical context meter metric resolution for predefined space plasma equations.
+_Avoid_: Equation controller, equation manager, formula evaluator service

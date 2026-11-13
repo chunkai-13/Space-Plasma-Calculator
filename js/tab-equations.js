@@ -248,129 +248,72 @@ class EquationsTabController {
   }
 
   assertPhysicalBoundary(param, rawVal, uDef, isZh) {
-    if (isNaN(rawVal)) return isZh ? "錯誤：請輸入有效數值" : "Error: Please enter a valid number";
-    const c = param.unitCategory, id = param.id;
-    if ((c === "magnetic_field" || id === "B" || id === "B1") && rawVal <= 0) {
-      return isZh ? "錯誤：磁場強度必須大於 0 (B > 0)" : "Error: Magnetic field B must be greater than 0";
-    }
-    if ((c === "density" || c === "number_density" || ["n", "n1", "ne", "ni", "np"].includes(id)) && rawVal <= 0) {
-      return isZh ? "錯誤：粒子數密度必須大於 0 (n > 0)" : "Error: Number density n must be greater than 0";
-    }
-    if (c === "temperature" || ["T", "Te", "Ti", "Tp"].includes(id)) {
-      const valK = uDef && uDef.id === "eV" ? rawVal * 11604.518 : rawVal;
-      if (valK < 0) return isZh ? "錯誤：熱力學溫度不可低於絕對零度 (T ≥ 0 K)" : "Error: Temperature cannot be below 0 K";
-    }
-    if (id === "Rc" && rawVal <= 0) return isZh ? "錯誤：曲率半徑必須大於 0 (Rc > 0)" : "Error: Curvature radius must be > 0";
-    if (id === "gamma" && rawVal <= 1) return isZh ? "錯誤：絕熱指數必須大於 1 (γ > 1)" : "Error: Adiabatic index γ must be > 1";
-    if (id === "M1" && rawVal <= 0) return isZh ? "錯誤：上游馬赫數必須大於 0 (M1 > 0)" : "Error: Upstream Mach number M1 must be > 0";
-    if (id === "kappa" && rawVal <= 1.5) return isZh ? "錯誤：Kappa 指數必須大於 1.5 (κ > 1.5)" : "Error: Kappa index must be > 1.5";
-    return null;
+    return EquationSolver.assertPhysicalBoundary(param, rawVal, uDef, isZh);
   }
 
   computeCurrentEquation() {
     const eq = this.selectedEquation;
     if (!eq || !this.eqInputsContainer) return;
     const isZh = this.app.currentLang === "zh";
-    const inputs = {}, units = {};
-    let firstError = null;
 
     // 清除既有錯誤標記與抖動動畫
     this.eqInputsContainer.querySelectorAll(".smart-input-group, .form-input, .eq-param-input").forEach(el => {
       el.classList.remove("smart-input-error", "input-shake");
     });
 
-    try {
-      eq.inputs.forEach(param => {
-        if (param.type === "select") {
-          const selectEl = this.eqInputsContainer.querySelector(`.eq-param-input[data-param="${param.id}"]`);
-          const chosen = param.options.find(o => o.value === (selectEl ? selectEl.value : param.default));
-          if (chosen && chosen.m !== undefined && chosen.m <= 0) {
-            throw new RangeError(isZh ? "錯誤：粒子質量必須大於 0 (m > 0)" : "Error: Particle mass must be > 0");
-          }
-          if (chosen && chosen.q !== undefined && chosen.q === 0 && eq.id.includes("gyro")) {
-            throw new RangeError(isZh ? "錯誤：中性粒子不產生迴旋運動 (q ≠ 0)" : "Error: Neutral particle has no gyration (q ≠ 0)");
-          }
-          inputs[param.id] = chosen;
-        } else {
-          const inputEl = this.eqInputsContainer.querySelector(`.eq-param-input[data-param="${param.id}"]`);
-          const rawVal = inputEl ? parseFloat(inputEl.value) : (param.default || 0);
-          const parentGroup = inputEl ? inputEl.closest(".smart-input-group") || inputEl : null;
-
-          let uDef = null;
-          if (param.unitCategory) {
-            const unitEl = this.eqInputsContainer.querySelector(`.eq-param-unit[data-param="${param.id}"]`);
-            const qDef = PHYSICAL_QUANTITIES.find(q => q.id === param.unitCategory);
-            uDef = qDef ? qDef.units.find(u => u.id === (unitEl ? unitEl.value : param.defaultUnit)) : null;
-            units[param.id] = uDef;
-          }
-
-          const errMsg = this.assertPhysicalBoundary(param, rawVal, uDef, isZh);
-          if (errMsg) {
-            if (parentGroup) {
-              parentGroup.classList.remove("input-shake");
-              void parentGroup.offsetWidth;
-              parentGroup.classList.add("smart-input-error", "input-shake");
-            }
-            if (!firstError) firstError = errMsg;
-          }
-
-          inputs[param.id] = isNaN(rawVal) ? 0 : rawVal;
+    // 收集 rawInputs 與 inputUnits
+    const rawInputs = {}, inputUnits = {};
+    eq.inputs.forEach(param => {
+      if (param.type === "select") {
+        const selectEl = this.eqInputsContainer.querySelector(`.eq-param-input[data-param="${param.id}"]`);
+        rawInputs[param.id] = selectEl ? selectEl.value : param.default;
+      } else {
+        const inputEl = this.eqInputsContainer.querySelector(`.eq-param-input[data-param="${param.id}"]`);
+        rawInputs[param.id] = inputEl ? parseFloat(inputEl.value) : (param.default || 0);
+        if (param.unitCategory) {
+          const unitEl = this.eqInputsContainer.querySelector(`.eq-param-unit[data-param="${param.id}"]`);
+          const qDef = PHYSICAL_QUANTITIES.find(q => q.id === param.unitCategory);
+          inputUnits[param.id] = qDef ? qDef.units.find(u => u.id === (unitEl ? unitEl.value : param.defaultUnit)) : null;
         }
-      });
-
-      if (firstError) throw new RangeError(firstError);
-
-      const outputs = eq.calculate(inputs, units);
-      if (!outputs || outputs.some(o => isNaN(o.value) || !isFinite(o.value))) {
-        throw new RangeError(isZh ? "錯誤：數值超出物理計算範圍 (產生除以零或無效值)" : "Error: Value out of physical range");
       }
+    });
 
-      this.renderEquationOutputs(outputs);
-    } catch (err) {
+    // 呼叫 EquationSolver 核心評估接縫
+    const result = EquationSolver.solve(eq, rawInputs, inputUnits, { isZh });
+    if (result.hasError) {
+      if (result.violatedParamId) {
+        const inputEl = this.eqInputsContainer.querySelector(`.eq-param-input[data-param="${result.violatedParamId}"]`);
+        const parentGroup = inputEl ? inputEl.closest(".smart-input-group") || inputEl : null;
+        if (parentGroup) {
+          parentGroup.classList.remove("input-shake");
+          void parentGroup.offsetWidth;
+          parentGroup.classList.add("smart-input-error", "input-shake");
+        }
+      }
       if (this.eqResultBox) {
         this.eqResultBox.innerHTML = `
           <div class="calc-error-banner input-shake" role="alert">
             <span class="error-badge">!</span>
-            <div><strong>${isZh ? "【物理邊界防禦警告】" : "[Physical Boundary Warning]"}</strong> ${err.message}</div>
+            <div><strong>${isZh ? "【物理邊界防禦警告】" : "[Physical Boundary Warning]"}</strong> ${result.message}</div>
           </div>
         `;
       }
+      return;
     }
+
+    this.renderEquationOutputs(result.outputs);
   }
 
   resolveMeterType(out) {
-    const u = (out.unit || "").trim(), lbl = ((out.labelZh || "") + " " + (out.labelEn || "")).toLowerCase();
-    if (!u || u === "1" || u.includes("Dimensionless") || u.includes("Ratio") || u.includes("比值") || u === "≤ 1") {
-      return (lbl.includes("beta") || lbl.includes("貝他") || lbl.includes("mach") || lbl.includes("馬赫")) ? "beta" : (lbl.includes("比") || lbl.includes("ratio") ? "ratio" : null);
-    }
-    if (u.includes("Hz") || u.includes("rad/s")) return "frequency";
-    if (["s", "ms", "μs", "us", "ns"].includes(u)) return "time";
-    if (["km/s", "m/s", "cm/s"].includes(u)) return "velocity";
-    if (["m", "km", "cm"].includes(u)) return "length";
-    return null;
+    return EquationSolver.resolveMeterType(out);
   }
 
   cleanUnit(str) {
-    if (!str) return "";
-    const cleaned = str.replace(/\s*\(.*?\)/g, "").trim();
-    return cleaned || str;
+    return EquationSolver.cleanUnit(str);
   }
 
   detectUnitSystem(uStr, isZh) {
-    if (!uStr) return "";
-    const s = uStr.trim();
-    if (s === "1" || s === "" || s.includes("無因次") || s.toLowerCase().includes("dimensionless")) {
-      return isZh ? "無因次" : "Dimensionless";
-    }
-    const token = s.replace(/[\(\)\[\]]/g, "").trim();
-    const SP = ["nT", "gamma", "γ", "km", "km/s", "c", "eV", "keV", "MeV", "GeV", "nPa", "pPa", "kHz", "MHz", "GHz", "mHz", "ms", "μs", "us", "ns", "cm⁻³", "cm^-3", "cc", "/cm³", "RE", "AU", "eV/nT"];
-    const CGS = ["G", "Gauss", "dyn/cm²", "dyn/cm^2", "dyn", "erg", "erg/G", "cm", "cm/s", "g/cm³", "barye"];
-    const SI = ["T", "Tesla", "m", "m/s", "s", "Hz", "rad/s", "Pa", "J", "K", "kg/m³", "m⁻³", "m^-3", "A", "V/m", "A/m²", "N", "W"];
-    const hasU = arr => arr.some(u => token === u || token.startsWith(u + " ") || token.endsWith(" " + u) || token.startsWith(u + "/") || token.endsWith("/" + u));
-    if (hasU(SP)) return isZh ? "太空常用制" : "Space";
-    if (hasU(CGS)) return isZh ? "高斯制" : "CGS";
-    if (hasU(SI)) return isZh ? "SI 制" : "SI";
-    return isZh ? "SI 制" : "SI";
+    return EquationSolver.detectUnitSystem(uStr, isZh);
   }
 
   renderEquationOutputs(outputs) {
@@ -380,15 +323,8 @@ class EquationsTabController {
     this.eqResultBox.innerHTML = `
       <div class="eq-outputs-grid">
         ${outputs.map((out, outIdx) => {
-          const rawBaseUnit = isZh ? (out.unitZh || out.unit) : (out.unitEn || out.unit);
-          const baseUnitStr = this.cleanUnit(rawBaseUnit);
-          const allUnits = [{ label: baseUnitStr, value: out.value, isBase: true }];
-          if (out.altUnits) {
-            allUnits.push(...out.altUnits.map(a => ({
-              label: this.cleanUnit(isZh ? (a.labelZh || a.label) : (a.labelEn || a.label)),
-              value: a.value
-            })));
-          }
+          const baseUnitStr = out.baseUnitStr || this.cleanUnit(isZh ? (out.unitZh || out.unit) : (out.unitEn || out.unit));
+          const allUnits = out.allUnits || [{ label: baseUnitStr, value: out.value, isBase: true }];
           out._allUnits = allUnits;
 
           const formatted = this.formatNum(out.value);
@@ -401,7 +337,7 @@ class EquationsTabController {
             altHtml = `
               <div class="eq-alt-units" id="eq-alt-units-${outIdx}">
                 ${out.altUnits.map(a => {
-                  const lbl = isZh ? (a.labelZh || a.label) : (a.labelEn || a.label);
+                  const lbl = this.cleanUnit(isZh ? (a.labelZh || a.label) : (a.labelEn || a.label));
                   const sys = this.detectUnitSystem(lbl, isZh);
                   return `<span>= <strong>${this.formatNum(a.value)}</strong> ${lbl} <span class="unit-sys-tag">[${sys}]</span></span>`;
                 }).join(" ")}
@@ -409,16 +345,16 @@ class EquationsTabController {
             `;
           }
 
-          const mType = this.resolveMeterType(out);
+          const mType = out.meterType || this.resolveMeterType(out);
           const meterHtml = (typeof ModernUIController !== "undefined" && mType)
             ? ModernUIController.renderContextMeter(out.value, mType, out.unit || "", isZh) : "";
 
-          const baseSys = this.detectUnitSystem(baseUnitStr, isZh);
+          const baseSys = out.baseSystem || this.detectUnitSystem(baseUnitStr, isZh);
           const baseSysTag = baseSys ? ` <span class="unit-sys-badge">[${baseSys}]</span>` : '';
           const unitSelectorHtml = allUnits.length > 1
             ? `<select class="smart-unit-select eq-out-unit-select" data-out-idx="${outIdx}" title="${isZh ? '切換輸出單位' : 'Switch output unit'}" style="margin-left: 0.5rem; font-size: 0.95rem; vertical-align: middle;">
                 ${allUnits.map((u, uIdx) => {
-                  const sys = this.detectUnitSystem(u.label, isZh);
+                  const sys = u.system || this.detectUnitSystem(u.label, isZh);
                   const sysTag = sys ? ` [${sys}]` : '';
                   return `<option value="${uIdx}">${u.label}${sysTag}</option>`;
                 }).join("")}

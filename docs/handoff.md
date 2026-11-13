@@ -1,6 +1,6 @@
 # 太空電漿物理計算與單位查詢工具 交接文檔（Handoff Documentation）
 
-文件版本：v5.8  
+文件版本：v5.9  
 更新日期：2026-11-13  
 專案儲存庫：chunkai-13/Space-Plasma-Calculator (main branch)
 
@@ -72,13 +72,20 @@
 ### ADR-008：單檔 500 行代碼防線原則（Modular Defense Strategy）
 * **架構決策**：為杜絕大型單體程式碼造成的維護困難與注意力稀釋（Attention Dilution），專案建立了 `./scripts/check-line-counts.sh` 檢測機制。全專案 30 個原生 JavaScript 與 CSS 模組之檔案行數皆強制限制在 500 行以內。
 
-### ADR-009：公式 AST 引擎深化與不透明文件接縫（v5.8 規劃）
+### ADR-009：公式 AST 引擎深化與不透明文件接縫（v5.8）
 * **架構決策**：
   1. 將自訂公式 AST 運算、求值、格式化、因次檢驗與變異動作收斂至單一深模組 `FormulaASTEngine`。
   2. 對外徹底隱藏 `tokens` 陣列內部結構，提供語意化直接操作方法（`insertTerm`、`removeTerm`、`insertFraction`、`insertParentheses`、`clear`、`loadPreset`、`parseFromLatex`）。
   3. 內部自主維護 Undo/Redo 快照歷史棧與當前作用槽位路徑（Insertion Target）。
   4. 提供單一觀察者接縫（`subscribe`）廣播公式狀態快照，解除 UI 適配器間的級聯依賴。
   5. 遵循單檔 500 行限制，以單一公開門面（Facade Entry）組合私有適配器，並提供向後相容別名 `PlasmaCustomCalculator` 保證平滑漸進遷移。
+
+### ADR-010：物理方程式求解器深化與視圖解耦（v5.9）
+* **架構決策**：
+  1. 將物理邊界防禦斷言（$B \le 0$、$n \le 0$、$T < 0$ 等）、數值計算、替代單位多制度計算與數量級標尺維度/比例解析，自 `tab-equations.js` 徹底解耦，收斂至純物理求解深模組 `EquationSolver`（`js/equation-solver.js`）。
+  2. 提供純粹結構化的計算接縫：`solve(eqId, rawInputs, inputUnits, options) => EquationSolveResult`，違規以純資料物件回傳，不操作 DOM。
+  3. `tab-equations.js` 職責降級為純視圖適配器（View Adapter），行數自 496 行驟降至 432 行，徹底消除單檔 500 行警報。
+  4. 建立涵蓋所有核心領域公式之 Headless 單元測試（`tests/test-equation-solver.js`），實現物理計算零 DOM 依賴驗證。
 
 ---
 
@@ -157,7 +164,8 @@ Space Plasma Calculator/
 | `js/equations-particle.js` | 333 | 500 | 合格 OK |
 | `js/equations-mhd-waves.js` | 295 | 500 | 合格 OK |
 | `js/equations-kinetic-shocks.js` | 351 | 500 | 合格 OK |
-| `js/tab-equations.js` | 496 | 500 | 合格 OK |
+| `js/equation-solver.js` | 274 | 500 | 合格 OK |
+| `js/tab-equations.js` | 432 | 500 | 合格 OK |
 | `js/preset-state-manager.js` | 302 | 500 | 合格 OK |
 | `js/app-ui.js` | 380 | 500 | 合格 OK |
 | `js/formula-ast-engine.js` | 403 | 500 | 合格 OK |
@@ -170,6 +178,7 @@ Space Plasma Calculator/
 | `js/tab-builder.js` | 195 | 500 | 合格 OK |
 | `js/tab-lookup.js` | 433 | 500 | 合格 OK |
 | `tests/test-formula-ast-engine.js` | 93 | 500 | 合格 OK |
+| `tests/test-equation-solver.js` | 86 | 500 | 合格 OK |
 
 ---
 
@@ -186,7 +195,8 @@ Space Plasma Calculator/
 * **v5.5**：補齊導覽列 W3C WAI-ARIA 鍵盤導覽標準（Roving Tabindex、方向鍵循環切換、Home/End 支援）；修正數量級標尺時間週期對數映射。
 * **v5.6**：優化單位手冊「帶入換算」微互動（平滑滾動至換算器、容器與輸入框 0.8 秒淡藍色脈衝光效、自動焦點轉移與文字全選）。
 * **v5.7**：全面修復英文版介面下方程式速算庫（Formula Presets）結果卡片中「典型太空電漿環境數量級對照（Order of Magnitude Context）」區塊的中文字元殘留問題，標題、物理情境標籤（太陽風、磁層、電離層、微觀/動力學/巨觀尺度、磁能/熱能主導、激波強度）與軌道提示 tooltips 全數支援雙語自動切換。
-* **v5.8（當前版本）**：落實 ADR-009 深化公式 AST 運算引擎（`FormulaASTEngine`），封裝內部 Term Nodes 陣列，提供不透明文件直接語意變異介面、內部快照歷史棧（Undo/Redo）與單向響應觀察者接縫（`subscribe`）；重構 `app-ui.js` 與 `tab-builder.js` 消滅接縫洩漏，並建立 Headless 自動化單元測試套件（`tests/test-formula-ast-engine.js`），全數通過 500 行防線。
+* **v5.8**：落實 ADR-009 深化公式 AST 運算引擎（`FormulaASTEngine`），封裝內部 Term Nodes 陣列，提供不透明文件直接語意變異介面、內部快照歷史棧（Undo/Redo）與單向響應觀察者接縫（`subscribe`）；重構 `app-ui.js` 與 `tab-builder.js` 消滅接縫洩漏，並建立 Headless 自動化單元測試套件（`tests/test-formula-ast-engine.js`），全數通過 500 行防線。
+* **v5.9（當前版本）**：落實 ADR-010 物理方程式求解深模組（`EquationSolver`），將參數邊界斷言（$B \le 0$、$n \le 0$ 等）、物理公式計算、替代單位與數量級標尺維度解析自視圖層完全解耦；`tab-equations.js` 行數自 496 行降至 432 行徹底解除行數警報，並建立 Headless 自動化單元測試套件（`tests/test-equation-solver.js`），實現純物理邏輯無 DOM 驗證。
 
 ---
 
